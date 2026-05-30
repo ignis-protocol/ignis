@@ -45,6 +45,37 @@ body::after{
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;font-family:var(--font)}
 
+/* ambient identity layer */
+#ignis-bg{
+  position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+  color:rgba(0,255,65,0.06);font-size:12px;letter-spacing:0.22em;
+}
+.bg-row{
+  position:absolute;left:-20vw;width:140vw;white-space:nowrap;
+  transform:rotate(-7deg);animation:bg-drift var(--dur,42s) linear infinite;
+}
+.bg-row:nth-child(1){top:13%;--dur:48s}
+.bg-row:nth-child(2){top:36%;--dur:60s;animation-direction:reverse;color:rgba(232,160,48,0.045)}
+.bg-row:nth-child(3){top:61%;--dur:52s}
+.bg-row:nth-child(4){top:82%;--dur:66s;animation-direction:reverse;color:rgba(232,160,48,0.04)}
+@keyframes bg-drift{0%{transform:translateX(0) rotate(-7deg)}100%{transform:translateX(-28vw) rotate(-7deg)}}
+
+.brand-sigil{
+  position:absolute;right:7vw;top:18vh;width:min(34vw,420px);aspect-ratio:1;
+  pointer-events:none;opacity:0.18;animation:sigil-breathe 5s ease-in-out infinite;
+}
+.brand-sigil::before{
+  content:'△';position:absolute;inset:0;display:grid;place-items:center;
+  font-size:min(28vw,340px);line-height:1;color:transparent;
+  -webkit-text-stroke:2px var(--g0);text-shadow:0 0 24px rgba(0,255,65,0.25);
+}
+.brand-sigil::after{
+  content:'IGNIS';position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);
+  color:var(--amber);font-size:min(4vw,44px);font-weight:700;letter-spacing:0.18em;
+  text-shadow:0 0 18px rgba(232,160,48,0.28);
+}
+@keyframes sigil-breathe{0%,100%{opacity:0.12;transform:scale(0.98)}50%{opacity:0.22;transform:scale(1.02)}}
+
 /* ── NAV ── */
 #nav{
   position:fixed;top:32px;left:0;right:0;z-index:100;
@@ -54,8 +85,10 @@ button{cursor:pointer;font-family:var(--font)}
   backdrop-filter:blur(8px);
   font-size:11px;letter-spacing:0.08em;
 }
-.nav-logo{color:var(--g0);font-weight:700;font-size:14px;letter-spacing:0.06em}
-.nav-logo span{color:var(--amber)}
+.nav-logo{color:var(--g0);font-weight:700;font-size:14px;letter-spacing:0.06em;animation:logo-glow 3.8s ease-in-out infinite}
+.nav-logo span{color:var(--amber);display:inline-block;animation:mark-pulse 2.8s ease-in-out infinite}
+@keyframes logo-glow{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 12px rgba(0,255,65,0.45)}}
+@keyframes mark-pulse{0%,100%{transform:translateY(0);text-shadow:0 0 0 transparent}50%{transform:translateY(-1px);text-shadow:0 0 12px rgba(232,160,48,0.55)}}
 .nav-links{display:flex;gap:28px;color:var(--dim)}
 .nav-links a{transition:color 0.15s}
 .nav-links a:hover{color:var(--g0)}
@@ -86,7 +119,7 @@ section:first-of-type{padding-top:140px}
   max-width:100%;position:relative;overflow:hidden;
 }
 
-.hero-inner{max-width:1100px;margin:0 auto;padding:0 40px;width:100%}
+.hero-inner{max-width:1100px;margin:0 auto;padding:0 40px;width:100%;position:relative;z-index:2}
 
 .hero-tag{
   display:inline-flex;align-items:center;gap:8px;
@@ -105,9 +138,11 @@ section:first-of-type{padding-top:140px}
   font-size:clamp(42px,7vw,88px);font-weight:700;
   color:var(--white);letter-spacing:-0.02em;line-height:1.0;
   margin-bottom:8px;
+  animation:title-rise 0.7s ease-out both;
 }
 .hero-h1 .accent{color:var(--g0)}
 .hero-h1 .amber{color:var(--amber)}
+@keyframes title-rise{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
 
 .hero-sub{
   font-size:clamp(14px,2vw,18px);color:var(--dim);
@@ -312,6 +347,8 @@ footer{
   .nav-links{display:none}
   section{padding:60px 20px}
   .hero-inner{padding:0 20px}
+  .brand-sigil{right:-18vw;top:18vh;width:78vw;opacity:0.1}
+  #ignis-bg{font-size:10px}
   .two-col{grid-template-columns:1fr}
   .util-grid{grid-template-columns:1fr}
   .steps{grid-template-columns:1fr 1fr;gap:24px}
@@ -369,6 +406,12 @@ footer{
 </style>
 </head>
 <body>
+<div id="ignis-bg" aria-hidden="true">
+  <div class="bg-row">IGNIS △ FORGE FROM CODE △ BASE 8453 △ GITLAWB △ REPO BOND △ </div>
+  <div class="bg-row">COMMIT TIP △ PROOF OF BUILDER △ LAUNCH KEY △ IGNIS △ </div>
+  <div class="bg-row">△ △ △ CODE IS CAPITAL △ △ △ FORGE TOKENS FROM CODE △ </div>
+  <div class="bg-row">BASE MAINNET △ BANKR DEPLOY API △ AUTO LP △ NO GAS △ </div>
+</div>
 
 <!-- NAV -->
 <!-- ALPHA BANNER -->
@@ -411,6 +454,7 @@ footer{
 <!-- HERO -->
 <section id="hero">
   <div class="hero-glow"></div>
+  <div class="brand-sigil" aria-hidden="true"></div>
   <div class="hero-inner">
     <div class="hero-tag">
       <span class="dot"></span>
