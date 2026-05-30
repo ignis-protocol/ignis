@@ -63,6 +63,7 @@ app.use((req, _res, next) => {
 app.get('/', (_req, res) => res.json({
   name:    'Ignis API',
   version: '0.1.0',
+  build:   'partner-deploy-ready',
   tagline: 'forge tokens from code.',
   network: 'Base Mainnet (8453)',
   endpoints: [
@@ -110,6 +111,7 @@ app.get('/health', async (_req, res) => {
     status:   rpc_ok ? 'ok' : 'degraded',
     rpc:      rpc_ok ? 'connected' : 'unreachable',
     block,
+    build:    'partner-deploy-ready',
     uptime:   Math.floor(process.uptime()),
     ts:       new Date().toISOString(),
   });
