@@ -44,7 +44,7 @@ Every other launchpad creates tokens from hype. Ignis creates tokens from code.
 | Backend | Node.js + Express |
 | Database | SQLite via sql.js (pure JS) |
 | Chain | Base Mainnet (chain ID 8453) |
-| Launch engine | bankr.bot Agent API |
+| Launch engine | bankr.bot Deploy API (Partner Key), Agent API fallback |
 | Identity | gitlawb DID (Ed25519) |
 | Wallet auth | EIP-191 personal_sign + session tokens |
 | Bond watcher | GraphQL subscription + HTTP polling fallback |
@@ -69,7 +69,7 @@ ignis/
     │   └── bondWatcher.js
     └── routes/
         ├── auth.js       ← wallet challenge/verify/session
-        ├── bankr.js      ← bankr.bot Agent API proxy
+        ├── bankr.js      ← bankr.bot Deploy API + Agent API fallback
         ├── bond.js       ← repo bond CRUD + slash
         ├── gitlawb.js    ← gitlawb node proxy (repos, agents, trust, bounties)
         ├── launchkey.js  ← $IGNIS balance check
@@ -85,14 +85,15 @@ ignis/
 
 ### Prerequisites
 - Node.js 18+
-- bankr.bot API key → [bankr.bot/api](https://bankr.bot/api)
+- Bankr Partner Key for production no-gas launches, or a Bankr API key for fallback Agent API testing
 
 ### 1. Backend
 
 ```bash
 cd backend
 cp .env.example .env
-# Fill in BANKR_API_KEY
+# Fill in BANKR_PARTNER_KEY for production deploys
+# Optional fallback: BANKR_API_KEY
 
 npm install
 npm start
@@ -134,7 +135,7 @@ Open `frontend/index.html` in your browser. Update `API_BASE` at the top of each
 1. wallet connect    → connect to Base Mainnet
 2. wallet auth       → sign message, prove ownership
 3. forge             → 5-step wizard:
-   Step 1: bankr.bot API key (57% swap fees → your wallet)
+   Step 1: connected wallet fee recipient (or Bankr API key fallback)
    Step 2: project name + description
    Step 3: symbol + socials + gitlawb repo
    Step 4: repo bond amount ($IGNIS to lock)
@@ -202,6 +203,7 @@ GET  /health
 ```bash
 PORT=3001
 BANKR_API_KEY=bk_your_key_here    # from bankr.bot/api
+BANKR_PARTNER_KEY=bk_ptr_your_key_here # preferred: Token Launch Deploy API
 BASE_RPC_URL=https://mainnet.base.org
 GITLAWB_NODE=https://node.gitlawb.com
 CORS_ORIGIN=*

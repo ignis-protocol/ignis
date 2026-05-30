@@ -1,14 +1,21 @@
-// routes/bankr.js — bankr.bot Agent API integration
-// Per-user API key: each user brings their own bankr.bot key
-// so their 57% fee share goes directly to their own bankr wallet.
+// routes/bankr.js — bankr.bot integration
+// Preferred path: Partner Token Launch Deploy API, with creator fees routed to
+// the user's connected wallet. Fallback: Agent API prompt with a user key.
 const express = require('express');
 const router  = express.Router();
+const { ethers } = require('ethers');
 const dbModule = require('../db');
 function getDb() { return dbModule.getDB(); }
 
-const BANKR_API_BASE = 'https://api.bankr.bot/agent';
+const BANKR_AGENT_API_BASE = 'https://api.bankr.bot/agent';
+const BANKR_TOKEN_API_BASE = 'https://api.bankr.bot/token-launches';
 const POLL_INTERVAL  = 2500;
 const POLL_TIMEOUT   = 80;
+const BANKR_PARTNER_KEY = process.env.BANKR_PARTNER_KEY || null;
+
+function hasPartnerKey() {
+  return !!(BANKR_PARTNER_KEY && BANKR_PARTNER_KEY !== 'bk_ptr_your_key_here');
+}
 
 // ── resolve which key to use ──────────────────────────────────────────────────
 // Priority: user-supplied key > BANKR_API_KEY env (platform fallback)
@@ -23,28 +30,82 @@ function resolveKey(reqBody = {}) {
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
+function parseBankrError(text, status) {
+  let parsed = null;
+  try { parsed = JSON.parse(text); } catch (_) {}
+
+  const code = parsed?.error || parsed?.code || '';
+  const message = parsed?.message || text || `bankr.bot ${status}`;
+
+  if (code === 'subscription_required' || /subscription_required|Bankr Club|LLM credits/i.test(message)) {
+    return {
+      code: 'subscription_required',
+      message: 'Bankr Agent API requires Bankr Club or LLM credits. Ignis will use Bankr Deploy API automatically once BANKR_PARTNER_KEY is configured.',
+      bankr_message: message,
+    };
+  }
+
+  return { code: code || `bankr_${status}`, message };
+}
+
 async function bankrPost(path, body, apiKey) {
-  const resp = await fetch(`${BANKR_API_BASE}${path}`, {
+  const resp = await fetch(`${BANKR_AGENT_API_BASE}${path}`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
     body: JSON.stringify(body),
   });
   if (!resp.ok) {
     const text = await resp.text().catch(() => resp.statusText);
-    throw new Error(`bankr.bot ${resp.status}: ${text}`);
+    const normalized = parseBankrError(text, resp.status);
+    const err = new Error(normalized.message);
+    err.status = resp.status;
+    err.code = normalized.code;
+    err.details = normalized;
+    throw err;
   }
   return resp.json();
 }
 
 async function bankrGet(path, apiKey) {
-  const resp = await fetch(`${BANKR_API_BASE}${path}`, {
+  const resp = await fetch(`${BANKR_AGENT_API_BASE}${path}`, {
     headers: { 'X-API-Key': apiKey },
   });
   if (!resp.ok) {
     const text = await resp.text().catch(() => resp.statusText);
-    throw new Error(`bankr.bot ${resp.status}: ${text}`);
+    const normalized = parseBankrError(text, resp.status);
+    const err = new Error(normalized.message);
+    err.status = resp.status;
+    err.code = normalized.code;
+    err.details = normalized;
+    throw err;
   }
   return resp.json();
+}
+
+async function bankrDeploy(body) {
+  const resp = await fetch(`${BANKR_TOKEN_API_BASE}/deploy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Partner-Key': BANKR_PARTNER_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const text = await resp.text();
+  let json = null;
+  try { json = text ? JSON.parse(text) : {}; } catch (_) {}
+
+  if (!resp.ok) {
+    const normalized = parseBankrError(text, resp.status);
+    const err = new Error(normalized.message);
+    err.status = resp.status;
+    err.code = normalized.code;
+    err.details = normalized;
+    throw err;
+  }
+
+  return json || {};
 }
 
 function buildLaunchPrompt(data) {
@@ -61,19 +122,65 @@ function buildLaunchPrompt(data) {
 }
 
 // ── POST /api/bankr/launch ────────────────────────────────────────────────────
-// body: { apiKey (user's own key), name, symbol, ... }
-// If apiKey is provided: 57% fee → user's bankr wallet
-// If not: falls back to platform BANKR_API_KEY (fee → platform wallet)
+// body: { name, symbol, fee_recipient, apiKey?, ... }
+// Preferred: BANKR_PARTNER_KEY deploys and routes 57% creator fee to fee_recipient.
+// Fallback: user/platform Agent API key submits a natural-language launch prompt.
 router.post('/launch', async (req, res) => {
   const { name, symbol, description, website, twitter,
-          gitlawb_repo, vesting, governance } = req.body;
+          gitlawb_repo, vesting, governance, fee_recipient, simulateOnly } = req.body;
 
   if (!name)   return res.status(400).json({ error: 'name required' });
   if (!symbol) return res.status(400).json({ error: 'symbol required' });
 
+  if (hasPartnerKey()) {
+    if (!fee_recipient) {
+      return res.status(400).json({ error: 'fee_recipient wallet required for Bankr partner deploy' });
+    }
+    if (!ethers.utils.isAddress(fee_recipient)) {
+      return res.status(400).json({ error: 'invalid fee_recipient wallet address' });
+    }
+
+    try {
+      const launch = await bankrDeploy({
+        tokenName: name,
+        tokenSymbol: symbol,
+        feeRecipient: {
+          type: 'wallet',
+          value: fee_recipient,
+        },
+        ...(description ? { description } : {}),
+        ...(website ? { website } : {}),
+        ...(twitter ? { twitter } : {}),
+        ...(simulateOnly ? { simulateOnly: true } : {}),
+      });
+
+      return res.status(simulateOnly ? 200 : 201).json({
+        ok: true,
+        mode: 'partner_deploy',
+        launch,
+        contract: launch.tokenAddress || launch.contract || launch.address || null,
+        tx_hash: launch.txHash || launch.transactionHash || null,
+        fee_recipient,
+        fee_model: '57% creator share routed to user wallet',
+        message: simulateOnly ? 'launch simulated' : 'token deployed',
+      });
+    } catch(e) {
+      console.error('[POST /bankr/launch partner]', e.message);
+      return res.status(e.status || 502).json({
+        error: e.message,
+        code: e.code || 'bankr_partner_error',
+        details: e.details || null,
+      });
+    }
+  }
+
   let apiKey;
   try { apiKey = resolveKey(req.body); } catch(e) {
-    return res.status(503).json({ error: e.message });
+    return res.status(503).json({
+      error: 'Bankr partner deploy is not configured yet, and no fallback Bankr Agent API key was provided.',
+      code: 'bankr_not_configured',
+      hint: 'Add BANKR_PARTNER_KEY for no-gas user launches, or provide a Bankr Agent API key with Bankr Club/LLM credits.',
+    });
   }
 
   const usingUserKey = !!req.body.apiKey;
@@ -91,9 +198,13 @@ router.post('/launch', async (req, res) => {
     });
   } catch(e) {
     console.error('[POST /bankr/launch]', e.message);
-    const status = e.message.includes('401') ? 401
-                 : e.message.includes('403') ? 403 : 502;
-    return res.status(status).json({ error: e.message });
+    const status = e.status || (e.message.includes('401') ? 401
+                 : e.message.includes('403') ? 403 : 502);
+    return res.status(status).json({
+      error: e.message,
+      code: e.code || 'bankr_agent_error',
+      details: e.details || null,
+    });
   }
 });
 
@@ -150,12 +261,16 @@ router.post('/save', async (req, res) => {
 router.get('/status', (_req, res) => {
   const envKey = process.env.BANKR_API_KEY;
   const platformConfigured = !!(envKey && envKey !== 'bk_your_key_here');
+  const partnerConfigured = hasPartnerKey();
   return res.json({
     ok: true,
-    configured: platformConfigured,
-    // Always tell users to bring their own key for fee ownership
-    fee_model: 'bring-your-own-key',
-    hint: 'Get your free API key at bankr.bot/api — 57% of swap fees go to your wallet',
+    configured: partnerConfigured || platformConfigured,
+    partner_configured: partnerConfigured,
+    agent_configured: platformConfigured,
+    fee_model: partnerConfigured ? 'partner-deploy-fee-recipient' : 'agent-api-fallback',
+    hint: partnerConfigured
+      ? 'Bankr Deploy API is enabled — 57% creator share routes to the connected wallet.'
+      : 'Bankr partner deploy is pending. Agent API fallback requires Bankr Club or LLM credits.',
   });
 });
 

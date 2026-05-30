@@ -887,13 +887,13 @@ async function cmdBankr(args){
       const json = await resp.json();
       if(json.configured){
         ln('  status     ✓ configured & ready','g0');
-        ln('  route      Ignis → bankr.bot → Base','g1');
+        ln(`  route      ${json.partner_configured ? 'Ignis → Bankr Deploy API → Base' : 'Ignis → Bankr Agent API → Base'}`,'g1');
         ln('  gas        free — bankr.bot covers it','g1');
         ln('  fee share  57% of 1.2% swap fees → you','g1');
         ln('  tip        type: forge to launch','dim');
       } else {
         ln('  status     ✗ not configured','red');
-        ln('  fix        add BANKR_API_KEY to backend .env','amber');
+        ln('  fix        add BANKR_PARTNER_KEY to backend env','amber');
       }
     } catch(e){
       ln('  ⚠ backend offline — run: cd backend && npm start','amber');
@@ -1436,9 +1436,16 @@ async function cmdLookup(args){
 
 // ── LAUNCH WIZARD ──
 function cmdLaunch(){
-  wizData = {}; wizStep = 0;
+  wizData = { feeRecipient: walletAddress || '' }; wizStep = 0;
   renderWiz();
   document.getElementById('wiz-overlay').classList.add('open');
+  fetch(`${API_BASE}/api/bankr/status`)
+    .then(r => r.json())
+    .then(j => {
+      wizData.bankrStatus = j;
+      if(document.getElementById('wiz-overlay').classList.contains('open') && wizStep === 0) renderWiz();
+    })
+    .catch(() => {});
 }
 
 function closeWizard(){
@@ -1446,25 +1453,41 @@ function closeWizard(){
   ln('  launch wizard closed.','dim');
 }
 
+async function connectWalletForWizard(){
+  await cmdWallet(['connect']);
+  if(walletAddress){
+    wizData.feeRecipient = walletAddress;
+    renderWiz();
+  }
+}
+
 function renderWiz(){
   const progress = Array.from({length:WIZ_TOTAL},(_,i)=>`<div class="wiz-pd ${i<wizStep?'done':i===wizStep?'active':''}"></div>`).join('');
   let body = `<div class="wiz-progress">${progress}</div><div class="wiz-body">`;
 
   if(wizStep===0){
+    const partnerReady = !!wizData.bankrStatus?.partner_configured;
     const savedKey = sessionStorage.getItem('bankr_api_key') || '';
     body += `
       <div class="wiz-step-lbl">STEP 1 / ${WIZ_TOTAL}  ·  SETUP FEE WALLET</div>
       <div class="wiz-q" style="color:var(--g0);font-size:13px">You earn <span style="color:var(--amber);font-weight:600">57% of every swap</span> on your token — automatically, forever.</div>
       <div style="margin:10px 0 14px;padding:10px 12px;border:1px solid var(--g3);background:var(--g4);font-size:11px;color:var(--dim);line-height:1.9">
-        Fees go straight to your own wallet — not to Ignis.<br><br>
-        <span style="color:var(--g0)">1.</span>&nbsp; Create a free key at <a href="https://bankr.bot/api" target="_blank" style="color:var(--g0)">bankr.bot/api</a><br>
-        <span style="color:var(--g0)">2.</span>&nbsp; Copy your API key<br>
-        <span style="color:var(--g0)">3.</span>&nbsp; Paste it below
+        Fees go straight to your connected wallet — not to Ignis.<br><br>
+        <span style="color:var(--g0)">wallet</span>&nbsp; ${walletAddress ? walletAddress : 'not connected'}<br>
+        <span style="color:var(--g0)">mode</span>&nbsp; ${partnerReady ? 'Ignis partner deploy — no Bankr key required' : 'Bankr Agent fallback — Club or LLM credits required'}
       </div>
+      ${!walletAddress ? `
+      <div class="wiz-hint" style="color:var(--amber)">Connect your wallet first so Bankr can route the 57% creator fee to you.</div>
+      ` : ''}
+      ${!partnerReady ? `
       <input class="wiz-input" id="wf-key" type="password" placeholder="bk_xxxxxxxxxxxxxxxx" value="${wizData.apiKey||savedKey}" autocomplete="off">
-      <div class="wiz-hint">Stored only in your browser — never sent to Ignis servers</div>
+      <div class="wiz-hint">Temporary fallback only. Agent API keys require Bankr Club or LLM credits.</div>
+      ` : `
+      <div class="wiz-hint">Ignis will use Bankr Deploy API and set your wallet as feeRecipient.</div>
+      `}
       <div class="wiz-btns">
         <button class="wiz-btn" onclick="closeWizard()">cancel</button>
+        ${!walletAddress ? `<button class="wiz-btn" onclick="connectWalletForWizard()">wallet connect</button>` : ''}
         <button class="wiz-btn primary" onclick="wizNext(0)">next →</button>
       </div>`;
 
@@ -1521,7 +1544,7 @@ function renderWiz(){
       </div>`;
 
   } else if(wizStep===4){
-    const keyMasked  = (wizData.apiKey||'').slice(0,8) + '...';
+    const partnerReady = !!wizData.bankrStatus?.partner_configured;
     const bondInfo   = wizData.repo && wizData.bondAmount
       ? `${wizData.bondAmount} $IGNIS → ${wizData.repo}`
       : 'skip (no repo linked)';
@@ -1534,12 +1557,13 @@ function renderWiz(){
         <div class="sum-row"><span class="sum-k">symbol</span><span class="sum-v amber">${wizData.symbol}</span></div>
         <div class="sum-row"><span class="sum-k">gas fee</span><span class="sum-v accent">free ✓</span></div>
         <div class="sum-row"><span class="sum-k">your fee share</span><span class="sum-v" style="color:var(--g0);font-weight:600">57% of every swap → your wallet</span></div>
+        <div class="sum-row"><span class="sum-k">fee recipient</span><span class="sum-v" style="font-size:10px">${wizData.feeRecipient||walletAddress||'—'}</span></div>
         <div class="sum-row"><span class="sum-k">repo bond</span><span class="sum-v accent">${bondInfo}</span></div>
         <div class="sum-row"><span class="sum-k">liquidity</span><span class="sum-v accent">auto-seed by bankr.bot</span></div>
         <div class="sum-row"><span class="sum-k">website</span><span class="sum-v">${wizData.website||'—'}</span></div>
         <div class="sum-row"><span class="sum-k">gitlawb repo</span><span class="sum-v">${wizData.repo||'—'}</span></div>
         <div class="sum-row"><span class="sum-k">network</span><span class="sum-v blue">Base Mainnet (8453)</span></div>
-        <div class="sum-row"><span class="sum-k">route</span><span class="sum-v">Ignis → bankr.bot → Base</span></div>
+        <div class="sum-row"><span class="sum-k">route</span><span class="sum-v">${partnerReady ? 'Ignis → Bankr Deploy API → Base' : 'Ignis → Bankr Agent API → Base'}</span></div>
       </div>
       <div id="deploy-log"></div>
       <div class="wiz-btns" id="deploy-btns">
@@ -1561,10 +1585,18 @@ function renderWiz(){
 
 function wizNext(step){
   if(step===0){
-    const key = document.getElementById('wf-key').value.trim();
-    if(!key){ flash('wf-key'); return; }
-    wizData.apiKey = key;
-    sessionStorage.setItem('bankr_api_key', key);
+    const partnerReady = !!wizData.bankrStatus?.partner_configured;
+    if(!walletAddress){
+      cmdWallet(['connect']);
+      return;
+    }
+    wizData.feeRecipient = walletAddress;
+    if(!partnerReady){
+      const key = document.getElementById('wf-key')?.value.trim();
+      if(!key){ flash('wf-key'); return; }
+      wizData.apiKey = key;
+      sessionStorage.setItem('bankr_api_key', key);
+    }
   } else if(step===1){
     const n = document.getElementById('wf0').value.trim();
     const d = document.getElementById('wf0b').value.trim();
@@ -1588,6 +1620,17 @@ function wizNext(step){
 
 // ── BANKR.BOT DEPLOY ──────────────────────────────────────────────────────────
 
+function formatBankrLaunchError(json, fallback){
+  const code = json?.code || json?.details?.code;
+  if(code === 'subscription_required'){
+    return 'Bankr Agent API requires Bankr Club or LLM credits. Ignis partner Deploy API is pending BANKR_PARTNER_KEY approval.';
+  }
+  if(code === 'bankr_not_configured'){
+    return json.hint || json.error || fallback;
+  }
+  return json?.error || fallback;
+}
+
 async function deployToken(){
   const log   = document.getElementById('deploy-log');
   const btns  = document.getElementById('deploy-btns');
@@ -1602,14 +1645,15 @@ async function deployToken(){
 
   dlog('submitting to bankr.bot API...', 'warn');
 
-  // 1. Submit launch job to our backend → bankr.bot
-  let jobId, meta;
+  // 1. Submit launch to our backend → bankr.bot
+  let jobId, meta, result = null, contract = null, txHash = null;
   try {
     const resp = await fetch(`${API_BASE}/api/bankr/launch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         apiKey:       wizData.apiKey,
+        fee_recipient: wizData.feeRecipient || walletAddress,
         name:         wizData.name,
         symbol:       wizData.symbol,
         description:  wizData.desc,
@@ -1621,10 +1665,18 @@ async function deployToken(){
       }),
     });
     const json = await resp.json();
-    if(!resp.ok) throw new Error(json.error || `backend ${resp.status}`);
-    jobId = json.jobId;
-    meta  = json.meta;
-    dlog(`job submitted  ·  id: ${jobId}`, 'ok');
+    if(!resp.ok) throw new Error(formatBankrLaunchError(json, `backend ${resp.status}`));
+
+    if(json.mode === 'partner_deploy'){
+      result   = json.launch || {};
+      contract = json.contract || result.tokenAddress || result.contract || result.address || null;
+      txHash   = json.tx_hash || result.txHash || result.transactionHash || null;
+      dlog('bankr.bot: deploy confirmed ✓', 'ok');
+    } else {
+      jobId = json.jobId;
+      meta  = json.meta;
+      dlog(`job submitted  ·  id: ${jobId}`, 'ok');
+    }
   } catch(e){
     dlog('✗ ' + (e.message || 'failed to submit'), 'err');
     btns.innerHTML = `<button class="wiz-btn" onclick="wizBack()">← back</button><button class="wiz-btn launch" onclick="deployToken()">retry</button>`;
@@ -1632,12 +1684,11 @@ async function deployToken(){
   }
 
   // 2. Poll job status
-  dlog('waiting for bankr.bot to deploy on Base...');
+  if(!result) dlog('waiting for bankr.bot to deploy on Base...');
   const POLL_MS  = 3000;
   const MAX_POLL = 80;   // ~4 minutes max
-  let   result   = null;
 
-  for(let i = 0; i < MAX_POLL; i++){
+  for(let i = 0; !result && i < MAX_POLL; i++){
     await sleep(POLL_MS);
     if(i % 4 === 0) dlog(`polling... (${Math.round((i * POLL_MS)/1000)}s elapsed)`);
 
@@ -1646,6 +1697,7 @@ async function deployToken(){
         headers: { 'x-api-key': wizData.apiKey || '' },
       });
       const json = await resp.json();
+      if(!resp.ok) throw new Error(formatBankrLaunchError(json, `poll ${resp.status}`));
       const job  = json.job;
 
       if(job?.status === 'completed'){
@@ -1674,8 +1726,8 @@ async function deployToken(){
   const responseText = typeof result === 'string' ? result : JSON.stringify(result);
   const contractMatch = responseText.match(/0x[a-fA-F0-9]{40}/);
   const txMatch       = responseText.match(/0x[a-fA-F0-9]{64}/);
-  const contract      = contractMatch ? contractMatch[0] : null;
-  const txHash        = txMatch       ? txMatch[0]       : null;
+  contract = contract || (contractMatch ? contractMatch[0] : null);
+  txHash   = txHash   || (txMatch       ? txMatch[0]       : null);
 
   if(contract){
     const r1 = document.createElement('div'); r1.className='dl-line ok';
@@ -1693,7 +1745,7 @@ async function deployToken(){
         contract:     contract || `bankr-${jobId}`,
         tx_hash:      txHash || '',
         block_number: 0,
-        deployer:     'bankr.bot',
+        deployer:     wizData.feeRecipient || walletAddress || 'bankr.bot',
         name:         wizData.name,
         symbol:       wizData.symbol,
         description:  wizData.desc,
