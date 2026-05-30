@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGNIS — Forge tokens from code.</title>
+<meta name="description" content="Terminal-style token launchpad on gitlawb × Base. Push code. Forge tokens. Own the repo.">
+<meta property="og:title" content="IGNIS — Forge tokens from code.">
+<meta property="og:description" content="Terminal-style token launchpad on gitlawb × Base. No hype. Just commits.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --g0:#00ff41;--g1:#00cc34;--g2:#008f24;--g3:#004d14;--g4:#001a07;
+  --amber:#e8a030;--blue:#4fc3f7;--red:#e84545;
+  --bg:#060b06;--surface:#090e09;
+  --dim:#2a4a2a;--dim2:#1a301a;
+  --white:#eef4ee;
+  --font:'IBM Plex Mono',monospace;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--g0);font-family:var(--font);
+  font-size:13px;line-height:1.6;overflow-x:hidden;
+  cursor:crosshair;
+}
+
+/* scanlines */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px);
+}
+
+/* noise grain */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:0.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px;
+}
+
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:var(--font)}
+
+/* ── NAV ── */
+#nav{
+  position:fixed;top:32px;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;height:48px;
+  border-bottom:1px solid var(--dim2);background:rgba(6,11,6,0.92);
+  backdrop-filter:blur(8px);
+  font-size:11px;letter-spacing:0.08em;
+}
+.nav-logo{color:var(--g0);font-weight:700;font-size:14px;letter-spacing:0.06em}
+.nav-logo span{color:var(--amber)}
+.nav-links{display:flex;gap:28px;color:var(--dim)}
+.nav-links a{transition:color 0.15s}
+.nav-links a:hover{color:var(--g0)}
+.nav-cta{
+  background:none;border:1px solid var(--g2);color:var(--g0);
+  padding:6px 18px;font-size:11px;letter-spacing:0.08em;
+  transition:all 0.15s;
+}
+.nav-cta:hover{background:var(--g3);border-color:var(--g0)}
+
+/* ── SECTIONS ── */
+section{padding:100px 40px;max-width:1100px;margin:0 auto}
+section:first-of-type{padding-top:140px}
+
+.section-num{
+  color:var(--dim);font-size:11px;letter-spacing:0.12em;
+  margin-bottom:6px;display:block;
+}
+.section-sep{
+  border:none;border-top:1px solid var(--dim2);
+  margin:0 0 48px;
+}
+
+/* ── HERO ── */
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;padding-top:80px;padding-bottom:60px;
+  max-width:100%;position:relative;overflow:hidden;
+}
+
+.hero-inner{max-width:1100px;margin:0 auto;padding:0 40px;width:100%}
+
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid var(--dim2);padding:4px 14px;
+  font-size:10px;letter-spacing:0.12em;color:var(--dim);
+  margin-bottom:32px;
+}
+.hero-tag .dot{width:5px;height:5px;border-radius:50%;background:var(--g0);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+.hero-prompt{
+  color:var(--dim);font-size:13px;letter-spacing:0.04em;margin-bottom:4px;
+}
+
+.hero-h1{
+  font-size:clamp(42px,7vw,88px);font-weight:700;
+  color:var(--white);letter-spacing:-0.02em;line-height:1.0;
+  margin-bottom:8px;
+}
+.hero-h1 .accent{color:var(--g0)}
+.hero-h1 .amber{color:var(--amber)}
+
+.hero-sub{
+  font-size:clamp(14px,2vw,18px);color:var(--dim);
+  font-weight:400;letter-spacing:0.02em;margin-bottom:48px;
+  max-width:600px;
+}
+
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:64px}
+
+.btn-primary{
+  background:var(--g0);color:var(--bg);
+  border:none;padding:12px 32px;font-size:12px;
+  font-weight:700;letter-spacing:0.1em;
+  transition:all 0.15s;
+}
+.btn-primary:hover{background:var(--g1)}
+
+.btn-secondary{
+  background:none;border:1px solid var(--dim);color:var(--dim);
+  padding:12px 32px;font-size:12px;letter-spacing:0.1em;
+  transition:all 0.15s;
+}
+.btn-secondary:hover{border-color:var(--g0);color:var(--g0)}
+
+.hero-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  border:1px solid var(--dim2);max-width:700px;
+}
+.stat{
+  padding:16px 20px;border-right:1px solid var(--dim2);
+}
+.stat:last-child{border-right:none}
+.stat-val{font-size:22px;font-weight:700;color:var(--g0);display:block}
+.stat-lbl{font-size:10px;color:var(--dim);letter-spacing:0.1em;display:block;margin-top:2px}
+
+/* big green glow bg */
+.hero-glow{
+  position:absolute;right:-200px;top:50%;transform:translateY(-50%);
+  width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,255,65,0.04) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* ── THESIS ── */
+#thesis .big-text{
+  font-size:clamp(20px,3vw,32px);color:var(--white);
+  line-height:1.4;font-weight:400;margin-bottom:40px;
+  border-left:2px solid var(--g0);padding-left:24px;
+}
+#thesis .big-text em{color:var(--g0);font-style:normal;font-weight:700}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:48px}
+
+.col-text{color:var(--dim);line-height:1.8;font-size:13px}
+.col-text p{margin-bottom:16px}
+.col-text p:last-child{margin-bottom:0}
+
+.code-block{
+  background:var(--surface);border:1px solid var(--dim2);
+  padding:20px 24px;font-size:12px;color:var(--dim);
+  line-height:2;
+}
+.code-block .prompt{color:var(--g2)}
+.code-block .cmd{color:var(--white)}
+.code-block .out{color:var(--g0)}
+.code-block .cmt{color:var(--dim)}
+
+/* ── UTILITIES ── */
+#utilities h2{
+  font-size:clamp(22px,3vw,36px);color:var(--white);
+  font-weight:700;letter-spacing:-0.01em;margin-bottom:48px;
+}
+
+.util-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:2px}
+
+.util-card{
+  background:var(--surface);border:1px solid var(--dim2);
+  padding:32px;transition:border-color 0.2s;position:relative;
+  overflow:hidden;
+}
+.util-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--g0);transform:scaleX(0);transform-origin:left;
+  transition:transform 0.3s;
+}
+.util-card:hover{border-color:var(--dim)}
+.util-card:hover::before{transform:scaleX(1)}
+
+.util-num{
+  font-size:10px;color:var(--dim);letter-spacing:0.12em;
+  margin-bottom:12px;display:block;
+}
+.util-icon{font-size:20px;margin-bottom:12px;display:block}
+.util-title{
+  font-size:16px;font-weight:700;color:var(--white);
+  margin-bottom:8px;letter-spacing:0.02em;
+}
+.util-desc{font-size:12px;color:var(--dim);line-height:1.7}
+.util-tag{
+  display:inline-block;margin-top:16px;padding:3px 10px;
+  border:1px solid var(--dim2);font-size:10px;color:var(--dim);
+  letter-spacing:0.08em;
+}
+
+/* ── HOW IT WORKS ── */
+#how h2{
+  font-size:clamp(22px,3vw,36px);color:var(--white);
+  font-weight:700;margin-bottom:48px;
+}
+
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative}
+.steps::before{
+  content:'';position:absolute;top:20px;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--dim2) 20%,var(--dim2) 80%,transparent);
+}
+
+.step{padding:0 16px;text-align:center}
+.step-num{
+  width:40px;height:40px;border:1px solid var(--dim2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--g0);margin:0 auto 16px;
+  background:var(--bg);position:relative;z-index:1;
+}
+.step-title{font-size:12px;color:var(--white);font-weight:600;margin-bottom:6px;letter-spacing:0.04em}
+.step-desc{font-size:11px;color:var(--dim);line-height:1.6}
+.step-cmd{
+  display:inline-block;margin-top:10px;padding:3px 8px;
+  background:var(--g4);border:1px solid var(--g3);
+  font-size:10px;color:var(--g0);letter-spacing:0.04em;
+}
+
+/* ── LAUNCH ── */
+#launch{
+  background:var(--surface);border:1px solid var(--dim2);
+  padding:64px;text-align:center;max-width:700px;margin:0 auto 100px;
+}
+#launch .launch-tag{
+  font-size:10px;color:var(--dim);letter-spacing:0.12em;margin-bottom:16px;display:block
+}
+#launch h2{
+  font-size:clamp(24px,4vw,44px);color:var(--white);
+  font-weight:700;margin-bottom:12px;
+}
+#launch p{color:var(--dim);margin-bottom:32px;font-size:13px}
+#launch .launch-note{
+  font-size:11px;color:var(--dim2);margin-top:16px;letter-spacing:0.06em
+}
+
+/* ── BUILT ON ── */
+#builton{
+  display:flex;align-items:center;justify-content:center;gap:0;
+  border-top:1px solid var(--dim2);border-bottom:1px solid var(--dim2);
+  padding:20px 0;max-width:100%;margin:0;
+  overflow:hidden;background:var(--surface);
+}
+.built-item{
+  padding:0 40px;border-right:1px solid var(--dim2);
+  font-size:11px;color:var(--dim);letter-spacing:0.1em;
+  display:flex;align-items:center;gap:8px;
+}
+.built-item:last-child{border-right:none}
+.built-item .bi-dot{width:4px;height:4px;border-radius:50%;background:var(--g0)}
+
+/* ── FOOTER ── */
+footer{
+  max-width:1100px;margin:0 auto;padding:48px 40px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--dim2);font-size:11px;color:var(--dim);
+  flex-wrap:wrap;gap:16px;
+}
+.footer-links{display:flex;gap:24px}
+.footer-links a:hover{color:var(--g0)}
+.footer-ca{
+  display:flex;align-items:center;gap:8px;
+  border:1px solid var(--dim2);padding:6px 14px;
+}
+.footer-ca span{color:var(--g0)}
+
+/* ── TICKER ── */
+#ticker-wrap{
+  overflow:hidden;border-bottom:1px solid var(--dim2);
+  padding:8px 0;background:var(--surface);
+  font-size:11px;color:var(--dim);letter-spacing:0.06em;
+  white-space:nowrap;
+}
+#ticker-inner{
+  display:inline-block;
+  animation:ticker 40s linear infinite;
+}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.t-sep{color:var(--dim2);margin:0 20px}
+.t-g{color:var(--g0)}
+.t-a{color:var(--amber)}
+
+/* ── ANIMATIONS ── */
+.fade-in{opacity:0;transform:translateY(16px);transition:opacity 0.6s,transform 0.6s}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #nav{padding:0 20px}
+  .nav-links{display:none}
+  section{padding:60px 20px}
+  .hero-inner{padding:0 20px}
+  .two-col{grid-template-columns:1fr}
+  .util-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr;gap:24px}
+  .steps::before{display:none}
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .stat{border-bottom:1px solid var(--dim2)}
+  #launch{padding:40px 24px}
+  footer{flex-direction:column;align-items:flex-start}
+}
+
+/* ── FIRE ANIMATION ── */
+#fire-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.flame {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50% 50% 20% 20%;
+  transform-origin: bottom center;
+  animation: flicker var(--dur, 3s) ease-in-out infinite alternate;
+  opacity: var(--op, 0.7);
+}
+
+@keyframes flicker {
+  0%   { transform: scaleX(1)   scaleY(1)   rotate(var(--rot, -2deg)); opacity: var(--op, 0.7); }
+  25%  { transform: scaleX(0.95) scaleY(1.05) rotate(calc(var(--rot, -2deg) + 3deg)); }
+  50%  { transform: scaleX(1.05) scaleY(0.95) rotate(calc(var(--rot, -2deg) - 2deg)); opacity: calc(var(--op, 0.7) * 0.85); }
+  75%  { transform: scaleX(0.98) scaleY(1.08) rotate(calc(var(--rot, -2deg) + 1deg)); }
+  100% { transform: scaleX(1)   scaleY(1)   rotate(var(--rot, -2deg)); opacity: var(--op, 0.7); }
+}
+
+/* Ember particles */
+.ember {
+  position: absolute;
+  border-radius: 50%;
+  animation: rise var(--rdur, 4s) ease-out infinite;
+  opacity: 0;
+}
+@keyframes rise {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.8; }
+  100% { transform: translateY(-160px) translateX(var(--dx, 20px)) scale(0); opacity: 0; }
+}
+
+/* fade out fire on scroll — show only at top */
+#fire-container.hidden { opacity: 0; transition: opacity 0.6s; }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<!-- ALPHA BANNER -->
+<div style="background:#1a0d00;border-bottom:1px solid #e8a030;padding:8px 40px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#e8a030;letter-spacing:0.06em;text-align:center;position:fixed;top:0;left:0;right:0;z-index:9999">
+  ⚠ ALPHA — $IGNIS token not yet deployed. Token launching via bankr.bot is live. Utilities run in simulated mode until $IGNIS contract is set.
+</div>
+<nav id="nav">
+  <div class="nav-logo">IGNIS <span>△</span></div>
+  <div class="nav-links">
+    <a href="#thesis">▸THESIS</a>
+    <a href="#utilities">▸UTILITIES</a>
+    <a href="#how">▸HOW_IT_WORKS</a>
+    <a href="https://github.com/yourusername/ignis">▸GITHUB</a>
+  </div>
+  <button class="nav-cta" onclick="document.getElementById('launch').scrollIntoView({behavior:'smooth'})">▸ FORGE_NOW</button>
+</nav>
+
+<!-- TICKER -->
+<div id="ticker-wrap">
+  <div id="ticker-inner">
+    <span>△_IGNIS_V0.1</span><span class="t-sep">◆</span>
+    <span>BUILT_ON_GITLAWB</span><span class="t-sep">◆</span>
+    <span>BASE_MAINNET_8453</span><span class="t-sep">◆</span>
+    <span class="t-g">$IGNIS · LAUNCHED_VIA_BANKR</span><span class="t-sep">◆</span>
+    <span>FAIR_LAUNCH</span><span class="t-sep">◆</span>
+    <span class="t-a">CODE_IS_THE_NEW_CAPITAL</span><span class="t-sep">◆</span>
+    <span>FORGE_TOKENS_FROM_CODE</span><span class="t-sep">◆</span>
+    <span>IGNIS_·_LATIN_FOR_FIRE</span><span class="t-sep">◆</span>
+    <span>△_IGNIS_V0.1</span><span class="t-sep">◆</span>
+    <span>BUILT_ON_GITLAWB</span><span class="t-sep">◆</span>
+    <span>BASE_MAINNET_8453</span><span class="t-sep">◆</span>
+    <span class="t-g">$IGNIS · LAUNCHED_VIA_BANKR</span><span class="t-sep">◆</span>
+    <span>FAIR_LAUNCH</span><span class="t-sep">◆</span>
+    <span class="t-a">CODE_IS_THE_NEW_CAPITAL</span><span class="t-sep">◆</span>
+    <span>FORGE_TOKENS_FROM_CODE</span><span class="t-sep">◆</span>
+    <span>IGNIS_·_LATIN_FOR_FIRE</span><span class="t-sep">◆</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-tag">
+      <span class="dot"></span>
+      BASE_MAINNET · CHAIN_8453 · LIVE
+    </div>
+    <div class="hero-prompt">ignis@base:~$ </div>
+    <h1 class="hero-h1">
+      <span class="accent">FORGE</span> TOKENS<br>
+      FROM <span class="amber">CODE.</span>
+    </h1>
+    <p class="hero-sub">
+      The first token launchpad where your repo is your credibility.<br>
+      No hype. No forms. Push code. Forge tokens. Own the repo.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="window.location.href='terminal.html'">▸ OPEN_TERMINAL</button>
+      <button class="btn-secondary" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">▸ HOW_IT_WORKS</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-val" id="s-tokens">0</span>
+        <span class="stat-lbl">TOKENS_FORGED</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">3</span>
+        <span class="stat-lbl">NODES_ONLINE</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">8453</span>
+        <span class="stat-lbl">CHAIN_ID</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">0%</span>
+        <span class="stat-lbl">TEAM_ALLOC</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUILT ON -->
+<div id="builton">
+  <div class="built-item"><span class="bi-dot"></span>GITLAWB</div>
+  <div class="built-item"><span class="bi-dot"></span>BASE_MAINNET</div>
+  <div class="built-item"><span class="bi-dot"></span>BANKR.BOT</div>
+  <div class="built-item"><span class="bi-dot"></span>UNISWAP_V3</div>
+  <div class="built-item"><span class="bi-dot"></span>FAIR_LAUNCH</div>
+</div>
+
+<!-- THESIS -->
+<section id="thesis">
+  <span class="section-num">[ 01 ]</span>
+  <hr class="section-sep">
+
+  <div class="big-text fade-in">
+    Every other launchpad creates tokens from <em>hype.</em><br>
+    Ignis creates tokens from <em>code.</em>
+  </div>
+
+  <div class="two-col">
+    <div class="col-text fade-in">
+      <p>
+        Pump.fun, Moonshot, every launchpad you know —
+        tokens are born from one sentence, one image, one tweet.
+        Nobody can verify if there's anything real behind it.
+        Everyone knows this. Everyone buys anyway.
+        Because there's no alternative.
+      </p>
+      <p>
+        Ignis is the alternative.
+        Tokens launched here are attached to a real repo with
+        commit history, contributor DIDs, and activity that's
+        on-chain verifiable forever on gitlawb.
+      </p>
+      <p>
+        <strong style="color:var(--white)">Token as proof of work.</strong>
+        Not proof of narrative.
+      </p>
+    </div>
+    <div class="code-block fade-in">
+      <div><span class="prompt">$</span> <span class="cmd">git push gitlawb main</span></div>
+      <div class="cmt">// Enumerating objects: 12, done.</div>
+      <div class="cmt">// Pinning 6 objects to IPFS...</div>
+      <div class="out">// CID: bafkreihu5qziap...</div>
+      <br>
+      <div><span class="prompt">$</span> <span class="cmd">forge</span></div>
+      <div class="cmt">// submitting to bankr.bot...</div>
+      <div class="cmt">// job: job_abc123</div>
+      <div class="out">// ✓ TOKEN FORGED: MYTOKEN (MYT)</div>
+      <div class="out">// contract: 0x4f2a...b3c1</div>
+      <div class="out">// lp: auto-seeded by bankr.bot</div>
+      <div class="out">// fee: 57% swaps → your wallet</div>
+      <br>
+      <div><span class="prompt">$</span> <span class="cmd">bond owner/myrepo 100</span></div>
+      <div class="out">// ✓ 100 $IGNIS bonded to repo</div>
+      <div class="cmt">// slash timer: 90 days</div>
+    </div>
+  </div>
+</section>
+
+<!-- UTILITIES -->
+<section id="utilities">
+  <span class="section-num">[ 02 ]</span>
+  <hr class="section-sep">
+  <h2 class="fade-in">> $IGNIS_UTILITY</h2>
+
+  <div class="util-grid">
+    <div class="util-card fade-in">
+      <span class="util-num">UTILITY_01</span>
+      <span class="util-icon">🗝</span>
+      <div class="util-title">LAUNCH_KEY</div>
+      <div class="util-desc">
+        Hold $IGNIS to unlock token forging on Ignis.
+        Not a fee — a hold. Your stake in the ecosystem is
+        what gives you access. Sell below threshold, access goes dark.
+      </div>
+      <span class="util-tag">HOLD_TO_FORGE</span>
+    </div>
+
+    <div class="util-card fade-in">
+      <span class="util-num">UTILITY_02</span>
+      <span class="util-icon">⬡</span>
+      <div class="util-title">REPO_BOND</div>
+      <div class="util-desc">
+        Bond $IGNIS to your repo at launch. Repo goes 90 days
+        without a commit? Bond is slashed to treasury. Buyers
+        can filter "active repos only." This is skin in the game,
+        not a checkbox.
+      </div>
+      <span class="util-tag">SLASH_IF_INACTIVE</span>
+    </div>
+
+    <div class="util-card fade-in">
+      <span class="util-num">UTILITY_03</span>
+      <span class="util-icon">◎</span>
+      <div class="util-title">COMMIT_CURRENCY</div>
+      <div class="util-desc">
+        Tip merged PRs with $IGNIS. Every tip is an on-chain
+        record of value assigned to a specific commit. Contributors
+        build a portable reputation that follows their DID
+        everywhere in the gitlawb ecosystem.
+      </div>
+      <span class="util-tag">ON-CHAIN_PROOF_OF_VALUE</span>
+    </div>
+
+    <div class="util-card fade-in">
+      <span class="util-num">UTILITY_04</span>
+      <span class="util-icon">◈</span>
+      <div class="util-title">PROOF_OF_BUILDER</div>
+      <div class="util-desc">
+        $IGNIS balance boosts your gitlawb trust score.
+        Higher trust = access to larger bounties, higher-value
+        tasks, and more credibility when agents delegate work
+        to your DID. Capital as proof of commitment.
+      </div>
+      <span class="util-tag">TRUST_SCORE_BOOST</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <span class="section-num">[ 03 ]</span>
+  <hr class="section-sep">
+  <h2 class="fade-in">> HOW_IT_WORKS</h2>
+
+  <div class="steps fade-in">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">CONNECT</div>
+      <div class="step-desc">Connect wallet to Base Mainnet. Sign to authenticate.</div>
+      <span class="step-cmd">wallet connect</span>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">SETUP_FEE</div>
+      <div class="step-desc">Enter bankr.bot key. 57% of all swaps go to your wallet.</div>
+      <span class="step-cmd">bankr.bot/api</span>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">FORGE</div>
+      <div class="step-desc">Name, symbol, repo link, bond amount. 4 steps, no forms.</div>
+      <span class="step-cmd">forge</span>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-title">LAUNCH</div>
+      <div class="step-desc">bankr.bot deploys. Fair launch. Auto LP. Zero gas.</div>
+      <span class="step-cmd">Base Mainnet</span>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-title">EARN</div>
+      <div class="step-desc">Push commits. Contributors get tipped. Bond stays alive.</div>
+      <span class="step-cmd">tip + bond</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA LAUNCH -->
+<div style="max-width:1100px;margin:0 auto;padding:0 40px">
+  <div id="launch" class="fade-in">
+    <span class="launch-tag">[ LAUNCH_YOUR_TOKEN ]</span>
+    <h2>> FORGE_NOW.</h2>
+    <p>No gas. No forms. No hype required.<br>Just a repo and something worth building.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="window.location.href='terminal.html'">▸ OPEN_TERMINAL</button>
+      <button class="btn-secondary" onclick="window.open('https://bankr.bot/api','_blank')">▸ GET_BANKR_KEY</button>
+    </div>
+    <div class="launch-note">
+      LAUNCHED_VIA_BANKR · FAIR_LAUNCH · 0%_TEAM_ALLOCATION · BASE_MAINNET
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-weight:700;color:var(--g0);font-size:14px;letter-spacing:0.06em">GIT<span style="color:var(--amber)">FORGE</span>//2025</div>
+    <div style="color:var(--dim2);font-size:10px">forge tokens from code.</div>
+  </div>
+  <div class="footer-links">
+    <a href="https://x.com/ignis">@ignis</a>
+    <a href="https://github.com/yourusername/ignis">GITHUB</a>
+    <a href="https://gitlawb.com">GITLAWB</a>
+    <a href="terminal.html">TERMINAL</a>
+  </div>
+  <div class="footer-ca">
+    CA: <span>TBA</span>
+  </div>
+</footer>
+
+<script>
+// Animate counter
+function animateCounter(el, target, duration=1500){
+  let start = 0;
+  const step = timestamp => {
+    if(!start) start = timestamp;
+    const progress = Math.min((timestamp-start)/duration, 1);
+    el.textContent = Math.floor(progress * target);
+    if(progress < 1) requestAnimationFrame(step);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(step);
+}
+
+// Fetch real token count from backend
+async function loadStats(){
+  try {
+    const resp = await fetch('https://ignis-production-1c71.up.railway.app/api/stats');
+    const json = await resp.json();
+    if(json.stats?.tokens_total !== undefined){
+      animateCounter(document.getElementById('s-tokens'), json.stats.tokens_total);
+    }
+  } catch(_){
+    animateCounter(document.getElementById('s-tokens'), 0);
+  }
+}
+
+// Fade in on scroll
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+},{threshold:0.1});
+
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+
+// Load on boot
+loadStats();
+</script>
+
+<!-- FIRE ANIMATION -->
+<div id="fire-container" aria-hidden="true">
+  <!-- Main flames - left cluster -->
+  <div class="flame" style="left:2%;width:90px;height:130px;background:linear-gradient(to top,#cc3300,#ff6600,#ffaa00,transparent);--dur:2.8s;--rot:-3deg;--op:0.55"></div>
+  <div class="flame" style="left:5%;width:60px;height:100px;background:linear-gradient(to top,#ee4400,#ff7700,#ffcc00,transparent);--dur:2.2s;--rot:2deg;--op:0.45"></div>
+  <div class="flame" style="left:9%;width:40px;height:70px;background:linear-gradient(to top,#ff5500,#ffaa00,transparent);--dur:3.1s;--rot:-1deg;--op:0.35"></div>
+  <!-- left glow -->
+  <div class="flame" style="left:0%;width:200px;height:80px;background:radial-gradient(ellipse at bottom,rgba(255,80,0,0.18),transparent);border-radius:0;--dur:4s;--op:1"></div>
+
+  <!-- Main flames - right cluster -->
+  <div class="flame" style="right:2%;width:90px;height:130px;background:linear-gradient(to top,#cc3300,#ff6600,#ffaa00,transparent);--dur:3.1s;--rot:3deg;--op:0.55"></div>
+  <div class="flame" style="right:5%;width:60px;height:100px;background:linear-gradient(to top,#ee4400,#ff7700,#ffcc00,transparent);--dur:2.5s;--rot:-2deg;--op:0.45"></div>
+  <div class="flame" style="right:9%;width:40px;height:70px;background:linear-gradient(to top,#ff5500,#ffaa00,transparent);--dur:2.9s;--rot:1deg;--op:0.35"></div>
+  <!-- right glow -->
+  <div class="flame" style="right:0%;width:200px;height:80px;background:radial-gradient(ellipse at bottom,rgba(255,80,0,0.18),transparent);border-radius:0;--dur:4.2s;--op:1"></div>
+
+  <!-- Center subtle flames -->
+  <div class="flame" style="left:50%;transform:translateX(-50%);width:50px;height:60px;background:linear-gradient(to top,#ff4400,#ffaa00,transparent);--dur:3.5s;--rot:0deg;--op:0.12"></div>
+
+  <!-- Ember particles - left -->
+  <div class="ember" style="left:6%;width:3px;height:3px;background:#ffcc00;--rdur:3.2s;--dx:-15px;animation-delay:0.2s"></div>
+  <div class="ember" style="left:4%;width:2px;height:2px;background:#ff8800;--rdur:2.8s;--dx:10px;animation-delay:0.8s"></div>
+  <div class="ember" style="left:8%;width:2px;height:2px;background:#ffdd00;--rdur:3.6s;--dx:-8px;animation-delay:1.4s"></div>
+  <div class="ember" style="left:3%;width:3px;height:3px;background:#ffaa00;--rdur:4.1s;--dx:20px;animation-delay:2.1s"></div>
+  <div class="ember" style="left:7%;width:2px;height:2px;background:#ff6600;--rdur:2.6s;--dx:-12px;animation-delay:0.5s"></div>
+
+  <!-- Ember particles - right -->
+  <div class="ember" style="right:6%;width:3px;height:3px;background:#ffcc00;--rdur:3.4s;--dx:15px;animation-delay:0.4s"></div>
+  <div class="ember" style="right:4%;width:2px;height:2px;background:#ff8800;--rdur:2.9s;--dx:-10px;animation-delay:1.1s"></div>
+  <div class="ember" style="right:8%;width:2px;height:2px;background:#ffdd00;--rdur:3.8s;--dx:8px;animation-delay:1.7s"></div>
+  <div class="ember" style="right:3%;width:3px;height:3px;background:#ffaa00;--rdur:4.3s;--dx:-20px;animation-delay:2.4s"></div>
+  <div class="ember" style="right:7%;width:2px;height:2px;background:#ff6600;--rdur:2.7s;--dx:12px;animation-delay:0.7s"></div>
+</div>
+
+<script>
+// Hide fire on scroll (show only near top)
+window.addEventListener('scroll', () => {
+  const fire = document.getElementById('fire-container');
+  if (fire) {
+    if (window.scrollY > 300) fire.classList.add('hidden');
+    else fire.classList.remove('hidden');
+  }
+}, { passive: true });
+</script>
+
+</body>
+</html>

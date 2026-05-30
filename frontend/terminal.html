@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ignis △ — Forge tokens from code.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="application/javascript"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #080c08;
+  --surface:  #0c120c;
+  --border:   #1a2e1a;
+  --border2:  #0f1f0f;
+  --g0: #00ff41;
+  --g1: #00cc34;
+  --g2: #008f24;
+  --g3: #004d14;
+  --g4: #002a0a;
+  --amber: #e8a030;
+  --amber2: #c07818;
+  --blue: #5ab8e8;
+  --red: #e84545;
+  --dim: #2a4a2a;
+  --dim2: #1a301a;
+  --white: #e8f0e8;
+  --font: 'Geist Mono', monospace;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--g0); font-family: var(--font); font-size: 13px; line-height: 1.5; overflow: hidden; }
+
+/* scanline overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
+}
+
+/* vignette */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 9998;
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 50%, rgba(0,0,0,0.65) 100%);
+}
+
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+/* ── TOPBAR ── */
+#topbar {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  height: 36px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 11px;
+}
+
+.tb-left { display: flex; align-items: center; gap: 16px; color: var(--dim); }
+.tb-left .logo { color: var(--g0); font-weight: 600; letter-spacing: 0.04em; font-size: 12px; }
+.tb-left .logo em { color: var(--amber); font-style: normal; }
+.tb-center { text-align: center; color: var(--dim); font-size: 10px; letter-spacing: 0.08em; }
+.tb-right { display: flex; align-items: center; gap: 16px; justify-content: flex-end; color: var(--dim); }
+
+.live-dot {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--g0); margin-right: 5px;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 4px var(--g0)} 50%{opacity:0.3;box-shadow:none} }
+
+/* ── TICKER ── */
+#ticker {
+  flex-shrink: 0; height: 22px; overflow: hidden;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg);
+  display: flex; align-items: center;
+}
+#ticker-track {
+  display: flex; gap: 0; white-space: nowrap;
+  animation: scroll-left 45s linear infinite;
+  font-size: 10px; color: var(--dim); letter-spacing: 0.06em;
+}
+@keyframes scroll-left { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+#ticker-track .sep { color: var(--border); margin: 0 12px; }
+#ticker-track .up { color: var(--g1); }
+#ticker-track .dn { color: var(--red); }
+#ticker-track .hl { color: var(--amber); }
+
+/* ── MAIN AREA ── */
+#main { flex: 1; display: flex; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  flex-shrink: 0; width: 200px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; flex-direction: column;
+  font-size: 11px; overflow-y: auto;
+}
+
+.sb-section { padding: 12px 14px 6px; }
+.sb-label { color: var(--dim); font-size: 10px; letter-spacing: 0.1em; margin-bottom: 6px; text-transform: uppercase; }
+
+.sb-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 6px; border-radius: 2px;
+  color: var(--dim); cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+  margin-bottom: 1px;
+}
+.sb-item:hover, .sb-item.active { color: var(--g0); background: var(--g4); }
+.sb-item .ic { font-size: 11px; width: 14px; text-align: center; flex-shrink: 0; }
+
+.sb-divider { border: none; border-top: 1px solid var(--border2); margin: 6px 14px; }
+
+.sb-node { padding: 8px 14px; }
+.sb-node-title { color: var(--dim); font-size: 10px; letter-spacing: 0.06em; margin-bottom: 6px; }
+.node-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: var(--dim2); font-size: 10px; }
+.node-row .nd { width: 6px; height: 6px; border-radius: 50%; background: var(--g2); flex-shrink: 0; }
+.node-row .nd.warn { background: var(--amber2); }
+
+/* ── TERMINAL ── */
+#term-wrap { flex: 1; overflow-y: auto; padding: 16px 20px; scroll-behavior: smooth; }
+#term-wrap::-webkit-scrollbar { width: 3px; }
+#term-wrap::-webkit-scrollbar-thumb { background: var(--g3); border-radius: 2px; }
+
+#output { min-height: 100%; }
+
+.ln { margin: 1px 0; white-space: pre-wrap; word-break: break-all; }
+.ln.g0 { color: var(--g0); }
+.ln.g1 { color: var(--g1); }
+.ln.g2 { color: var(--g2); }
+.ln.dim { color: var(--dim); }
+.ln.dim2 { color: var(--dim2); }
+.ln.amber { color: var(--amber); }
+.ln.amber2 { color: var(--amber2); }
+.ln.blue { color: var(--blue); }
+.ln.red { color: var(--red); }
+.ln.white { color: var(--white); }
+.ln.blank { height: 6px; }
+.ln.hdr { color: var(--amber); font-weight: 600; letter-spacing: 0.06em; }
+.ln.sep { color: var(--dim2); }
+.ln.prompt { color: var(--g0); }
+.ln.cmd-echo { color: var(--white); }
+
+/* inline colors */
+.c-g { color: var(--g0); }
+.c-a { color: var(--amber); }
+.c-b { color: var(--blue); }
+.c-r { color: var(--red); }
+.c-w { color: var(--white); }
+.c-d { color: var(--dim); }
+
+/* ── INPUT ── */
+#input-bar {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0;
+  padding: 8px 20px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+#prompt-path { color: var(--blue); font-size: 12px; white-space: nowrap; }
+#prompt-branch { color: var(--amber); font-size: 12px; white-space: nowrap; }
+#prompt-sym { color: var(--g2); font-size: 12px; margin: 0 6px 0 2px; white-space: nowrap; }
+#cmd-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--white); font-family: var(--font); font-size: 13px;
+  caret-color: var(--g0);
+}
+
+/* ── WIZARD OVERLAY ── */
+#wiz-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(8,12,8,0.92); z-index: 200;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+#wiz-overlay.open { display: flex; }
+
+#wiz-box {
+  width: min(640px, 95vw);
+  border: 1px solid var(--g2);
+  background: var(--surface);
+  box-shadow: 0 0 40px rgba(0,255,65,0.08);
+}
+
+.wiz-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--g4);
+}
+.wiz-hdr-left { display: flex; align-items: center; gap: 10px; }
+.wiz-hdr-title { color: var(--g0); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; }
+.wiz-hdr-sub { color: var(--dim); font-size: 10px; }
+.wiz-close { background: none; border: none; color: var(--dim); font-family: var(--font); font-size: 14px; cursor: pointer; padding: 0; line-height: 1; transition: color 0.1s; }
+.wiz-close:hover { color: var(--g0); }
+
+.wiz-progress { display: flex; gap: 4px; padding: 12px 16px 0; }
+.wiz-pd { height: 2px; flex: 1; background: var(--border); transition: background 0.3s; }
+.wiz-pd.done { background: var(--g2); }
+.wiz-pd.active { background: var(--amber); }
+
+.wiz-body { padding: 16px; }
+
+.wiz-step-lbl { color: var(--dim); font-size: 10px; letter-spacing: 0.08em; margin-bottom: 3px; }
+.wiz-q { color: var(--amber); font-size: 13px; margin-bottom: 12px; }
+.wiz-hint { color: var(--dim); font-size: 10px; margin-top: -8px; margin-bottom: 12px; }
+
+.wiz-input {
+  width: 100%; background: var(--bg); border: none;
+  border-bottom: 1px solid var(--g3);
+  color: var(--white); font-family: var(--font); font-size: 13px;
+  padding: 7px 10px; outline: none; margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.wiz-input:focus { border-bottom-color: var(--g0); }
+.wiz-input.err { border-bottom-color: var(--red); }
+
+.wiz-select {
+  width: 100%; background: var(--bg); border: none;
+  border-bottom: 1px solid var(--g3);
+  color: var(--g0); font-family: var(--font); font-size: 12px;
+  padding: 7px 10px; outline: none; margin-bottom: 10px;
+  cursor: pointer; appearance: none;
+}
+.wiz-select option { background: var(--bg); }
+
+.wiz-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.wiz-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.wiz-btn {
+  background: none; border: 1px solid var(--border);
+  color: var(--dim); font-family: var(--font); font-size: 11px;
+  padding: 6px 16px; cursor: pointer; letter-spacing: 0.04em;
+  transition: all 0.15s;
+}
+.wiz-btn:hover { border-color: var(--g2); color: var(--g0); }
+.wiz-btn.primary { border-color: var(--g2); color: var(--g0); background: var(--g4); font-weight: 600; }
+.wiz-btn.primary:hover { background: var(--g3); border-color: var(--g0); }
+.wiz-btn.launch { border-color: var(--amber2); color: var(--amber); background: rgba(232,160,48,0.06); }
+.wiz-btn.launch:hover { background: rgba(232,160,48,0.14); border-color: var(--amber); }
+
+/* summary */
+.wiz-summary { border: 1px solid var(--border); margin: 8px 0; }
+.sum-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 12px; border-bottom: 1px solid var(--border2); font-size: 12px; }
+.sum-row:last-child { border-bottom: none; }
+.sum-k { color: var(--dim); }
+.sum-v { color: var(--white); text-align: right; max-width: 60%; word-break: break-all; }
+.sum-v.accent { color: var(--g0); }
+.sum-v.amber { color: var(--amber); }
+.sum-v.blue { color: var(--blue); }
+
+/* deploy log */
+#deploy-log { max-height: 130px; overflow-y: auto; margin-top: 10px; font-size: 11px; }
+#deploy-log::-webkit-scrollbar { width: 2px; }
+#deploy-log::-webkit-scrollbar-thumb { background: var(--g3); }
+.dl-line { padding: 2px 0; color: var(--dim); }
+.dl-line.ok { color: var(--g1); }
+.dl-line.warn { color: var(--amber2); }
+.dl-line.err { color: var(--red); }
+
+/* token card post-launch */
+.token-card {
+  border: 1px solid var(--g2);
+  background: var(--g4);
+  padding: 10px 14px;
+  margin: 4px 0;
+  font-size: 11px;
+}
+.token-card .tc-name { color: var(--g0); font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.token-card .tc-row { display: flex; justify-content: space-between; color: var(--dim); margin: 2px 0; }
+.token-card .tc-row span { color: var(--white); }
+
+/* ── LOOKUP PANEL ── */
+#lookup-panel {
+  display: none; position: fixed; right: 16px; top: 50px;
+  width: 280px; border: 1px solid var(--g2);
+  background: var(--surface); z-index: 100;
+  box-shadow: 0 0 24px rgba(0,255,65,0.06);
+}
+#lookup-panel.open { display: block; }
+.lp-hdr { padding: 8px 12px; background: var(--g4); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.lp-title { color: var(--g0); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; }
+.lp-close { background: none; border: none; color: var(--dim); font-family: var(--font); font-size: 14px; cursor: pointer; padding: 0; }
+.lp-close:hover { color: var(--g0); }
+.lp-body { padding: 10px 12px; font-size: 11px; }
+.lp-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border2); }
+.lp-row:last-of-type { border-bottom: none; }
+.lp-k { color: var(--dim); }
+.lp-v { color: var(--g0); }
+.lp-v.amber { color: var(--amber); }
+.lp-v.blue { color: var(--blue); }
+.lp-v.red { color: var(--red); }
+.lp-note { color: var(--dim2); font-size: 10px; margin-top: 8px; }
+
+/* cursor blink */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.blink { animation: blink 1s step-end infinite; }
+
+@media(max-width:640px) {
+  #sidebar { display: none; }
+  .tb-right { display: none; }
+}
+
+/* ── IGNIS fire glow ── */
+#app::after {
+  content: '';
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #cc3300 20%, #ff6600 40%, #ffaa00 50%, #ff6600 60%, #cc3300 80%, transparent 100%);
+  animation: fire-line 3s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 9997;
+}
+@keyframes fire-line {
+  0%   { opacity: 0.4; transform: scaleX(0.95); }
+  50%  { opacity: 0.8; transform: scaleX(1.02); }
+  100% { opacity: 0.5; transform: scaleX(0.98); }
+}
+
+/* ember particles in terminal */
+.ignis-ember {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9996;
+  animation: ember-rise var(--dur, 4s) ease-out infinite;
+  opacity: 0;
+}
+@keyframes ember-rise {
+  0%   { transform: translateY(0) translateX(0); opacity: 0.7; }
+  100% { transform: translateY(-80px) translateX(var(--dx, 10px)); opacity: 0; }
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="tb-left">
+      <a href="index.html" style="color:var(--dim);text-decoration:none;font-size:10px;letter-spacing:0.06em">← home</a>
+      <span class="logo">IGNIS <em>△</em></span>
+      <span><span class="live-dot"></span>base mainnet · 8453</span>
+    </div>
+    <div class="tb-center" id="block-display">BLOCK #22,847,193</div>
+    <div class="tb-right">
+      <span id="node-count">3/3 nodes online</span>
+      <span id="clock-el"></span>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div id="ticker">
+    <div id="ticker-track"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sb-section">
+        <div class="sb-label">commands</div>
+        <div class="sb-item active" onclick="runCmd('help')"><span class="ic">?</span>help</div>
+        <div class="sb-item" onclick="runCmd('forge')"><span class="ic">🔥</span>forge</div>
+        <div class="sb-item" onclick="runCmd('tokens')"><span class="ic">◈</span>tokens</div>
+        <div class="sb-item" onclick="runCmd('bankr status')"><span class="ic">◉</span>bankr</div>
+        <div class="sb-item" onclick="runCmd('key')"><span class="ic">🗝</span>key</div>
+        <div class="sb-item" onclick="runCmd('bond list')"><span class="ic">⬡</span>bond</div>
+        <div class="sb-item" onclick="runCmd('leaderboard')"><span class="ic">◎</span>leaders</div>
+        <div class="sb-item" onclick="runCmd('network')"><span class="ic">◈</span>network</div>
+        <div class="sb-item" onclick="runCmd('gas')"><span class="ic">⛽</span>gas</div>
+        <div class="sb-item" onclick="runCmd('agents')"><span class="ic">◉</span>agents</div>
+        <div class="sb-item" onclick="runCmd('repos')"><span class="ic">⊟</span>repos</div>
+        <div class="sb-item" onclick="runCmd('bounties')"><span class="ic">◎</span>bounties</div>
+      </div>
+      <hr class="sb-divider">
+      <div class="sb-section">
+        <div class="sb-label">utils</div>
+        <div class="sb-item" onclick="runCmd('wallet connect')"><span class="ic">◇</span>wallet</div>
+        <div class="sb-item" onclick="runCmd('wallet auth')"><span class="ic">✓</span>auth</div>
+        <div class="sb-item" onclick="runCmd('did')"><span class="ic">◈</span>did</div>
+        <div class="sb-item" onclick="runCmd('lookup')"><span class="ic">⊕</span>lookup</div>
+        <div class="sb-item" onclick="runCmd('clear')"><span class="ic">✕</span>clear</div>
+      </div>
+      <hr class="sb-divider">
+      <div class="sb-node">
+        <div class="sb-node-title">LIVE NODES</div>
+        <div class="node-row"><span class="nd"></span>node.gitlawb.com 🇺🇸</div>
+        <div class="node-row"><span class="nd warn"></span>node2.gitlawb.com 🇺🇸</div>
+        <div class="node-row"><span class="nd"></span>node3.gitlawb.com 🇯🇵</div>
+      </div>
+    </div>
+
+    <!-- TERMINAL -->
+    <div id="term-wrap" onclick="focusInput()">
+      <div id="output"></div>
+    </div>
+
+  </div>
+
+  <!-- INPUT -->
+  <div id="input-bar">
+    <span id="prompt-path">anon@ignis</span><span id="prompt-branch">(main)</span><span id="prompt-sym">$ </span>
+    <input type="text" id="cmd-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+  </div>
+
+</div>
+
+<!-- LOOKUP PANEL -->
+<div id="lookup-panel">
+  <div class="lp-hdr"><span class="lp-title">TOKEN / REPO LOOKUP</span><button class="lp-close" onclick="closeLookup()">✕</button></div>
+  <div class="lp-body" id="lookup-body"></div>
+</div>
+
+<!-- LAUNCH WIZARD -->
+<div id="wiz-overlay">
+  <div id="wiz-box">
+    <div class="wiz-hdr">
+      <div class="wiz-hdr-left">
+        <span class="wiz-hdr-title">IGNIS △ // TOKEN FORGE</span>
+        <span class="wiz-hdr-sub">gitlawb × bankr.bot × $GITLAWB</span>
+      </div>
+      <button class="wiz-close" onclick="closeWizard()">✕</button>
+    </div>
+    <div id="wiz-inner"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const API_BASE = 'https://ignis-production-1c71.up.railway.app';
+
+// ── AUTH HELPER ──
+function getAuthHeaders() {
+  const token = sessionStorage.getItem('auth_token');
+  return token ? { 'x-auth-token': token } : {};
+}
+
+function requiresAuth(action) {
+  const token = sessionStorage.getItem('auth_token');
+  if (!token) {
+    blank();
+    ln(`  ✗ authentication required to ${action}`, 'red');
+    ln('  run: wallet connect  then  wallet auth', 'amber');
+    blank();
+    return false;
+  }
+  return true;
+}
+
+// ── STATE ──
+const out = document.getElementById('output');
+const input = document.getElementById('cmd-input');
+let cmdHistory = [], histIdx = -1;
+let wizStep = 0, wizData = {};
+const WIZ_TOTAL = 5;
+
+// ── TICKER ──
+const tickerData = [
+  ['$GITLAWB','0.00032','▲4.2%','up'],['ETH','$3,421','▲1.8%','up'],
+  ['BASE TVL','$5.57B','▲0.6%','up'],['GAS','0.003 gwei','',''],
+  ['IGNIS','forge tokens from code','🔥',''],
+  ['AGENTS','31,851','active',''],['REPOS','3,922','on-chain',''],
+  ['DAILY TXS','4.2M','',''],['NODE1','10,897 writes','🇺🇸',''],
+  ['NODE3','32 writes','🇯🇵',''],['DEGEN','$0.0041','▲3.1%','up'],
+  ['AERO','$1.83','▼0.4%','dn'],
+];
+const track = document.getElementById('ticker-track');
+const buildTicker = () => {
+  let html = '';
+  for(let rep=0;rep<2;rep++){
+    tickerData.forEach(([k,v,c,dir])=>{
+      const cls = dir==='up'?'up':dir==='dn'?'dn':'';
+      html += `<span>${k} <span class="${cls}">${v}</span>${c?` <span class="hl">${c}</span>`:''}</span><span class="sep">◆</span>`;
+    });
+  }
+  track.innerHTML = html;
+};
+buildTicker();
+
+// ── CLOCK & BLOCK ──
+let blockNum = 22847193;
+setInterval(()=>{
+  blockNum++;
+  document.getElementById('block-display').textContent = 'BLOCK #' + blockNum.toLocaleString();
+},2000);
+const clockEl = document.getElementById('clock-el');
+const tick = ()=>{ clockEl.textContent = new Date().toLocaleTimeString('en-GB'); };
+tick(); setInterval(tick,1000);
+
+// ── OUTPUT HELPERS ──
+function ln(text='', cls='dim', raw=false){
+  const d = document.createElement('div');
+  d.className = 'ln ' + cls;
+  if(raw) d.innerHTML = text; else d.textContent = text;
+  out.appendChild(d); scrollDn(); return d;
+}
+function blank(){ ln('','blank'); }
+function sep(char='─',len=64){ ln(char.repeat(len),'sep'); }
+function scrollDn(){ document.getElementById('term-wrap').scrollTop = 9e9; }
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+async function typeLines(lines, delay=28){
+  for(const l of lines){ ln(...l); await sleep(delay); }
+}
+
+// ── BOOT ──
+async function boot(){
+  await sleep(80);
+  ln('','blank');
+  ln('  Ignis  ·  forge tokens from code.  ·  built on gitlawb × Base','dim');
+  ln('  ─────────────────────────────────────────────────────────────────────','sep');
+  await sleep(150);
+  ln('  >> connecting to Base mainnet (chain 8453)...','dim');
+  await sleep(350);
+  ln('  >> node.gitlawb.com  ·  online  ·  10,897 writes accepted','g1');
+  await sleep(200);
+  ln('  >> node3.gitlawb.com ·  online  ·  32 writes (JP)','g1');
+  await sleep(200);
+  ln('  >> node2.gitlawb.com ·  syncing...','amber2');
+  await sleep(300);
+  ln('  >> gitlawb MCP server  ·  25 tools available','g1');
+  await sleep(200);
+  ln('  >> DID identity module  ·  ready  ·  no signup required','g1');
+  await sleep(200);
+  ln('  >> bankr.bot forge module  ·  ready  ·  $GITLAWB LP pairing active','g1');
+  blank();
+  ln('  type <span class="c-g">help</span> to see commands  ·  type <span class="c-a">forge</span> to launch a token on Base','dim',true);
+  ln('','blank');
+  ln('  ⚠ ALPHA  ·  $IGNIS not yet deployed  ·  utilities run in simulated mode','amber');
+  blank();
+  input.focus();
+}
+
+// ── COMMANDS ──
+const cmds = {
+  help:        cmdHelp,
+  forge:       cmdLaunch,
+  tokens:      cmdTokens,
+  launch:      cmdLaunch,
+  bankr:       cmdBankr,
+  bond:        cmdBond,
+  tip:         cmdTip,
+  key:         cmdLaunchKey,
+  leaderboard: cmdLeaderboard,
+  lookup:      cmdLookup,
+  wallet:      cmdWallet,
+  network:     cmdNetwork,
+  gas:         cmdGas,
+  agents:      cmdAgents,
+  repos:       cmdRepos,
+  bounties:    cmdBounties,
+  did:         cmdDID,
+  whoami:      cmdWhoami,
+  clear:       ()=>{ out.innerHTML=''; },
+  exit:        ()=>{ blank(); ln('  there is no exit. only the forge.','amber'); blank(); },
+  ignis:    cmdAbout,
+  gitlawb:     cmdAbout,
+  about:       cmdAbout,
+  ls:          cmdLs,
+  push:        cmdPush,
+  commit:      cmdCommit,
+};
+
+async function cmdHelp(){
+  blank();
+  ln('  COMMANDS','hdr');
+  sep('─',56);
+  const items = [
+    ['forge','launch a token — no gas, auto LP, earn fees'],
+    ['key [address]','check $IGNIS balance for Launch Key'],
+    ['bond [repo]','view / manage repo bonds'],
+    ['tip [repo] [commit] [amt]','tip a commit with $IGNIS'],
+    ['leaderboard','top contributors by $IGNIS earned'],
+    ['tokens [symbol]','browse token registry'],
+    ['bankr status','check bankr.bot connection'],
+    ['wallet connect','connect your wallet'],
+    ['network','live Base network stats'],
+    ['gas','live gas oracle'],
+    ['agents','browse gitlawb agent DIDs & trust'],
+    ['repos','list gitlawb repos + bond status'],
+    ['bounties','open $GITLAWB bounties'],
+    ['about','what is Ignis'],
+    ['clear','clear terminal'],
+  ];
+  for(const [cmd,desc] of items){
+    ln(`  <span class="c-g">${cmd.padEnd(22)}</span><span class="c-d">${desc}</span>`,'g0',true);
+    await sleep(16);
+  }
+  sep('─',56);
+  blank();
+}
+
+async function cmdNetwork(){
+  blank();
+  ln('  BASE NETWORK  ·  live via RPC','hdr');
+  sep('─',52);
+  ln('  >> fetching live data...','dim');
+  try {
+    const resp = await fetch(`${API_BASE}/api/network`);
+    const json = await resp.json();
+    const n = json.network;
+    await typeLines([
+      [`  chain id          ${n.chain_id}  (${n.chain_name})`,'g0'],
+      [`  latest block      #${n.block_number.toLocaleString()}`,'g0'],
+      [`  gas price         ${n.gas_price_gwei} gwei`,'g0'],
+      [`  explorer          ${n.explorer}`,'blue'],
+      [`  rpc               ${n.rpc}`,'dim'],
+    ],22);
+  } catch(e) {
+    await typeLines([
+      ['  chain id          8453  (Base Mainnet)','g0'],
+      ['  latest block      #' + blockNum.toLocaleString(),'g0'],
+      ['  ⚠ backend offline — run: cd backend && npm start','amber'],
+    ],22);
+  }
+  blank();
+  ln('  ignis stats','hdr');
+  try {
+    const resp2 = await fetch(`${API_BASE}/api/stats`);
+    const json2 = await resp2.json();
+    const s = json2.stats;
+    await typeLines([
+      [`  tokens forged     ${s.tokens_total}`,'g1'],
+      [`  forged today      ${s.tokens_today}`,'g1'],
+      [`  unique builders   ${s.unique_deployers}`,'g1'],
+    ],22);
+  } catch(e) {
+    ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+  }
+  sep('─',52);
+  blank();
+}
+
+async function cmdGas(){
+  blank();
+  ln('  GAS ORACLE  ·  BASE MAINNET  ·  live','hdr');
+  sep('─',44);
+  ln('  >> querying Base RPC...','dim');
+  try {
+    const resp = await fetch(`${API_BASE}/api/network/gas`);
+    const json = await resp.json();
+    const g = json.gas;
+    await typeLines([
+      [`  slow             ${g.slow} gwei`,'dim'],
+      [`  normal           ${g.normal} gwei`,'g0'],
+      [`  fast             ${g.fast} gwei`,'amber'],
+      ['','blank'],
+      [`  est deploy cost  ${g.deploy_cost_eth} ETH  (~$${g.deploy_cost_usd})`,'g1'],
+      [`  updated          ${new Date(g.updated_at).toLocaleTimeString()}`,'dim'],
+    ],24);
+  } catch(e) {
+    await typeLines([
+      ['  slow   (~30s)    0.001 gwei','dim'],
+      ['  normal (~10s)    0.003 gwei','g0'],
+      ['  fast   (<5s)     0.008 gwei','amber'],
+      ['  ⚠ backend offline — showing defaults','amber'],
+    ],24);
+  }
+  sep('─',44);
+  blank();
+}
+
+async function cmdAgents(){
+  blank();
+  ln('  ACTIVE AGENTS  ·  gitlawb cluster  ·  live','hdr');
+  sep('─',68);
+  ln('  >> fetching from node.gitlawb.com...','dim');
+  try {
+    const resp = await fetch(`${API_BASE}/api/gitlawb/agents`);
+    const json = await resp.json();
+    const agents = json.agents || [];
+    if(json.source === 'fallback') ln('  ⚠ node unreachable — showing last known data','amber');
+    ln(`  ${'DID'.padEnd(36)} ${'CAPABILITIES'.padEnd(18)} ${'TRUST'.padEnd(8)} PUSHES`,'dim');
+    blank();
+    for(const a of agents){
+      const did  = (a.did||'unknown').padEnd(36);
+      const caps = ((a.capabilities||[]).join(',') || a.role || '—').slice(0,16).padEnd(18);
+      const ts   = String(a.trustScore ?? '—').padEnd(8);
+      const push = String(a.pushes ?? '—');
+      ln(`  <span class="c-b">${did}</span><span class="c-g">${caps}</span><span class="c-a">${ts}</span><span class="c-d">${push}</span>`,'g0',true);
+      await sleep(20);
+    }
+    if(!agents.length) ln('  no agents found on node','dim');
+  } catch(e){
+    ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+  }
+  sep('─',68);
+  blank();
+}
+
+async function cmdRepos(){
+  blank();
+  ln('  REPOS  ·  gitlawb federated network  ·  live','hdr');
+  sep('─',68);
+  ln('  >> fetching from node.gitlawb.com...','dim');
+  try {
+    const [reposResp, bondsResp] = await Promise.all([
+      fetch(`${API_BASE}/api/gitlawb/repos`),
+      fetch(`${API_BASE}/api/bond`),
+    ]);
+    const reposJson = await reposResp.json();
+    const bondsJson = await bondsResp.json();
+    const repos  = reposJson.repos || [];
+    const bonds  = bondsJson.bonds || [];
+    const bondedRepos = new Set(bonds.map(b => b.repo));
+
+    if(reposJson.source === 'fallback') ln('  ⚠ node unreachable — showing last known data','amber');
+    ln(`  ${'REPO'.padEnd(26)} ${'OWNER'.padEnd(14)} ${'BOND'.padEnd(8)} DESC`,'dim');
+    blank();
+    for(const r of repos){
+      const name  = (r.name||'—').slice(0,24).padEnd(26);
+      const owner = (r.owner||r.did||'—').slice(0,12).padEnd(14);
+      const repo  = `${r.owner||''}/${r.name||''}`.trim();
+      const bonded= bondedRepos.has(repo) ? '⬡ yes  ' : '—      ';
+      const desc  = (r.description||'').slice(0,26);
+      ln(`  <span class="c-g">${name}</span><span class="c-d">${owner}</span><span class="c-a">${bonded}</span><span class="c-d">${desc}</span>`,'g0',true);
+      await sleep(18);
+    }
+    if(!repos.length) ln('  no repos found — push your first: git push gitlawb main','dim');
+  } catch(e){
+    ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+  }
+  sep('─',68);
+  blank();
+}
+
+async function cmdBounties(){
+  blank();
+  ln('  OPEN BOUNTIES  ·  GitlawbBounties.sol  ·  live','hdr');
+  sep('─',70);
+  ln('  >> fetching bounties...','dim');
+  try {
+    const resp = await fetch(`${API_BASE}/api/gitlawb/bounties`);
+    const json = await resp.json();
+    const bounties = json.bounties || [];
+    if(json.source === 'fallback') ln('  ⚠ contract not set — showing known bounties','amber');
+    else if(json.source === 'on-chain') ln('  ✓ data from GitlawbBounties.sol on Base','g1');
+    ln(`  ${'ID/TITLE'.padEnd(40)} ${'REWARD'.padEnd(18)} STATUS`,'dim');
+    blank();
+    for(const b of bounties){
+      const title = (b.title||'—').slice(0,38).padEnd(40);
+      const reward= `${b.amount||'?'} ${b.currency||'$GITLAWB'}`.padEnd(18);
+      const status= b.status||b.open===true?'open':b.open===false?'closed':'—';
+      const sc    = status==='open'?'c-g':status==='in-progress'?'c-a':'c-d';
+      ln(`  <span class="c-w">${title}</span><span class="c-g">${reward}</span><span class="${sc}">${status}</span>`,'g0',true);
+      await sleep(18);
+    }
+    if(!bounties.length) ln('  no open bounties right now','dim');
+  } catch(e){
+    ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+  }
+  sep('─',70);
+  ln('  post a bounty: open PR in gitlawb/PIPs','dim');
+  blank();
+}
+
+async function cmdDID(args){
+  blank();
+  const did = args[0];
+  if(did){
+    ln(`  >> resolving DID: ${did}...`,'dim');
+    try {
+      const resp = await fetch(`${API_BASE}/api/gitlawb/did/${encodeURIComponent(did)}`);
+      const json = await resp.json();
+      if(!resp.ok) throw new Error(json.error);
+      const p = json.profile;
+      ln('  DID PROFILE  ·  ' + (json.source==='live'?'live ✓':'scraped'),'hdr');
+      sep('─',52);
+      ln(`  did           ${did}`,'g0');
+      if(p.trustScore != null) ln(`  trust score   ${p.trustScore}  ${p.trustScore >= 0.8 ? '⬡ proof of builder' : ''}`,'g0');
+      if(p.level)      ln(`  level         ${p.level}`,'g1');
+      if(p.pushes)     ln(`  pushes        ${p.pushes}`,'g1');
+      if(p.repos)      ln(`  repos         ${p.repos}`,'g1');
+      if(p.profileUrl) ln(`  profile       ${p.profileUrl}`,'blue');
+      sep('─',52);
+    } catch(e){ ln(`  ✗ ${e.message}`,'red'); }
+    blank(); return;
+  }
+  // show own DID / auth status
+  ln('  DID IDENTITY  ·  gitlawb Ed25519','hdr');
+  sep('─',52);
+  const token = sessionStorage.getItem('auth_token');
+  const addr  = sessionStorage.getItem('auth_address');
+  if(addr && token){
+    ln(`  wallet        ${addr.slice(0,6)}...${addr.slice(-4)}`,'g0');
+    ln('  auth          ✓ authenticated','g0');
+    ln('  usage         bond / tip commands unlocked','g1');
+  } else {
+    ln('  wallet        not authenticated','amber');
+    ln('  to auth:      wallet connect  then  wallet auth','dim');
+  }
+  ln('','blank');
+  ln('  to resolve a DID: did:gitlawb:z6Mk...','dim');
+  ln('  to create one:    gl identity new  (gitlawb CLI)','dim');
+  sep('─',52);
+  blank();
+}
+
+async function cmdWhoami(){
+  blank();
+  ln('  SESSION','hdr');
+  sep('─',40);
+  ln(`  user      anon@gitlawb`,'g0');
+  ln(`  session   ${Math.random().toString(36).slice(2,10).toUpperCase()}`,'g0');
+  ln(`  network   Base Mainnet (8453)`,'g0');
+  ln(`  rpc       mainnet.base.org`,'g0');
+  ln(`  mode      demo (wallet not connected)`,'amber');
+  sep('─',40);
+  blank();
+}
+
+async function cmdTokens(args){
+  blank();
+  const q = args[0];
+  if(q){
+    ln(`  >> searching registry for: ${q}...`,'dim');
+    try {
+      const resp = await fetch(`${API_BASE}/api/tokens?q=${encodeURIComponent(q)}`);
+      const json = await resp.json();
+      if(!json.tokens?.length){ ln('  no tokens found matching: ' + q,'amber'); blank(); return; }
+      ln('  SEARCH RESULTS','hdr');
+      sep('─',64);
+      ln(`  ${'SYMBOL'.padEnd(10)} ${'NAME'.padEnd(24)} ${'CONTRACT'.padEnd(14)} FORGED`,'dim');
+      blank();
+      for(const t of json.tokens){
+        const date = new Date(t.created_at).toLocaleDateString();
+        ln(`  <span class="c-a">${t.symbol.padEnd(10)}</span><span class="c-w">${t.name.slice(0,22).padEnd(24)}</span><span class="c-d">${t.contract.slice(0,6)}...${t.contract.slice(-4)}</span>  ${date}`,'g0',true);
+        await sleep(18);
+      }
+    } catch(e){
+      ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+    }
+  } else {
+    ln('  IGNIS TOKEN REGISTRY','hdr');
+    sep('─',64);
+    try {
+      const [listResp, statsResp] = await Promise.all([
+        fetch(`${API_BASE}/api/tokens?limit=10`),
+        fetch(`${API_BASE}/api/stats`),
+      ]);
+      const list  = await listResp.json();
+      const stats = await statsResp.json();
+      const s = stats.stats;
+      ln(`  total forged: ${s.tokens_total}  ·  today: ${s.tokens_today}  ·  builders: ${s.unique_deployers}`,'g1');
+      blank();
+      if(!list.tokens?.length){
+        ln('  no tokens forged yet — be the first! type: forge','dim');
+      } else {
+        ln(`  ${'SYMBOL'.padEnd(10)} ${'NAME'.padEnd(24)} ${'DEPLOYER'.padEnd(14)} FORGED`,'dim');
+        blank();
+        for(const t of list.tokens){
+          const date = new Date(t.created_at).toLocaleDateString();
+          ln(`  <span class="c-a">${t.symbol.padEnd(10)}</span><span class="c-w">${t.name.slice(0,22).padEnd(24)}</span><span class="c-d">${t.deployer.slice(0,6)}...${t.deployer.slice(-4)}</span>  ${date}`,'g0',true);
+          await sleep(18);
+        }
+        if(list.total > 10) ln(`  ... and ${list.total - 10} more — use: tokens [symbol]`,'dim');
+      }
+    } catch(e){
+      ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+    }
+  }
+  sep('─',64);
+  blank();
+}
+
+async function cmdBankr(args){
+  const sub = (args||[])[0];
+  blank();
+
+  if(!sub || sub==='status'){
+    ln('  BANKR.BOT STATUS','hdr');
+    sep('─',44);
+    try {
+      const resp = await fetch(`${API_BASE}/api/bankr/status`);
+      const json = await resp.json();
+      if(json.configured){
+        ln('  status     ✓ configured & ready','g0');
+        ln('  route      Ignis → bankr.bot → Base','g1');
+        ln('  gas        free — bankr.bot covers it','g1');
+        ln('  fee share  57% of 1.2% swap fees → you','g1');
+        ln('  tip        type: forge to launch','dim');
+      } else {
+        ln('  status     ✗ not configured','red');
+        ln('  fix        add BANKR_API_KEY to backend .env','amber');
+      }
+    } catch(e){
+      ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+    }
+    sep('─',44);
+    blank();
+    return;
+  }
+
+  if(sub==='prompt'){
+    const prompt = args.slice(1).join(' ');
+    if(!prompt){ ln('  usage: bankr prompt [your message]','amber'); blank(); return; }
+    ln(`  >> sending to bankr.bot: "${prompt}"`, 'dim');
+    try {
+      const resp = await fetch(`${API_BASE}/api/bankr/prompt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const json = await resp.json();
+      if(!resp.ok) throw new Error(json.error);
+      ln('  BANKR RESPONSE','hdr');
+      sep('─',60);
+      const lines = (json.response||'no response').toString().split('\n');
+      for(const l of lines) if(l.trim()) ln(`  ${l}`,'g1');
+      sep('─',60);
+    } catch(e){
+      ln(`  ✗ ${e.message}`,'red');
+    }
+    blank();
+    return;
+  }
+
+  ln('  BANKR.BOT COMMANDS','hdr');
+  sep('─',44);
+  await typeLines([
+    ['  bankr status        check bankr.bot connection','dim'],
+    ['  bankr prompt [msg]  send raw prompt to bankr.bot','dim'],
+    ['  forge               launch a token (no setup needed)','g1'],
+  ],18);
+  sep('─',44);
+  blank();
+}
+
+
+// ── UTILITY 1: LAUNCH KEY — check $IGNIS balance for forge access ─────────────
+async function cmdLaunchKey(args){
+  blank();
+  const address = (args||[])[0] || walletAddress;
+  if(!address){
+    ln('  usage: key [wallet_address]','amber');
+    ln('  or: wallet connect  then: key','dim');
+    blank(); return;
+  }
+  ln('  >> checking $IGNIS balance for Launch Key...','dim');
+  try {
+    const resp = await fetch(`${API_BASE}/api/launchkey/check/${address}`);
+    const json = await resp.json();
+    blank();
+    ln('  LAUNCH KEY STATUS','hdr');
+    sep('─',50);
+    ln(`  wallet      ${address.slice(0,6)}...${address.slice(-4)}`,'dim');
+    ln(`  $IGNIS held ${json.ignis_balance}`,'g0');
+    ln(`  required    ${json.min_required} $IGNIS`,'dim');
+    if(json.eligible){
+      ln('  status      ✓ ELIGIBLE — you can forge tokens','g0');
+    } else {
+      ln('  status      ✗ NOT ELIGIBLE','red');
+      ln(`  need        ${json.min_required - json.ignis_balance} more $IGNIS`,'amber');
+    }
+    if(json.simulated) ln('  note        simulated — $IGNIS contract not yet deployed','amber');
+    sep('─',50);
+  } catch(e){
+    ln('  ⚠ backend offline — run: cd backend && npm start','amber');
+  }
+  blank();
+}
+
+// ── UTILITY 2: REPO BOND ───────────────────────────────────────────────────────
+async function cmdBond(args){
+  const sub = (args||[])[0];
+  blank();
+
+  // bond status for a repo
+  if(sub && sub.includes('/')){
+    ln(`  >> checking bond for repo: ${sub}...`,'dim');
+    try {
+      const resp = await fetch(`${API_BASE}/api/bond/${encodeURIComponent(sub)}`);
+      const json = await resp.json();
+      if(!resp.ok){ ln(`  no active bond for ${sub}`,'amber'); blank(); return; }
+      const b = json.bond;
+      ln('  REPO BOND','hdr');
+      sep('─',52);
+      ln(`  repo            ${b.repo}`,'g0');
+      ln(`  bonded          ${b.amount_ignis} $IGNIS`,'g0');
+      ln(`  bonder          ${b.bonder.slice(0,6)}...${b.bonder.slice(-4)}`,'dim');
+      ln(`  status          ${b.status}`,'g1');
+      ln(`  inactive for    ${b.inactive_days} days`,(b.at_risk?'red':'dim'));
+      ln(`  slash in        ${b.days_until_slash} days`,(b.at_risk?'amber':'dim'));
+      if(b.at_risk) ln('  ⚠ REPO AT RISK — push a commit to reset timer','red');
+      sep('─',52);
+    } catch(e){ ln('  ⚠ backend offline','amber'); }
+    blank(); return;
+  }
+
+  // list all bonds
+  if(!sub || sub==='list'){
+    ln('  ACTIVE REPO BONDS','hdr');
+    sep('─',68);
+    try {
+      const resp = await fetch(`${API_BASE}/api/bond`);
+      const json = await resp.json();
+      if(!json.bonds?.length){ ln('  no active bonds yet — forge a token to create one','dim'); blank(); return; }
+      ln(`  ${'REPO'.padEnd(28)} ${'AMOUNT'.padEnd(14)} ${'BONDER'.padEnd(12)} INACTIVE`,'dim');
+      blank();
+      for(const b of json.bonds){
+        const days = Math.floor((Date.now()-new Date(b.last_commit_at))/86400000);
+        const cls  = days > 60 ? 'red' : days > 30 ? 'amber' : 'g0';
+        ln(`  <span class="c-g">${b.repo.slice(0,26).padEnd(28)}</span><span class="c-a">${(b.amount_ignis+' $IGNIS').padEnd(14)}</span><span class="c-d">${b.bonder.slice(0,6)}...   </span><span class="${cls}">${days}d</span>`,'g0',true);
+        await sleep(18);
+      }
+    } catch(e){ ln('  ⚠ backend offline','amber'); }
+    sep('─',68);
+    blank(); return;
+  }
+
+  // help
+  ln('  REPO BOND COMMANDS','hdr');
+  sep('─',52);
+  await typeLines([
+    ['  bond list           list all active bonds','dim'],
+    ['  bond owner/repo     check bond for a repo','dim'],
+    ['','blank'],
+    ['  bonds auto-created when you forge a token','g1'],
+    ['  repo inactive 90 days → $IGNIS slashed','amber'],
+    ['  push commits to keep bond alive','dim'],
+  ],18);
+  sep('─',52);
+  blank();
+}
+
+// ── UTILITY 3: COMMIT TIP ─────────────────────────────────────────────────────
+async function cmdTip(args){
+  blank();
+  const sub = (args||[])[0];
+
+  // tip leaderboard shortcut
+  if(sub==='leaderboard'||sub==='top'){ await cmdLeaderboard(); return; }
+
+  // tip a commit: tip owner/repo abc123 50 "great work"
+  if(sub && sub.includes('/')){
+    const repo       = sub;
+    const commitHash = args[1];
+    const amount     = args[2];
+    const message    = args.slice(3).join(' ');
+    const contributor= args[1]?.startsWith('0x') ? args[1] : null;
+
+    if(!commitHash||!amount){
+      ln('  usage: tip owner/repo [commit_hash] [amount] [message?]','amber');
+      ln('  example: tip gitlawb/core abc123f 10 "fixed the bug!"','dim');
+      blank(); return;
+    }
+    if(!walletAddress){ ln('  connect wallet first: wallet connect','amber'); blank(); return; }
+
+    ln(`  >> tipping ${amount} $IGNIS to commit ${commitHash.slice(0,8)}...`,'dim');
+    if(!requiresAuth('tip commits')) return;
+    try {
+      const resp = await fetch(`${API_BASE}/api/tips`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          repo, commit_hash: commitHash,
+          contributor: contributor || commitHash, // fallback
+          tipper: walletAddress,
+          amount_ignis: amount,
+          message: message || null,
+        }),
+      });
+      const json = await resp.json();
+      if(!resp.ok) throw new Error(json.error);
+      ln(`  ✓ ${json.message}`,'g0');
+      ln(`  total tipped to this commit: ${json.total_tipped_to_commit} $IGNIS`,'g1');
+    } catch(e){ ln(`  ✗ ${e.message}`,'red'); }
+    blank(); return;
+  }
+
+  // tips for a contributor: tip 0x1234...
+  if(sub?.startsWith('0x')){
+    ln(`  >> loading tips for ${sub.slice(0,6)}...`,'dim');
+    try {
+      const resp = await fetch(`${API_BASE}/api/tips/contributor/${sub}`);
+      const json = await resp.json();
+      ln('  TIPS EARNED','hdr');
+      sep('─',52);
+      ln(`  address     ${sub.slice(0,6)}...${sub.slice(-4)}`,'dim');
+      ln(`  total earned  ${json.total_earned} $IGNIS`,'g0');
+      ln(`  tip count     ${json.tip_count}`,'g1');
+      if(json.tips?.length){
+        blank();
+        for(const t of json.tips.slice(0,5)){
+          ln(`  ${t.repo.slice(0,20).padEnd(22)} +${t.amount_ignis} $IGNIS  "${t.message||'—'}"`.slice(0,64),'dim');
+        }
+      }
+      sep('─',52);
+    } catch(e){ ln('  ⚠ backend offline','amber'); }
+    blank(); return;
+  }
+
+  // help
+  ln('  COMMIT CURRENCY — tip $IGNIS to contributors','hdr');
+  sep('─',56);
+  await typeLines([
+    ['  tip owner/repo [commit] [amount] [msg]   tip a commit','dim'],
+    ['  tip 0xADDRESS                            view earned tips','dim'],
+    ['  tip leaderboard                          top contributors','dim'],
+    ['','blank'],
+    ['  every tip = on-chain proof of value for that contributor','g1'],
+    ['  tip history is portable — builders carry it everywhere','g1'],
+  ],18);
+  sep('─',56);
+  blank();
+}
+
+// ── UTILITY 4: LEADERBOARD ────────────────────────────────────────────────────
+async function cmdLeaderboard(){
+  blank();
+  ln('  $IGNIS TIP LEADERBOARD  ·  top contributors','hdr');
+  sep('─',64);
+  try {
+    const resp = await fetch(`${API_BASE}/api/tips/leaderboard`);
+    const json = await resp.json();
+    if(!json.leaderboard?.length){
+      ln('  no tips yet — be the first to tip: tip owner/repo commit 10','dim');
+      blank(); return;
+    }
+    ln(`  ${'RANK'.padEnd(6)} ${'CONTRIBUTOR'.padEnd(14)} ${'EARNED'.padEnd(18)} TIPS`,'dim');
+    blank();
+    const medals = ['🥇','🥈','🥉'];
+    for(let i=0; i<json.leaderboard.length; i++){
+      const l = json.leaderboard[i];
+      const medal = medals[i] || `  #${i+1}`;
+      ln(`  ${medal}   <span class="c-b">${l.contributor.slice(0,6)}...${l.contributor.slice(-4)}</span>   <span class="c-a">${(parseFloat(l.total_earned).toFixed(2)+' $IGNIS').padEnd(18)}</span><span class="c-d">${l.tip_count} tips</span>`,'g0',true);
+      await sleep(20);
+    }
+  } catch(e){ ln('  ⚠ backend offline','amber'); }
+  sep('─',64);
+  blank();
+}
+
+async function cmdAbout(){
+  blank();
+  ln('  Ignis  —  forge tokens from code.','hdr');
+  blank();
+  ln('  where repos become tokens.','g1');
+  ln('  push code to gitlawb. forge an ERC-20 paired with $GITLAWB.','g1');
+  ln('  contributors earn proportional to their commits. no forms. no middlemen.','g1');
+  blank();
+  ln('  built on','amber');
+  await typeLines([
+    ['  ◆ gitlawb  —  decentralized git network (DID + IPFS + libp2p)','dim'],
+    ['  ◆ bankr.bot  —  token forge & LP seeding','dim'],
+    ['  ◆ $GITLAWB  —  base-layer currency for all launches','dim'],
+    ['  ◆ Uniswap V3  —  liquidity on Base','dim'],
+    ['  ◆ GitlawbBounties.sol  —  contributor rewards','dim'],
+    ['  ◆ GitlawbGovernance.sol  —  on-chain voting','dim'],
+  ],18);
+  blank();
+  ln('  "forge tokens from code."','amber');
+  blank();
+  ln('  → gitlawb.com  ·  @gitlawb  ·  github.com/gitlawb','blue');
+  blank();
+}
+
+async function cmdLs(){
+  blank();
+  ln('  UTILITIES','hdr');
+  sep('─',52);
+  const items = [
+    ['repolaunch/', 'deploy repo tokens via bankr.bot'],
+    ['contract-lookup/', 'query Base contracts'],
+    ['agent-registry/', 'browse & hire agents'],
+    ['bounty-manager/', 'post/claim $GITLAWB bounties'],
+    ['gas-oracle/', 'real-time Base gas'],
+    ['did-resolver/', 'resolve gitlawb DIDs'],
+    ['wallet-connect/', 'multi-wallet (wagmi)'],
+    ['ipfs-gateway/', 'browse pinned objects'],
+    ['governance/', 'GitlawbGovernance.sol UI'],
+  ];
+  for(const [name,desc] of items){
+    ln(`  <span class="c-g">${name.padEnd(22)}</span><span class="c-d">${desc}</span>`,'g0',true);
+    await sleep(14);
+  }
+  sep('─',52);
+  blank();
+}
+
+async function cmdPush(){
+  blank();
+  ln('  git push gitlawb main','g0');
+  blank();
+  ln('  Enumerating objects: 12, done.','dim');
+  await sleep(300);
+  ln('  Counting objects: 100% (12/12), done.','dim');
+  await sleep(300);
+  ln('  Compressing objects: 100% (8/8), done.','dim');
+  await sleep(300);
+  ln('  Issuing ref certificate (Ed25519)...','amber');
+  await sleep(600);
+  const cid = 'bafkreihu5qziap3py' + Math.random().toString(36).slice(2,18);
+  ln('  Pinning 6 objects to IPFS...','amber');
+  await sleep(700);
+  ln(`  CID: ${cid}`,'g1');
+  await sleep(300);
+  ln('  Publishing RefUpdateEvent via Gossipsub...','amber');
+  await sleep(500);
+  ln('  ✓ pushed to gitlawb  ·  mirrored to 2 nodes','g0');
+  blank();
+}
+
+async function cmdCommit(){
+  blank();
+  ln('  signing message on-chain (demo)','dim');
+  await sleep(500);
+  const hash = '0x' + Array(64).fill(0).map(()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+  ln(`  message hash: ${hash.slice(0,20)}...`,'g1');
+  ln('  stored on Base via HTTP Signature (RFC 9421)','dim');
+  blank();
+}
+
+// ── WALLET STATE ──
+let walletAddress = null;
+let walletProvider = null;
+let walletSigner = null;
+
+const BASE_CHAIN_ID = 8453;
+const BASE_CHAIN_HEX = '0x2105';
+const BASE_RPC = 'https://mainnet.base.org';
+
+async function ensureBase(){
+  const network = await walletProvider.getNetwork();
+  if(network.chainId !== BASE_CHAIN_ID){
+    ln('  >> switching to Base mainnet...','amber');
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BASE_CHAIN_HEX }],
+      });
+    } catch(switchErr) {
+      if(switchErr.code === 4902){
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: BASE_CHAIN_HEX,
+            chainName: 'Base',
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+            rpcUrls: [BASE_RPC],
+            blockExplorerUrls: ['https://basescan.org'],
+          }],
+        });
+      } else throw switchErr;
+    }
+    walletProvider = new ethers.providers.Web3Provider(window.ethereum);
+    walletSigner = walletProvider.getSigner();
+    ln('  >> switched to Base mainnet (8453)','g1');
+  }
+}
+
+async function cmdWallet(args){
+  const sub = (args||[])[0];
+  blank();
+
+  if(sub==='connect'){
+    if(!window.ethereum){
+      ln('  ✗ no wallet detected — install MetaMask or Coinbase Wallet','red');
+      ln('  → metamask.io  ·  coinbase.com/wallet','dim');
+      blank();
+      return;
+    }
+    ln('  >> requesting wallet access...','dim');
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      walletProvider = new ethers.providers.Web3Provider(window.ethereum);
+      walletSigner   = walletProvider.getSigner();
+      walletAddress  = accounts[0];
+
+      await ensureBase();
+
+      const balance = await walletProvider.getBalance(walletAddress);
+      const ethBal  = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
+
+      ln(`  ✓ connected: ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}  ·  Base Mainnet`,'g0');
+      ln(`  ✓ balance: ${ethBal} ETH`,'g1');
+      ln(`  tip: run "wallet auth" to unlock bond & tip commands`,'dim');
+      document.getElementById('prompt-path').textContent = walletAddress.slice(0,6)+'...'+walletAddress.slice(-4)+'@ignis';
+
+      window.ethereum.on('accountsChanged', accs => {
+        walletAddress = accs[0] || null;
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_address');
+        document.getElementById('prompt-path').textContent = walletAddress
+          ? walletAddress.slice(0,6)+'...'+walletAddress.slice(-4)+'@ignis'
+          : 'anon@ignis △';
+      });
+    } catch(e) {
+      ln(`  ✗ ${e.message||'connection rejected'}`, 'red');
+    }
+
+  } else if(sub==='auth'){
+    // Wallet signature auth — proves ownership, unlocks bond/tip
+    if(!walletAddress || !walletSigner){
+      ln('  run: wallet connect first','amber'); blank(); return;
+    }
+    const existing = sessionStorage.getItem('auth_token');
+    if(existing){
+      // verify session still valid
+      try {
+        const me = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: { 'x-auth-token': existing },
+        });
+        if(me.ok){
+          const mej = await me.json();
+          ln(`  ✓ already authenticated as ${mej.address.slice(0,6)}...${mej.address.slice(-4)}`,'g0');
+          ln('  bond and tip commands are unlocked','g1');
+          blank(); return;
+        }
+      } catch(_){}
+      sessionStorage.removeItem('auth_token');
+    }
+
+    ln('  >> requesting auth challenge...','dim');
+    try {
+      // Step 1: get challenge
+      const chalResp = await fetch(`${API_BASE}/api/auth/challenge/${walletAddress}`);
+      const chal = await chalResp.json();
+      if(!chalResp.ok) throw new Error(chal.error);
+
+      ln(`  >> challenge received  ·  nonce: ${chal.nonce.slice(0,8)}...`,'dim');
+      ln('  >> sign the message in your wallet...','amber');
+
+      // Step 2: sign
+      const signature = await walletSigner.signMessage(chal.message);
+      ln('  >> signature received — verifying...','dim');
+
+      // Step 3: verify
+      const verResp = await fetch(`${API_BASE}/api/auth/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: walletAddress, nonce: chal.nonce, signature }),
+      });
+      const ver = await verResp.json();
+      if(!verResp.ok) throw new Error(ver.error);
+
+      sessionStorage.setItem('auth_token',   ver.token);
+      sessionStorage.setItem('auth_address', walletAddress);
+
+      ln(`  ✓ authenticated as ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}`,'g0');
+      ln('  ✓ bond and tip commands are now unlocked','g1');
+      ln(`  session valid 24 hours`,'dim');
+
+    } catch(e){
+      if(e.message?.includes('user rejected') || e.message?.includes('denied')){
+        ln('  ✗ signature rejected','amber');
+      } else {
+        ln(`  ✗ ${e.message}`,'red');
+      }
+    }
+
+  } else if(sub==='balance'){
+    if(!walletAddress){ ln('  run: wallet connect first','amber'); blank(); return; }
+    try {
+      await ensureBase();
+      const balance = await walletProvider.getBalance(walletAddress);
+      const ethBal  = ethers.utils.formatEther(balance);
+      ln(`  address  ${walletAddress}`,'g0');
+      ln(`  ETH      ${parseFloat(ethBal).toFixed(6)}`,'g1');
+      ln(`  network  Base Mainnet (8453)`,'g1');
+      const authd = !!sessionStorage.getItem('auth_token');
+      ln(`  auth     ${authd ? '✓ authenticated — bond/tip unlocked' : '✗ not authenticated — run: wallet auth'}`,(authd?'g1':'amber'));
+    } catch(e){ ln(`  ✗ ${e.message}`,'red'); }
+
+  } else {
+    ln('  WALLET COMMANDS','hdr');
+    sep('─',44);
+    await typeLines([
+      ['  wallet connect   connect MetaMask / Coinbase Wallet','dim'],
+      ['  wallet auth      sign to unlock bond & tip commands','dim'],
+      ['  wallet balance   show ETH balance + auth status','dim'],
+    ],18);
+    sep('─',44);
+  }
+  blank();
+}
+
+async function cmdLookup(args){
+  const q = (args||[])[0];
+  if(!q){
+    ln('  usage: lookup [address or name]','amber');
+    ln('  example: lookup 0x4ed4E862...  or  lookup degen','dim');
+    return;
+  }
+  blank();
+  ln(`  >> querying gitlawb + Base for: ${q}...`,'dim');
+  await sleep(500);
+  ln('  >> fetching on-chain data...','dim');
+  await sleep(500);
+
+  const presets = {
+    degen: {name:'DEGEN Token',symbol:'DEGEN',price:'$0.0041',mcap:'$155M',holders:'142,839',supply:'36.9B',lp:'Uniswap V3',repo:'degen/degen-token',verified:true},
+    toshi: {name:'TOSHI',symbol:'TOSHI',price:'$0.000019',mcap:'$8M',holders:'89,211',supply:'420.7B',lp:'Aerodrome',repo:'—',verified:true},
+  };
+  const d = presets[q.toLowerCase()] || {
+    name: 'TOKEN_'+q.slice(-4).toUpperCase(),
+    symbol: q.slice(-3).toUpperCase(),
+    price: '$0.00' + Math.floor(Math.random()*9999),
+    mcap: '$' + (Math.random()*10).toFixed(2)+'M',
+    holders: Math.floor(Math.random()*9999).toLocaleString(),
+    supply: Math.floor(Math.random()*1e10).toLocaleString(),
+    lp: 'Uniswap V3',
+    repo: '—',
+    verified: Math.random()>0.5,
+  };
+
+  const body = document.getElementById('lookup-body');
+  body.innerHTML = `
+    <div class="lp-row"><span class="lp-k">name</span><span class="lp-v">${d.name}</span></div>
+    <div class="lp-row"><span class="lp-k">symbol</span><span class="lp-v amber">${d.symbol}</span></div>
+    <div class="lp-row"><span class="lp-k">price</span><span class="lp-v">${d.price}</span></div>
+    <div class="lp-row"><span class="lp-k">mcap</span><span class="lp-v">${d.mcap}</span></div>
+    <div class="lp-row"><span class="lp-k">holders</span><span class="lp-v blue">${d.holders}</span></div>
+    <div class="lp-row"><span class="lp-k">supply</span><span class="lp-v">${d.supply}</span></div>
+    <div class="lp-row"><span class="lp-k">lp</span><span class="lp-v">${d.lp}</span></div>
+    <div class="lp-row"><span class="lp-k">gitlawb repo</span><span class="lp-v">${d.repo}</span></div>
+    <div class="lp-row"><span class="lp-k">verified</span><span class="lp-v ${d.verified?'':'amber'}">${d.verified?'✓ yes':'⚠ no'}</span></div>
+    <p class="lp-note">simulated · connect wallet for live feed</p>
+  `;
+  document.getElementById('lookup-panel').classList.add('open');
+  ln(`  ✓ found: ${d.name} (${d.symbol})  ·  panel open →`,'g1');
+  blank();
+}
+
+// ── LAUNCH WIZARD ──
+function cmdLaunch(){
+  wizData = {}; wizStep = 0;
+  renderWiz();
+  document.getElementById('wiz-overlay').classList.add('open');
+}
+
+function closeWizard(){
+  document.getElementById('wiz-overlay').classList.remove('open');
+  ln('  launch wizard closed.','dim');
+}
+
+function renderWiz(){
+  const progress = Array.from({length:WIZ_TOTAL},(_,i)=>`<div class="wiz-pd ${i<wizStep?'done':i===wizStep?'active':''}"></div>`).join('');
+  let body = `<div class="wiz-progress">${progress}</div><div class="wiz-body">`;
+
+  if(wizStep===0){
+    const savedKey = sessionStorage.getItem('bankr_api_key') || '';
+    body += `
+      <div class="wiz-step-lbl">STEP 1 / ${WIZ_TOTAL}  ·  SETUP FEE WALLET</div>
+      <div class="wiz-q" style="color:var(--g0);font-size:13px">Kamu dapat <span style="color:var(--amber);font-weight:600">57% dari setiap swap</span> token kamu — otomatis, selamanya.</div>
+      <div style="margin:10px 0 14px;padding:10px 12px;border:1px solid var(--g3);background:var(--g4);font-size:11px;color:var(--dim);line-height:1.9">
+        Fee langsung masuk ke wallet kamu sendiri — bukan ke Ignis.<br><br>
+        <span style="color:var(--g0)">1.</span>&nbsp; Daftar gratis di <a href="https://bankr.bot/api" target="_blank" style="color:var(--g0)">bankr.bot/api</a><br>
+        <span style="color:var(--g0)">2.</span>&nbsp; Copy API key kamu<br>
+        <span style="color:var(--g0)">3.</span>&nbsp; Paste di bawah ini
+      </div>
+      <input class="wiz-input" id="wf-key" type="password" placeholder="bk_xxxxxxxxxxxxxxxx" value="${wizData.apiKey||savedKey}" autocomplete="off">
+      <div class="wiz-hint">Tersimpan di browser kamu saja — tidak dikirim ke server Ignis</div>
+      <div class="wiz-btns">
+        <button class="wiz-btn" onclick="closeWizard()">cancel</button>
+        <button class="wiz-btn primary" onclick="wizNext(0)">next →</button>
+      </div>`;
+
+  } else if(wizStep===1){
+    body += `
+      <div class="wiz-step-lbl">STEP 2 / ${WIZ_TOTAL}  ·  PROJECT INFO</div>
+      <div class="wiz-q">Nama project kamu</div>
+      <input class="wiz-input" id="wf0" placeholder="e.g. GitLaw Protocol" value="${wizData.name||''}">
+      <div class="wiz-q" style="margin-top:8px">Deskripsi singkat</div>
+      <input class="wiz-input" id="wf0b" placeholder="satu kalimat — ini ngapain?" value="${wizData.desc||''}">
+      <div class="wiz-btns">
+        <button class="wiz-btn" onclick="wizBack()">← back</button>
+        <button class="wiz-btn primary" onclick="wizNext(1)">next →</button>
+      </div>`;
+
+  } else if(wizStep===2){
+    body += `
+      <div class="wiz-step-lbl">STEP 3 / ${WIZ_TOTAL}  ·  TOKEN</div>
+      <div class="wiz-q">Symbol token</div>
+      <input class="wiz-input" id="wf1" placeholder="e.g. LAW" style="text-transform:uppercase" value="${wizData.symbol||''}">
+      <div class="wiz-hint">Supply & liquidity otomatis — fair launch on Base, gratis</div>
+      <div class="wiz-q" style="margin-top:10px">Socials <span style="color:var(--dim2);font-size:10px">(semua opsional)</span></div>
+      <input class="wiz-input" id="wf1b" placeholder="website (https://...)" value="${wizData.website||''}">
+      <input class="wiz-input" id="wf1c" placeholder="twitter/X (@handle)" value="${wizData.twitter||''}">
+      <input class="wiz-input" id="wf1d" placeholder="gitlawb repo (owner/repo)" value="${wizData.repo||''}">
+      <div class="wiz-btns">
+        <button class="wiz-btn" onclick="wizBack()">← back</button>
+        <button class="wiz-btn primary" onclick="wizNext(2)">next →</button>
+      </div>`;
+
+  } else if(wizStep===3){
+    const hasBond = wizData.repo ? 'yes — 100 $IGNIS' : 'no repo linked';
+    const bondCls = wizData.repo ? 'accent' : 'dim';
+    body += `
+      <div class="wiz-step-lbl">STEP 4 / ${WIZ_TOTAL}  ·  REPO BOND</div>
+      <div class="wiz-q">Bond $IGNIS ke repo kamu — buktikan kamu serius</div>
+      <div style="margin:0 0 12px;padding:10px 12px;border:1px solid var(--g3);background:var(--g4);font-size:11px;color:var(--dim);line-height:1.8">
+        <span style="color:var(--g0)">Repo Bond</span> = skin in the game.<br>
+        Bond $IGNIS ke repo kamu → buyer bisa filter <span style="color:var(--g0)">"active repo only"</span><br>
+        Repo ga ada commit 90 hari → bond di-slash ke treasury.<br>
+        <span style="color:var(--dim2)">Opsional tapi sangat direkomendasikan.</span>
+      </div>
+      ${wizData.repo ? `
+      <div class="wiz-q">Bond amount untuk <span style="color:var(--g0)">${wizData.repo}</span></div>
+      <input class="wiz-input" id="wf-bond" type="number" placeholder="100 (minimum)" value="${wizData.bondAmount||'100'}">
+      <div class="wiz-hint">Minimum 100 $IGNIS — aktif selama repo aktif</div>
+      ` : `
+      <div style="color:var(--amber);font-size:11px;padding:6px 0">⚠ Kamu belum link gitlawb repo di step sebelumnya — bond akan di-skip.</div>
+      <div style="color:var(--dim2);font-size:10px;padding:4px 0">← back untuk tambah repo</div>
+      `}
+      <div class="wiz-btns">
+        <button class="wiz-btn" onclick="wizBack()">← back</button>
+        <button class="wiz-btn primary" onclick="wizNext(3)">next →</button>
+      </div>`;
+
+  } else if(wizStep===4){
+    const keyMasked  = (wizData.apiKey||'').slice(0,8) + '...';
+    const bondInfo   = wizData.repo && wizData.bondAmount
+      ? `${wizData.bondAmount} $IGNIS → ${wizData.repo}`
+      : 'skip (no repo linked)';
+    body += `
+      <div class="wiz-step-lbl">STEP 5 / ${WIZ_TOTAL}  ·  REVIEW & FORGE</div>
+      <div class="wiz-q">Semua siap — launching via bankr.bot on Base</div>
+      <div class="wiz-summary">
+        <div class="sum-row"><span class="sum-k">project</span><span class="sum-v">${wizData.name}</span></div>
+        <div class="sum-row"><span class="sum-k">deskripsi</span><span class="sum-v" style="font-size:10px">${wizData.desc||'—'}</span></div>
+        <div class="sum-row"><span class="sum-k">symbol</span><span class="sum-v amber">${wizData.symbol}</span></div>
+        <div class="sum-row"><span class="sum-k">gas fee</span><span class="sum-v accent">gratis ✓</span></div>
+        <div class="sum-row"><span class="sum-k">fee kamu</span><span class="sum-v" style="color:var(--g0);font-weight:600">57% dari setiap swap → wallet kamu</span></div>
+        <div class="sum-row"><span class="sum-k">repo bond</span><span class="sum-v accent">${bondInfo}</span></div>
+        <div class="sum-row"><span class="sum-k">liquidity</span><span class="sum-v accent">auto-seed by bankr.bot</span></div>
+        <div class="sum-row"><span class="sum-k">website</span><span class="sum-v">${wizData.website||'—'}</span></div>
+        <div class="sum-row"><span class="sum-k">gitlawb repo</span><span class="sum-v">${wizData.repo||'—'}</span></div>
+        <div class="sum-row"><span class="sum-k">network</span><span class="sum-v blue">Base Mainnet (8453)</span></div>
+        <div class="sum-row"><span class="sum-k">route</span><span class="sum-v">Ignis → bankr.bot → Base</span></div>
+      </div>
+      <div id="deploy-log"></div>
+      <div class="wiz-btns" id="deploy-btns">
+        <button class="wiz-btn" onclick="wizBack()">← back</button>
+        <button class="wiz-btn launch" onclick="deployToken()">🔥 forge sekarang</button>
+      </div>`;
+  }
+
+  body += '</div>';
+  document.getElementById('wiz-inner').innerHTML = body;
+  const fi = document.querySelector('.wiz-input');
+  if(fi) setTimeout(()=>fi.focus(),50);
+  document.querySelectorAll('.wiz-input').forEach(el=>{
+    el.addEventListener('keydown', e=>{
+      if(e.key==='Enter') document.querySelector('.wiz-btn.primary')?.click();
+    });
+  });
+}
+
+function wizNext(step){
+  if(step===0){
+    const key = document.getElementById('wf-key').value.trim();
+    if(!key){ flash('wf-key'); return; }
+    wizData.apiKey = key;
+    sessionStorage.setItem('bankr_api_key', key);
+  } else if(step===1){
+    const n = document.getElementById('wf0').value.trim();
+    const d = document.getElementById('wf0b').value.trim();
+    if(!n){ flash('wf0'); return; }
+    wizData.name = n; wizData.desc = d;
+  } else if(step===2){
+    const s = document.getElementById('wf1').value.trim().toUpperCase();
+    if(!s||s.length<2){ flash('wf1'); return; }
+    wizData.symbol  = s;
+    wizData.website = document.getElementById('wf1b').value.trim();
+    wizData.twitter = document.getElementById('wf1c').value.trim();
+    wizData.repo    = document.getElementById('wf1d').value.trim();
+  } else if(step===3){
+    if(wizData.repo){
+      const amt = document.getElementById('wf-bond')?.value.trim();
+      wizData.bondAmount = amt && parseFloat(amt) >= 100 ? amt : '100';
+    }
+  }
+  wizStep++; renderWiz();
+}
+
+// ── BANKR.BOT DEPLOY ──────────────────────────────────────────────────────────
+
+async function deployToken(){
+  const log   = document.getElementById('deploy-log');
+  const btns  = document.getElementById('deploy-btns');
+  btns.innerHTML = '';
+
+  function dlog(msg, cls=''){
+    const d = document.createElement('div');
+    d.className = 'dl-line ' + cls;
+    d.textContent = '  >> ' + msg;
+    log.appendChild(d); log.scrollTop = log.scrollHeight;
+  }
+
+  dlog('submitting to bankr.bot API...', 'warn');
+
+  // 1. Submit launch job to our backend → bankr.bot
+  let jobId, meta;
+  try {
+    const resp = await fetch(`${API_BASE}/api/bankr/launch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey:       wizData.apiKey,
+        name:         wizData.name,
+        symbol:       wizData.symbol,
+        description:  wizData.desc,
+        website:      wizData.website,
+        twitter:      wizData.twitter,
+        gitlawb_repo: wizData.repo,
+        vesting:      wizData.vesting,
+        governance:   wizData.gov,
+      }),
+    });
+    const json = await resp.json();
+    if(!resp.ok) throw new Error(json.error || `backend ${resp.status}`);
+    jobId = json.jobId;
+    meta  = json.meta;
+    dlog(`job submitted  ·  id: ${jobId}`, 'ok');
+  } catch(e){
+    dlog('✗ ' + (e.message || 'failed to submit'), 'err');
+    btns.innerHTML = `<button class="wiz-btn" onclick="wizBack()">← back</button><button class="wiz-btn launch" onclick="deployToken()">retry</button>`;
+    return;
+  }
+
+  // 2. Poll job status
+  dlog('waiting for bankr.bot to deploy on Base...');
+  const POLL_MS  = 3000;
+  const MAX_POLL = 80;   // ~4 minutes max
+  let   result   = null;
+
+  for(let i = 0; i < MAX_POLL; i++){
+    await sleep(POLL_MS);
+    if(i % 4 === 0) dlog(`polling... (${Math.round((i * POLL_MS)/1000)}s elapsed)`);
+
+    try {
+      const resp = await fetch(`${API_BASE}/api/bankr/job/${jobId}`, {
+        headers: { 'x-api-key': wizData.apiKey || '' },
+      });
+      const json = await resp.json();
+      const job  = json.job;
+
+      if(job?.status === 'completed'){
+        result = job.response || job.result || {};
+        dlog('bankr.bot: launch confirmed ✓', 'ok');
+        break;
+      }
+      if(job?.status === 'failed'){
+        dlog('bankr.bot: job failed — ' + (job.error || 'unknown'), 'err');
+        btns.innerHTML = `<button class="wiz-btn" onclick="wizBack()">← back</button>`;
+        return;
+      }
+    } catch(e){
+      dlog('poll error: ' + e.message, 'warn');
+    }
+  }
+
+  if(!result){
+    dlog('timeout — bankr.bot took too long. check bankr.bot dashboard.', 'warn');
+    btns.innerHTML = `<button class="wiz-btn primary" onclick="closeWizard()">close</button>`;
+    return;
+  }
+
+  // 3. Extract contract details from bankr response
+  // bankr returns contract address and tx hash in the response text
+  const responseText = typeof result === 'string' ? result : JSON.stringify(result);
+  const contractMatch = responseText.match(/0x[a-fA-F0-9]{40}/);
+  const txMatch       = responseText.match(/0x[a-fA-F0-9]{64}/);
+  const contract      = contractMatch ? contractMatch[0] : null;
+  const txHash        = txMatch       ? txMatch[0]       : null;
+
+  if(contract){
+    const r1 = document.createElement('div'); r1.className='dl-line ok';
+    r1.textContent = `  ✓ contract: ${contract}`;
+    log.appendChild(r1);
+  }
+  dlog('registering in Ignis registry...', '');
+
+  // 4. Save to Ignis registry
+  try {
+    await fetch(`${API_BASE}/api/bankr/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contract:     contract || `bankr-${jobId}`,
+        tx_hash:      txHash || '',
+        block_number: 0,
+        deployer:     'bankr.bot',
+        name:         wizData.name,
+        symbol:       wizData.symbol,
+        description:  wizData.desc,
+        website:      wizData.website,
+        twitter:      wizData.twitter,
+        gitlawb_repo: wizData.repo,
+        vesting:      wizData.vesting,
+        governance:   wizData.gov,
+      }),
+    });
+    dlog('saved to Ignis registry ✓', 'ok');
+  } catch(e){
+    dlog('registry save failed (token still deployed)', 'warn');
+  }
+
+  // auto-create repo bond if user set one
+  if(wizData.repo && wizData.bondAmount && parseFloat(wizData.bondAmount) >= 100){
+    dlog(`bonding ${wizData.bondAmount} $IGNIS to ${wizData.repo}...`);
+    try {
+      const bondResp = await fetch(`${API_BASE}/api/bond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          repo:           wizData.repo,
+          token_contract: contract || '',
+          bonder:         walletAddress || 'bankr.bot',
+          amount_ignis:   wizData.bondAmount,
+        }),
+      });
+      const bondJson = await bondResp.json();
+      if(bondResp.ok || bondResp.status === 409){
+        dlog(`repo bond active — ${wizData.bondAmount} $IGNIS locked ✓`, 'ok');
+      } else {
+        dlog(`bond note: ${bondJson.error || 'could not create bond'}`, 'warn');
+      }
+    } catch(e){
+      dlog('bond creation skipped (backend offline)', 'warn');
+    }
+  }
+
+  btns.innerHTML = `<button class="wiz-btn primary" onclick="closeWizard();postDeploy('${wizData.name}','${wizData.symbol}','${contract||jobId}','${txHash||''}', '${responseText.slice(0,120).replace(/'/g,'')}')">✓ done — view result</button>`;
+}
+
+function wizBack(){ if(wizStep>0){ wizStep--; renderWiz(); } }
+
+function flash(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('err');
+  el.focus();
+  setTimeout(()=>el.classList.remove('err'),1200);
+}
+
+
+async function postDeploy(name, symbol, contract, tx, bankrResponse){
+  blank();
+  sep('═',64);
+  ln(`  🔥 TOKEN FORGED: ${name} (${symbol})`,'hdr');
+  sep('─',64);
+  if(contract && contract.startsWith('0x')){
+    ln(`  contract   ${contract}`,'g0');
+    ln(`  explorer   basescan.org/token/${contract}`,'blue');
+  }
+  if(tx && tx.startsWith('0x')) ln(`  tx hash   ${tx}`,'dim');
+  ln(`  network    Base Mainnet (8453)`,'g1');
+  ln(`  route      Ignis → bankr.bot → Base`,'g1');
+  ln(`  lp         auto-seeded by bankr.bot`,'g1');
+  ln(`  fee share  57% of 1.2% swap fees → you`,'g1');
+  blank();
+  if(bankrResponse){
+    ln('  bankr.bot response:','amber');
+    const lines = bankrResponse.split('\\n').slice(0,4);
+    for(const l of lines) if(l.trim()) ln(`  ${l}`,'dim');
+  }
+  blank();
+  ln('  next steps:','amber');
+  ln(`  1. basescan    →  basescan.org/token/${contract?.slice(0,10)||'...'}...`,'dim');
+  ln(`  2. push repo   →  git push gitlawb main  (reset bond timer)`,'dim');
+  ln(`  3. tip commits →  tip owner/repo [commit_hash] [amount]`,'dim');
+  ln(`  4. check key   →  key  (verify Launch Key status)`,'dim');
+  ln(`  5. leaderboard →  leaderboard  (see top contributors)`,'dim');
+  sep('═',64);
+  blank();
+}
+
+// ── INPUT ──
+function focusInput(){ input.focus(); }
+
+function runCmd(str){
+  input.value = str;
+  processInput();
+}
+
+async function processInput(){
+  const raw = input.value.trim();
+  if(!raw) return;
+  cmdHistory.unshift(raw); histIdx=-1; input.value='';
+
+  blank();
+  ln(`  ${raw}`,'cmd-echo');
+
+  const parts = raw.split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const args = parts.slice(1);
+
+  if(cmds[cmd]) await cmds[cmd](args);
+  else ln(`  bash: ${cmd}: command not found  ·  type 'help'`,'red');
+}
+
+input.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ processInput(); return; }
+  if(e.key==='ArrowUp'){ e.preventDefault(); if(histIdx<cmdHistory.length-1){histIdx++;input.value=cmdHistory[histIdx];} }
+  if(e.key==='ArrowDown'){ e.preventDefault(); if(histIdx>0){histIdx--;input.value=cmdHistory[histIdx];}else{histIdx=-1;input.value='';} }
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const p=input.value.toLowerCase().trim();
+    if(!p) return;
+    const m=Object.keys(cmds).find(c=>c.startsWith(p));
+    if(m) input.value=m;
+  }
+  if(e.key==='Escape'){
+    if(document.getElementById('wiz-overlay').classList.contains('open')) closeWizard();
+    else closeLookup();
+  }
+});
+
+document.body.addEventListener('keydown',e=>{
+  if(document.getElementById('wiz-overlay').classList.contains('open')) return;
+  if(document.activeElement!==input) input.focus();
+});
+
+function closeLookup(){ document.getElementById('lookup-panel').classList.remove('open'); }
+
+// sidebar active state
+document.querySelectorAll('.sb-item').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+  });
+});
+
+// boot
+boot();
+</script>
+
+<!-- Ignis ember particles -->
+<div class="ignis-ember" style="bottom:44px;left:8%;width:2px;height:2px;background:#ff8800;--dur:3.2s;--dx:-12px;animation-delay:0.3s"></div>
+<div class="ignis-ember" style="bottom:44px;left:12%;width:1.5px;height:1.5px;background:#ffcc00;--dur:2.8s;--dx:8px;animation-delay:1.1s"></div>
+<div class="ignis-ember" style="bottom:44px;right:8%;width:2px;height:2px;background:#ff6600;--dur:3.6s;--dx:14px;animation-delay:0.7s"></div>
+<div class="ignis-ember" style="bottom:44px;right:12%;width:1.5px;height:1.5px;background:#ffaa00;--dur:2.5s;--dx:-10px;animation-delay:1.8s"></div>
+
+</body>
+</html>
