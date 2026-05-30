@@ -5,7 +5,8 @@ const express    = require('express');
 const router     = express.Router();
 const { ethers } = require('ethers');
 const crypto     = require('crypto');
-const db         = require('../db');
+const dbModule   = require('../db');
+function getDb() { return dbModule.getDB(); }
 
 // ── GET /api/auth/challenge/:address ─────────────────────────────────────────
 // Returns a nonce for the wallet to sign
@@ -20,7 +21,7 @@ router.get('/challenge/:address', (req, res) => {
   const message   = buildSignMessage(address.toLowerCase(), nonce);
 
   try {
-    db.createAuthNonce(address, nonce);
+    getDb().createAuthNonce(address, nonce);
     return res.json({
       ok: true,
       address,
@@ -49,7 +50,7 @@ router.post('/verify', async (req, res) => {
   }
 
   // Fetch the stored nonce
-  const record = db.getAuthNonce(nonce);
+  const record = getDb().getAuthNonce(nonce);
   if (!record) {
     return res.status(401).json({ error: 'nonce not found, expired, or already used' });
   }
@@ -76,8 +77,8 @@ router.post('/verify', async (req, res) => {
 
   // Issue session token (24hr)
   const token = crypto.randomBytes(32).toString('hex');
-  db.activateSession(nonce, token);
-  db.cleanExpiredSessions();
+  getDb().activateSession(nonce, token);
+  getDb().cleanExpiredSessions();
 
   return res.json({
     ok: true,
@@ -94,10 +95,10 @@ router.get('/me', (req, res) => {
   const token = req.headers['x-auth-token'];
   if (!token) return res.status(401).json({ error: 'x-auth-token header required' });
 
-  const session = db.getSession(token);
+  const session = getDb().getSession(token);
   if (!session) return res.status(401).json({ error: 'invalid or expired session' });
 
-  db.extendSession(token);
+  getDb().extendSession(token);
   return res.json({ ok: true, address: session.address, authenticated: true });
 });
 
@@ -112,12 +113,12 @@ function requireAuth(req, res, next) {
     });
   }
 
-  const session = db.getSession(token);
+  const session = getDb().getSession(token);
   if (!session) {
     return res.status(401).json({ error: 'invalid or expired session — re-authenticate' });
   }
 
-  db.extendSession(token);
+  getDb().extendSession(token);
   req.authAddress = session.address;
   next();
 }

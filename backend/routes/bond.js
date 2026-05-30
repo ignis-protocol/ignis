@@ -4,7 +4,8 @@
 const express   = require('express');
 const router    = express.Router();
 const { ethers } = require('ethers');
-const db        = require('../db');
+const dbModule  = require('../db');
+function getDb() { return dbModule.getDB(); }
 const { requireAuth } = require('./auth');
 
 // Minimum $IGNIS to bond (configurable)
@@ -85,26 +86,6 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// ── GET /api/bond/:repo — get bond for a repo ─────────────────────────────────
-router.get('/:repo(*)', (req, res) => {
-  const repo = req.params.repo;
-  const bond = getDb().getBondByRepo(repo);
-  if (!bond) return res.status(404).json({ error: 'no active bond for this repo' });
-
-  const inactive_days = daysAgo(bond.last_commit_at);
-  const days_until_slash = Math.max(0, 90 - inactive_days);
-
-  return res.json({
-    ok: true,
-    bond: {
-      ...bond,
-      inactive_days,
-      days_until_slash,
-      at_risk: inactive_days > 60,
-    },
-  });
-});
-
 // ── GET /api/bond/bonder/:address — bonds by wallet ──────────────────────────
 router.get('/bonder/:address', (req, res) => {
   const bonds = getDb().getBondsByBonder(req.params.address);
@@ -156,13 +137,33 @@ router.post('/slash', (req, res) => {
 // ── POST /api/bond/release/:id — release a bond (bonder calls this) ──────────
 router.post('/release/:id', (req, res) => {
   const { bonder } = req.body;
-  const bond = db.getDb().prepare('SELECT * FROM bonds WHERE id = ?').get(Number(req.params.id));
+  const bond = getDb().rawGet('SELECT * FROM bonds WHERE id = ?', [Number(req.params.id)]);
   if (!bond) return res.status(404).json({ error: 'bond not found' });
   if (bond.bonder !== bonder?.toLowerCase()) return res.status(403).json({ error: 'not your bond' });
   if (bond.status !== 'active') return res.status(400).json({ error: `bond is ${bond.status}` });
 
   getDb().releaseBond(bond.id);
   return res.json({ ok: true, message: `${bond.amount_ignis} $IGNIS bond released from ${bond.repo}` });
+});
+
+// ── GET /api/bond/:repo — get bond for a repo ─────────────────────────────────
+router.get('/:repo(*)', (req, res) => {
+  const repo = req.params.repo;
+  const bond = getDb().getBondByRepo(repo);
+  if (!bond) return res.status(404).json({ error: 'no active bond for this repo' });
+
+  const inactive_days = daysAgo(bond.last_commit_at);
+  const days_until_slash = Math.max(0, 90 - inactive_days);
+
+  return res.json({
+    ok: true,
+    bond: {
+      ...bond,
+      inactive_days,
+      days_until_slash,
+      at_risk: inactive_days > 60,
+    },
+  });
 });
 
 module.exports = router;

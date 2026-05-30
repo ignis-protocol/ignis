@@ -3,7 +3,8 @@
 const express    = require('express');
 const router     = express.Router();
 const { ethers } = require('ethers');
-const db         = require('../db');
+const dbModule   = require('../db');
+function getDb() { return dbModule.getDB(); }
 
 // Minimum $IGNIS balance required to forge (set in .env)
 const MIN_IGNIS_TO_LAUNCH = process.env.MIN_IGNIS_TO_LAUNCH || '1000';

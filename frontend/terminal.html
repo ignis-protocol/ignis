@@ -1454,15 +1454,15 @@ function renderWiz(){
     const savedKey = sessionStorage.getItem('bankr_api_key') || '';
     body += `
       <div class="wiz-step-lbl">STEP 1 / ${WIZ_TOTAL}  ·  SETUP FEE WALLET</div>
-      <div class="wiz-q" style="color:var(--g0);font-size:13px">Kamu dapat <span style="color:var(--amber);font-weight:600">57% dari setiap swap</span> token kamu — otomatis, selamanya.</div>
+      <div class="wiz-q" style="color:var(--g0);font-size:13px">You earn <span style="color:var(--amber);font-weight:600">57% of every swap</span> on your token — automatically, forever.</div>
       <div style="margin:10px 0 14px;padding:10px 12px;border:1px solid var(--g3);background:var(--g4);font-size:11px;color:var(--dim);line-height:1.9">
-        Fee langsung masuk ke wallet kamu sendiri — bukan ke Ignis.<br><br>
-        <span style="color:var(--g0)">1.</span>&nbsp; Daftar gratis di <a href="https://bankr.bot/api" target="_blank" style="color:var(--g0)">bankr.bot/api</a><br>
-        <span style="color:var(--g0)">2.</span>&nbsp; Copy API key kamu<br>
-        <span style="color:var(--g0)">3.</span>&nbsp; Paste di bawah ini
+        Fees go straight to your own wallet — not to Ignis.<br><br>
+        <span style="color:var(--g0)">1.</span>&nbsp; Create a free key at <a href="https://bankr.bot/api" target="_blank" style="color:var(--g0)">bankr.bot/api</a><br>
+        <span style="color:var(--g0)">2.</span>&nbsp; Copy your API key<br>
+        <span style="color:var(--g0)">3.</span>&nbsp; Paste it below
       </div>
       <input class="wiz-input" id="wf-key" type="password" placeholder="bk_xxxxxxxxxxxxxxxx" value="${wizData.apiKey||savedKey}" autocomplete="off">
-      <div class="wiz-hint">Tersimpan di browser kamu saja — tidak dikirim ke server Ignis</div>
+      <div class="wiz-hint">Stored only in your browser — never sent to Ignis servers</div>
       <div class="wiz-btns">
         <button class="wiz-btn" onclick="closeWizard()">cancel</button>
         <button class="wiz-btn primary" onclick="wizNext(0)">next →</button>
@@ -1471,10 +1471,10 @@ function renderWiz(){
   } else if(wizStep===1){
     body += `
       <div class="wiz-step-lbl">STEP 2 / ${WIZ_TOTAL}  ·  PROJECT INFO</div>
-      <div class="wiz-q">Nama project kamu</div>
+      <div class="wiz-q">Project name</div>
       <input class="wiz-input" id="wf0" placeholder="e.g. GitLaw Protocol" value="${wizData.name||''}">
-      <div class="wiz-q" style="margin-top:8px">Deskripsi singkat</div>
-      <input class="wiz-input" id="wf0b" placeholder="satu kalimat — ini ngapain?" value="${wizData.desc||''}">
+      <div class="wiz-q" style="margin-top:8px">Short description</div>
+      <input class="wiz-input" id="wf0b" placeholder="one sentence — what does it do?" value="${wizData.desc||''}">
       <div class="wiz-btns">
         <button class="wiz-btn" onclick="wizBack()">← back</button>
         <button class="wiz-btn primary" onclick="wizNext(1)">next →</button>
@@ -1485,8 +1485,8 @@ function renderWiz(){
       <div class="wiz-step-lbl">STEP 3 / ${WIZ_TOTAL}  ·  TOKEN</div>
       <div class="wiz-q">Symbol token</div>
       <input class="wiz-input" id="wf1" placeholder="e.g. LAW" style="text-transform:uppercase" value="${wizData.symbol||''}">
-      <div class="wiz-hint">Supply & liquidity otomatis — fair launch on Base, gratis</div>
-      <div class="wiz-q" style="margin-top:10px">Socials <span style="color:var(--dim2);font-size:10px">(semua opsional)</span></div>
+      <div class="wiz-hint">Supply and liquidity are handled automatically — fair launch on Base, no gas</div>
+      <div class="wiz-q" style="margin-top:10px">Socials <span style="color:var(--dim2);font-size:10px">(all optional)</span></div>
       <input class="wiz-input" id="wf1b" placeholder="website (https://...)" value="${wizData.website||''}">
       <input class="wiz-input" id="wf1c" placeholder="twitter/X (@handle)" value="${wizData.twitter||''}">
       <input class="wiz-input" id="wf1d" placeholder="gitlawb repo (owner/repo)" value="${wizData.repo||''}">
@@ -1500,20 +1500,20 @@ function renderWiz(){
     const bondCls = wizData.repo ? 'accent' : 'dim';
     body += `
       <div class="wiz-step-lbl">STEP 4 / ${WIZ_TOTAL}  ·  REPO BOND</div>
-      <div class="wiz-q">Bond $IGNIS ke repo kamu — buktikan kamu serius</div>
+      <div class="wiz-q">Bond $IGNIS to your repo — prove you are serious</div>
       <div style="margin:0 0 12px;padding:10px 12px;border:1px solid var(--g3);background:var(--g4);font-size:11px;color:var(--dim);line-height:1.8">
         <span style="color:var(--g0)">Repo Bond</span> = skin in the game.<br>
-        Bond $IGNIS ke repo kamu → buyer bisa filter <span style="color:var(--g0)">"active repo only"</span><br>
-        Repo ga ada commit 90 hari → bond di-slash ke treasury.<br>
-        <span style="color:var(--dim2)">Opsional tapi sangat direkomendasikan.</span>
+        Bond $IGNIS to your repo → buyers can filter for <span style="color:var(--g0)">"active repo only"</span><br>
+        No commits for 90 days → the bond gets slashed to treasury.<br>
+        <span style="color:var(--dim2)">Optional, but strongly recommended.</span>
       </div>
       ${wizData.repo ? `
-      <div class="wiz-q">Bond amount untuk <span style="color:var(--g0)">${wizData.repo}</span></div>
+      <div class="wiz-q">Bond amount for <span style="color:var(--g0)">${wizData.repo}</span></div>
       <input class="wiz-input" id="wf-bond" type="number" placeholder="100 (minimum)" value="${wizData.bondAmount||'100'}">
-      <div class="wiz-hint">Minimum 100 $IGNIS — aktif selama repo aktif</div>
+      <div class="wiz-hint">Minimum 100 $IGNIS — stays active while the repo stays active</div>
       ` : `
-      <div style="color:var(--amber);font-size:11px;padding:6px 0">⚠ Kamu belum link gitlawb repo di step sebelumnya — bond akan di-skip.</div>
-      <div style="color:var(--dim2);font-size:10px;padding:4px 0">← back untuk tambah repo</div>
+      <div style="color:var(--amber);font-size:11px;padding:6px 0">⚠ You did not link a gitlawb repo in the previous step — bond will be skipped.</div>
+      <div style="color:var(--dim2);font-size:10px;padding:4px 0">← back to add a repo</div>
       `}
       <div class="wiz-btns">
         <button class="wiz-btn" onclick="wizBack()">← back</button>
@@ -1527,13 +1527,13 @@ function renderWiz(){
       : 'skip (no repo linked)';
     body += `
       <div class="wiz-step-lbl">STEP 5 / ${WIZ_TOTAL}  ·  REVIEW & FORGE</div>
-      <div class="wiz-q">Semua siap — launching via bankr.bot on Base</div>
+      <div class="wiz-q">Everything is ready — launching via bankr.bot on Base</div>
       <div class="wiz-summary">
         <div class="sum-row"><span class="sum-k">project</span><span class="sum-v">${wizData.name}</span></div>
-        <div class="sum-row"><span class="sum-k">deskripsi</span><span class="sum-v" style="font-size:10px">${wizData.desc||'—'}</span></div>
+        <div class="sum-row"><span class="sum-k">description</span><span class="sum-v" style="font-size:10px">${wizData.desc||'—'}</span></div>
         <div class="sum-row"><span class="sum-k">symbol</span><span class="sum-v amber">${wizData.symbol}</span></div>
-        <div class="sum-row"><span class="sum-k">gas fee</span><span class="sum-v accent">gratis ✓</span></div>
-        <div class="sum-row"><span class="sum-k">fee kamu</span><span class="sum-v" style="color:var(--g0);font-weight:600">57% dari setiap swap → wallet kamu</span></div>
+        <div class="sum-row"><span class="sum-k">gas fee</span><span class="sum-v accent">free ✓</span></div>
+        <div class="sum-row"><span class="sum-k">your fee share</span><span class="sum-v" style="color:var(--g0);font-weight:600">57% of every swap → your wallet</span></div>
         <div class="sum-row"><span class="sum-k">repo bond</span><span class="sum-v accent">${bondInfo}</span></div>
         <div class="sum-row"><span class="sum-k">liquidity</span><span class="sum-v accent">auto-seed by bankr.bot</span></div>
         <div class="sum-row"><span class="sum-k">website</span><span class="sum-v">${wizData.website||'—'}</span></div>
@@ -1544,7 +1544,7 @@ function renderWiz(){
       <div id="deploy-log"></div>
       <div class="wiz-btns" id="deploy-btns">
         <button class="wiz-btn" onclick="wizBack()">← back</button>
-        <button class="wiz-btn launch" onclick="deployToken()">🔥 forge sekarang</button>
+        <button class="wiz-btn launch" onclick="deployToken()">forge now</button>
       </div>`;
   }
 
