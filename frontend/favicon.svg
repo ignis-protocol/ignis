@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ignis">
-  <rect width="64" height="64" rx="12" fill="#060b06"/>
-  <path d="M32 8 55 52H9L32 8Z" fill="none" stroke="#00ff41" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M33 18c2 8-6 11-6 19 0 6 5 11 11 11 7 0 12-5 12-12 0-8-6-13-10-18 1 8-7 9-7 18 0 2-3 2-3-1 0-6 6-9 3-17Z" fill="#e8a030"/>
-  <path d="M35 33c1 4-3 5-3 9 0 4 3 7 7 7s7-3 7-7c0-4-3-7-6-10 0 5-5 5-5 10 0 1-2 1-2-1 0-3 3-5 2-8Z" fill="#00ff41"/>
+  <rect width="64" height="64" rx="14" fill="#050805"/>
+  <path d="M32 9 55 52H9L32 9Z" fill="#071307" stroke="#00ff41" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M32 25 42 46H22L32 25Z" fill="#e8a030"/>
+  <path d="M32 33 37 46H27L32 33Z" fill="#00ff41"/>
 </svg>
