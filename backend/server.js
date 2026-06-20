@@ -32,7 +32,7 @@ const solana = new SolanaAnchor({
   secretKey: process.env.SOLANA_ANCHOR_SECRET_KEY,
 });
 const relays = [
-  { id: 'relay-jkt-01', region: 'Jakarta', role: 'ingress', latency_ms: 14, status: 'online' },
+  { id: 'relay-tyo-01', region: 'Tokyo', role: 'ingress', latency_ms: 14, status: 'online' },
   { id: 'relay-sgp-04', region: 'Singapore', role: 'mixer', latency_ms: 18, status: 'online' },
   { id: 'relay-ams-09', region: 'Amsterdam', role: 'exit', latency_ms: 23, status: 'warming' },
 ];

@@ -98,7 +98,7 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
       </div>
       <hr class="sb-divider">
       <div class="sb-section"><div class="sb-label">relays</div>
-        <div class="node-row"><span class="nd"></span>relay-jkt-01</div>
+        <div class="node-row"><span class="nd"></span>relay-tyo-01</div>
         <div class="node-row"><span class="nd"></span>relay-sgp-04</div>
         <div class="node-row"><span class="nd warn"></span>relay-ams-09</div>
       </div>
@@ -130,7 +130,7 @@ const state = {
   walletToken: sessionStorage.getItem('ignis_wallet_token') || null,
   proof: null,
   relays: [
-    {id:'R1', city:'Jakarta', ms:14, status:'sealed'},
+    {id:'R1', city:'Tokyo', ms:14, status:'sealed'},
     {id:'R4', city:'Singapore', ms:18, status:'forwarded'},
     {id:'R9', city:'Amsterdam', ms:23, status:'exit'}
   ]
@@ -204,7 +204,7 @@ async function boot(){
     ]);
   }
   ln('>> initializing relay session...', 'dim');
-  await sleep(180); ln('>> relay-jkt-01  online  14ms  sealed ingress', 'g1');
+  await sleep(180); ln('>> relay-tyo-01  online  14ms  sealed ingress', 'g1');
   await sleep(130); ln('>> relay-sgp-04  online  18ms  forwarding', 'g1');
   await sleep(130); ln('>> relay-ams-09  syncing  23ms  exit route warm', 'amber');
   await sleep(130); ln('>> Solana signal layer  planned  proof queue ready', 'g2');
