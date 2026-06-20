@@ -36,7 +36,13 @@ const relays = [
   { id: 'relay-sgp-04', region: 'Singapore', role: 'mixer', latency_ms: 18, status: 'online' },
   { id: 'relay-ams-09', region: 'Amsterdam', role: 'exit', latency_ms: 23, status: 'warming' },
 ];
-const allowedOrigins = String(process.env.CORS_ORIGIN || '*').split(',').map(v => v.trim()).filter(Boolean);
+const defaultCorsOrigins = [
+  'https://ignis-protocol.com',
+  'https://www.ignis-protocol.com',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+const allowedOrigins = String(process.env.CORS_ORIGIN || defaultCorsOrigins.join(',')).split(',').map(v => v.trim()).filter(Boolean);
 const TRUST_PROXY_HOPS = Number(process.env.TRUST_PROXY_HOPS || 1);
 
 app.disable('x-powered-by');
@@ -166,7 +172,7 @@ app.post('/api/wallet/challenge', authLimiter, asyncHandler(async (req, res) => 
     wallet,
     session_id: sessionId || null,
     nonce: crypto.randomBytes(18).toString('base64url'),
-    domain: optionalText(req.body.domain, 120) || 'ignis-lac-nine.vercel.app',
+    domain: optionalText(req.body.domain, 120) || 'ignis-protocol.com',
     created_at: now.toISOString(),
     expires_at: new Date(now.getTime() + WALLET_CHALLENGE_TTL_MS).toISOString(),
     used_at: null,

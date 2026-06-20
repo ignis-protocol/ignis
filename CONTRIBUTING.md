@@ -1,6 +1,6 @@
 # Contributing to IGNIS
 
-IGNIS is an anonymous code contribution protocol. Contributions should move the project toward metadata stripping, relay routing, blind review, portable signal, and Solana-native proof/incentive infrastructure.
+IGNIS is an anonymous code contribution protocol. Contributions should move the project toward metadata stripping, relay routing, blind review, portable signal, and Solana-native proof infrastructure.
 
 ## Areas That Need Work
 
@@ -8,7 +8,7 @@ IGNIS is an anonymous code contribution protocol. Contributions should move the 
 - **Relay API** - sealed submission flow, relay status, rate limits, abuse controls.
 - **Metadata stripping** - real diff/bundle sanitization.
 - **Blind review** - reviewer queues, scoring, quorum, audit trail.
-- **Solana** - wallet auth, contribution receipts, reviewer stake, relay bonds.
+- **Solana** - wallet auth, contribution receipts, and optional devnet anchoring.
 - **Security** - privacy threat modeling, metadata leak tests, relay abuse prevention.
 
 ## Local Development
@@ -22,8 +22,8 @@ npm start
 Open:
 
 ```text
-frontend/index.html
-frontend/terminal.html
+http://localhost:5173
+http://localhost:5173/terminal
 ```
 
 ## Contribution Standard

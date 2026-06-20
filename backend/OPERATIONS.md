@@ -5,7 +5,7 @@
 ```text
 AUTH_SECRET=<32+ random bytes>
 REVIEWER_API_KEYS=reviewer-1:<secret>,reviewer-2:<secret>,reviewer-3:<secret>
-CORS_ORIGIN=https://ignis-lac-nine.vercel.app
+CORS_ORIGIN=https://ignis-protocol.com,https://www.ignis-protocol.com
 TRUST_PROXY_HOPS=1
 ```
 
