@@ -1,97 +1,117 @@
-# IGNIS
+<p align="center">
+  <img src="frontend/ignis-mark.svg" width="96" alt="IGNIS logo">
+</p>
 
-> Code without a face.
+<h1 align="center">IGNIS</h1>
 
-IGNIS is an anonymous code contribution protocol. It strips identity from code submissions, routes sealed diff bundles through relays, sends work into blind review, and preserves contribution signal for a future Solana-native proof and incentive layer.
+<p align="center">
+  <strong>Code without a face.</strong>
+</p>
 
-IGNIS is focused on anonymous code contribution, blind review, and Solana-native signal.
+<p align="center">
+  Anonymous code contribution. Blind review. Portable signal. Solana-native proof layer.
+</p>
 
-**GitHub:** [ignis-protocol/ignis](https://github.com/ignis-protocol/ignis)
+<p align="center">
+  <a href="https://ignis-lac-nine.vercel.app"><strong>Website</strong></a>
+  ·
+  <a href="https://ignis-lac-nine.vercel.app/terminal.html"><strong>Terminal</strong></a>
+  ·
+  <a href="https://ignis-production-1c71.up.railway.app/health"><strong>API</strong></a>
+  ·
+  <a href="https://x.com/IgnisAgent_Ai"><strong>X</strong></a>
+</p>
 
----
-
-## What IGNIS Does
-
-IGNIS separates identity from contribution quality.
-
-- Generate a local ephemeral identity.
-- Strip metadata from a patch or diff bundle.
-- Route the sealed bundle through relays.
-- Let reviewers judge the code without profile context.
-- Build portable signal from accepted work.
-- Anchor accepted contribution proofs and incentives to Solana later.
-
-The product principle is simple:
-
-> No resume. No clout. No bias. Just the diff.
-
----
-
-## Protocol Shape
-
-| Layer | Purpose |
-|---|---|
-| Ephemeral Identity | Local-only session key for anonymous continuity |
-| Metadata Strip | Removes author, email, timezone, host, path, and identity leaks |
-| Relay Network | Routes sealed submissions through ingress, mixer, and exit relays |
-| Blind Review | Reviewers see diff, tests, and context, not identity |
-| Signal Score | Reputation based on accepted work and blind review quality |
-| Solana Layer | Future contribution receipts, reviewer stakes, relay bonds, and rewards |
+<p align="center">
+  <img alt="Status" src="https://img.shields.io/badge/status-alpha-00ff41?style=for-the-badge&labelColor=080b10">
+  <img alt="Protocol" src="https://img.shields.io/badge/protocol-anonymous%20code-a78bfa?style=for-the-badge&labelColor=080b10">
+  <img alt="Layer" src="https://img.shields.io/badge/layer-Solana%20planned-2dd4bf?style=for-the-badge&labelColor=080b10">
+</p>
 
 ---
 
-## Current Stack
+## What IGNIS Is
 
-| Layer | Tech |
-|---|---|
-| Frontend | Vanilla HTML/CSS/JS |
-| Backend | Node.js + Express |
-| API State | JSON file persistence for alpha deployments |
-| Settlement / Incentives | Solana planned |
-| Wallet | Phantom/Solana support planned |
+IGNIS is a protocol for builders who want their code judged before their identity.
+
+It lets a contributor submit work through an ephemeral identity, strip identifying metadata, route the sealed contribution through relays, and enter blind review. Accepted work builds portable signal that can later be anchored to Solana.
+
+No resume. No clout. No follower count. Just the diff.
 
 ---
 
-## Project Structure
+## Product Flow
 
 ```text
-ignis/
-+-- README.md
-+-- frontend/
-|   +-- index.html      # public landing page
-|   +-- terminal.html   # protocol terminal UI
-|   +-- favicon.svg
-+-- backend/
-    +-- server.js       # relay/submission/signal API
-    +-- package.json
-    +-- .env.example
-    +-- data/           # ignored runtime JSON store
+Builder
+  |
+  v
+Ephemeral identity
+  |
+  v
+Metadata strip
+  |
+  v
+Sealed submission
+  |
+  v
+Relay route
+  |
+  v
+Blind review
+  |
+  v
+Signal score
+  |
+  v
+Solana proof layer
 ```
-
-Legacy route files may still exist while the product is being migrated, but the active public server surface is the anonymous code protocol API in `backend/server.js`.
 
 ---
 
-## Quickstart
+## Core Product
 
-### Backend
+| Product Surface | What it does |
+|---|---|
+| Website | Presents IGNIS as an anonymous contribution protocol |
+| Terminal | Interactive protocol interface for sessions, submissions, reviews, signal, and Solana status |
+| API | Creates anonymous sessions, stores sealed submissions, exposes review queue and signal state |
+| Signal Layer | Tracks contribution quality without exposing the builder's public identity |
+| Solana Layer | Planned receipts, reviewer stake, relay bonds, and future incentives |
 
-```bash
-cd backend
-npm install
-cp .env.example .env
-npm start
-```
+---
 
-Server starts on:
+## Live Alpha
 
-```text
-http://localhost:3001
-```
+| Surface | URL |
+|---|---|
+| Website | https://ignis-lac-nine.vercel.app |
+| Terminal | https://ignis-lac-nine.vercel.app/terminal.html |
+| API Health | https://ignis-production-1c71.up.railway.app/health |
+| X | https://x.com/IgnisAgent_Ai |
 
-### Frontend
+---
 
-Open `frontend/index.html` or `frontend/terminal.html` directly in a browser, or deploy `frontend/` as static files.
+## Current Alpha Status
+
+Completed:
+
+- Product rebrand to anonymous code contribution.
+- Premium frontend and terminal UI.
+- Anonymous session API.
+- Persistent alpha backend storage.
+- Sealed submission API.
+- Relay, review, signal, and Solana status endpoints.
+- Terminal connected to backend API with local fallback.
+
+Not done yet:
+
+- Real metadata stripping CLI.
+- Reviewer voting and quorum settlement.
+- Production database.
+- Solana wallet auth.
+- On-chain proof program.
+- IGNIS SPL incentive layer.
 
 ---
 
@@ -99,19 +119,18 @@ Open `frontend/index.html` or `frontend/terminal.html` directly in a browser, or
 
 | Command | Description |
 |---|---|
-| `init` | Create a local ephemeral identity |
-| `strip [file]` | Remove identifying metadata from a diff bundle |
-| `submit [repo]` | Route a sealed submission through relays |
-| `review` | Show blind review queue state |
-| `signal` | Show portable signal score and Solana proof plan |
-| `network` | Inspect relay path |
-| `solana` | Show Solana proof/incentive layer status |
-| `wallet connect` | Connect Phantom if available |
-| `about` | Explain the new IGNIS direction |
+| `init` | Create an ephemeral anonymous identity |
+| `strip [file]` | Simulate metadata stripping for a diff bundle |
+| `submit [repo]` | Create a sealed anonymous submission |
+| `review` | Inspect the blind review queue |
+| `signal` | Read contribution signal state |
+| `network` | Inspect relay route state |
+| `solana` | Read planned proof and incentive layer status |
+| `wallet connect` | Attempt Phantom/Solana wallet connection |
 
 ---
 
-## API
+## API Surface
 
 ```text
 GET  /health
@@ -126,7 +145,7 @@ GET  /api/signal
 GET  /api/solana
 ```
 
-### `POST /api/sessions`
+Create an anonymous session:
 
 ```json
 {
@@ -135,20 +154,7 @@ GET  /api/solana
 }
 ```
 
-Response:
-
-```json
-{
-  "ok": true,
-  "session": {
-    "id": "ash_ab12cd34ef",
-    "status": "active",
-    "expires_at": "2026-06-23T00:00:00.000Z"
-  }
-}
-```
-
-### `POST /api/submissions`
+Create a sealed submission:
 
 ```json
 {
@@ -162,39 +168,59 @@ Response:
 }
 ```
 
-Response:
+---
 
-```json
-{
-  "ok": true,
-  "submission": {
-    "id": "sealed_ab12cd34",
-    "metadata_removed": true,
-    "review_mode": "blind",
-    "solana_proof": "queued_after_acceptance"
-  }
-}
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | Vanilla HTML, CSS, JavaScript |
+| Backend | Node.js, Express |
+| Alpha Storage | JSON file persistence |
+| Deployment | Vercel frontend, Railway backend |
+| Future Proof Layer | Solana |
+
+---
+
+## Local Development
+
+Backend:
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm start
+```
+
+Frontend:
+
+```bash
+python -m http.server 5173 --directory frontend
+```
+
+Open:
+
+```text
+http://localhost:5173
+http://localhost:5173/terminal.html
 ```
 
 ---
 
 ## Roadmap
 
-- [x] Rebrand to anonymous code protocol
-- [x] Replace public UI with relay/protocol UI
-- [x] Replace active backend API with relay/submission/signal endpoints
-- [x] Add persistent alpha API storage
-- [x] Add anonymous session creation
-- [x] Connect terminal flow to backend API with local fallback
-- [ ] Implement real metadata stripping CLI
-- [ ] Move sealed queue from JSON alpha storage to production database
-- [ ] Add reviewer workflow and scoring
-- [ ] Add Solana wallet auth
-- [ ] Deploy Solana signal proof program
-- [ ] Design IGNIS SPL incentive layer
+- [x] Product rebrand.
+- [x] Premium website and terminal.
+- [x] Backend Phase 1: foundation, storage, validation, health.
+- [x] Backend Phase 2: anonymous sessions and sealed submissions.
+- [ ] Phase 3: blind review voting, quorum, and scoring.
+- [ ] Phase 4: Solana wallet auth and proof receipts.
+- [ ] Phase 5: production hardening, monitoring, and incentive design.
 
 ---
 
-## Tagline
-
-**IGNIS - code without a face.**
+<p align="center">
+  <strong>IGNIS</strong><br>
+  code without a face.
+</p>
