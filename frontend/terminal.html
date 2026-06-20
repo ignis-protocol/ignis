@@ -71,7 +71,7 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
 
 <div id="app">
   <div id="topbar">
-    <div class="tb-left"><a class="logo" href="/"><span class="logo-mark"><img src="/ignis-mark.svg?v=2" alt=""></span><span>IGNIS</span></a><span><span class="live-dot"></span>relay alpha</span><span>solana signal layer</span></div>
+    <div class="tb-left"><a class="logo" href="/"><span class="logo-mark"><img src="/ignis-mark.svg?v=2" alt=""></span><span>IGNIS</span></a><span><span class="live-dot"></span>relay online</span><span>proof signal layer</span></div>
     <div class="tb-center">SESSION <span id="session-id">ASH-0000</span></div>
     <div class="tb-right"><a class="top-link" href="https://x.com/IgnisAgent_Ai" target="_blank" rel="noopener noreferrer">X</a><span id="relay-count">3/3 relays online</span><span id="clock">--:--:--</span></div>
   </div>
@@ -148,7 +148,7 @@ function renderTicker(ticks){
 renderTicker([
   ['connecting to IGNIS protocol','info'],
   ['blind review quorum: 3','hl'],
-  ['Solana proof layer planned','up']
+  ['Solana anchor queue ready','up']
 ]);
 
 function ln(text='', cls='g0', html=false){
@@ -177,7 +177,7 @@ async function api(path, options = {}){
     return data;
   } catch (err) {
     ln(`api offline: ${err.message}`, 'amber');
-    ln('continuing in local simulation mode.', 'dim');
+    ln('continuing in local protocol preview mode.', 'dim');
     return null;
   }
 }
@@ -207,7 +207,7 @@ async function boot(){
   await sleep(180); ln('>> relay-tyo-01  online  14ms  sealed ingress', 'g1');
   await sleep(130); ln('>> relay-sgp-04  online  18ms  forwarding', 'g1');
   await sleep(130); ln('>> relay-ams-09  syncing  23ms  exit route warm', 'amber');
-  await sleep(130); ln('>> Solana signal layer  planned  proof queue ready', 'g2');
+  await sleep(130); ln('>> Solana signal layer  proof queue ready', 'g2');
   blank();
   ln('type help to see commands  /  start with init', 'dim');
   blank();
@@ -356,8 +356,8 @@ async function cmdSignal(){
     ['confidence', data?.confidence || 'unproven'],
     ['accepted', String(data?.totals?.accepted ?? 0)],
     ['settled reviews', String(data?.totals?.settled_reviews ?? 0)],
-    ['portable proof', data ? data.proof_target : 'Solana anchor planned'],
-    ['token incentives', data ? data.incentive_layer : 'future IGNIS SPL reward layer']
+    ['portable proof', data ? data.proof_target : 'Solana anchor queue'],
+    ['token layer', data ? data.incentive_layer : 'none in current scope']
   ]);
   blank();
 }
@@ -478,7 +478,7 @@ function cmdAbout(){
   blank(); ln('ABOUT IGNIS', 'hdr'); sep();
   ln('IGNIS is an anonymous code contribution protocol: code without a face.', 'g0');
   blank();
-  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana devnet anchor queue'].forEach(x => ln('  - ' + x, 'dim'));
+  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana anchor queue'].forEach(x => ln('  - ' + x, 'dim'));
   blank();
 }
 

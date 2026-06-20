@@ -258,10 +258,10 @@ app.get('/api/sessions/:id', (req, res, next) => {
 });
 
 app.get('/api/relays', (req, res) => ok(res, req, {
-  source: 'ignis-alpha',
+  source: 'ignis-protocol',
   relays,
   policy: 'ingress -> mixer -> exit',
-  guarantee: 'alpha control-plane simulation, not a production anonymity guarantee yet',
+  guarantee: 'protocol preview; hardened anonymity guarantees require independent review',
 }));
 
 app.post('/api/submissions', asyncHandler(async (req, res) => {
@@ -428,7 +428,7 @@ app.get('/api/signal', (req, res) => {
     portable_score: Number(portableScore.toFixed(1)),
     confidence: signalConfidence(accepted, settled.length),
     proof_target: 'Solana devnet',
-    incentive_layer: 'none; IGNIS coin is outside current scope',
+    incentive_layer: 'none in current scope',
   });
 });
 
@@ -443,7 +443,7 @@ app.get('/api/solana', (req, res) => {
       failed: storage.state.anchor_jobs.filter(item => item.status === 'failed').length,
       confirmed: storage.state.proofs.filter(item => item.anchor.status === 'confirmed').length,
     },
-    token_mint: 'not planned in Phase 4',
+    token_mint: 'none in current scope',
   });
 });
 
