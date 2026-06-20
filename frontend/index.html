@@ -38,14 +38,19 @@ body::after{
 }
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
-.bg-ghost{
-  position:fixed;border-radius:50% 50% 0 0;pointer-events:none;z-index:0;opacity:.03;
-  background:var(--violet);animation:float 9s ease-in-out infinite;
-}
-.bg-ghost:nth-child(1){width:180px;height:210px;top:12%;left:4%}
-.bg-ghost:nth-child(2){width:120px;height:150px;right:7%;bottom:20%;background:var(--teal);animation-duration:13s}
-.bg-ghost:nth-child(3){width:80px;height:96px;right:2%;top:55%;animation-duration:7s;animation-delay:2s}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.ignis-field{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:radial-gradient(circle at 50% 18%,rgba(0,255,65,.07),transparent 24%),radial-gradient(circle at 82% 30%,rgba(167,139,250,.08),transparent 28%),linear-gradient(180deg,#06090d 0%,var(--bg) 72%)}
+.ignis-field::before{content:"";position:absolute;inset:-18%;opacity:.34;background-image:linear-gradient(120deg,rgba(0,255,65,.13) 1px,transparent 1px),linear-gradient(60deg,rgba(167,139,250,.1) 1px,transparent 1px);background-size:92px 160px;transform:rotate(-8deg);animation:fieldDrift 28s linear infinite}
+.ignis-field::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 10%,transparent 0%,rgba(8,11,16,.2) 45%,rgba(0,0,0,.62) 100%);box-shadow:inset 0 0 180px rgba(0,0,0,.68)}
+.field-beam{position:absolute;left:-20%;right:-20%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,65,.12),rgba(226,232,240,.34),rgba(167,139,250,.16),transparent);filter:drop-shadow(0 0 10px rgba(0,255,65,.32));opacity:.5;animation:beamSweep 9s ease-in-out infinite}
+.field-beam.b1{top:24%}.field-beam.b2{top:58%;animation-delay:-3.4s;animation-duration:11s;opacity:.32}.field-beam.b3{top:78%;animation-delay:-6s;animation-duration:13s;opacity:.24}
+.field-triangle{position:absolute;clip-path:polygon(50% 2%,96% 88%,4% 88%);border:1px solid rgba(0,255,65,.18);background:linear-gradient(135deg,rgba(0,255,65,.08),transparent 54%,rgba(167,139,250,.07));opacity:.18;filter:drop-shadow(0 0 28px rgba(0,255,65,.18));animation:triangleField 14s ease-in-out infinite}
+.field-triangle.t1{width:min(42vw,520px);aspect-ratio:1;left:-9vw;top:17vh;transform:rotate(-18deg)}.field-triangle.t2{width:min(36vw,420px);aspect-ratio:1;right:9vw;bottom:8vh;animation-delay:-5s;opacity:.12}.field-triangle.t3{width:220px;aspect-ratio:1;left:42vw;bottom:18vh;animation-delay:-9s;opacity:.08}
+.ember{position:absolute;width:3px;height:3px;border-radius:50%;background:#d8ffe1;box-shadow:0 0 16px #00ff41,0 0 36px rgba(0,255,65,.35);opacity:.55;animation:emberRise 12s linear infinite}
+.ember.e1{left:12%;bottom:-4%;animation-delay:-1s}.ember.e2{left:28%;bottom:-7%;animation-delay:-6s;animation-duration:15s}.ember.e3{left:47%;bottom:-5%;animation-delay:-3s;animation-duration:11s}.ember.e4{left:68%;bottom:-6%;animation-delay:-8s;animation-duration:16s}.ember.e5{left:84%;bottom:-5%;animation-delay:-4s;animation-duration:13s}
+@keyframes fieldDrift{to{background-position:184px 320px}}
+@keyframes beamSweep{0%,100%{transform:translateY(-12vh) rotate(-2deg);opacity:.08}48%{opacity:.55}60%{transform:translateY(32vh) rotate(-2deg);opacity:.2}}
+@keyframes triangleField{0%,100%{translate:0 0;opacity:.1}45%{translate:14px -18px;opacity:.22}70%{translate:-10px 10px;opacity:.14}}
+@keyframes emberRise{0%{transform:translate3d(0,0,0) scale(.75);opacity:0}12%{opacity:.58}100%{transform:translate3d(28px,-112vh,0) scale(1.25);opacity:0}}
 
 .site-nav{
   position:fixed;top:0;left:0;right:0;z-index:100;min-height:70px;padding:1rem 2.5rem;
@@ -92,16 +97,14 @@ button{font-family:inherit;cursor:pointer}
   position:relative;z-index:1;min-height:96vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:7rem 1.5rem 3rem;text-align:center;overflow:hidden;isolation:isolate;
 }
-.hero-backdrop{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(8,11,16,.1),var(--bg) 92%),linear-gradient(90deg,rgba(45,212,191,.08),transparent 36%,rgba(167,139,250,.09))}
-.hero-circuit{position:absolute;border:1px solid rgba(45,212,191,.14);opacity:.45;background-image:linear-gradient(90deg,rgba(45,212,191,.11) 1px,transparent 0),linear-gradient(rgba(167,139,250,.1) 1px,transparent 0);background-size:28px 28px;transform:skewY(-8deg);animation:gridDrift 18s linear infinite}
-.hero-circuit.a{width:min(820px,90vw);height:260px;left:-14rem;top:8rem}
-.hero-circuit.b{width:min(760px,86vw);height:220px;right:-16rem;bottom:6rem;animation-direction:reverse;animation-duration:22s}
-.scanline{position:absolute;left:0;right:0;top:20%;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:.55;animation:scan 4.8s ease-in-out infinite}
-.data-rain{position:absolute;width:1px;height:44vh;top:12vh;background:linear-gradient(180deg,transparent,rgba(45,212,191,.42),transparent);box-shadow:64px 40px 0 rgba(167,139,250,.2),138px -20px 0 rgba(96,165,250,.22),220px 72px 0 rgba(45,212,191,.18),322px 8px 0 rgba(250,204,21,.14),418px 90px 0 rgba(45,212,191,.16);opacity:.32;animation:dataRain 9s linear infinite}
-.data-rain.a{left:8%}.data-rain.b{right:22%;animation-duration:12s;animation-delay:-4s;opacity:.22}
-@keyframes gridDrift{to{background-position:56px 56px}}
-@keyframes scan{0%,100%{transform:translateY(0);opacity:.18}50%{transform:translateY(46vh);opacity:.62}}
-@keyframes dataRain{0%{transform:translateY(-16vh)}100%{transform:translateY(74vh)}}
+.hero-backdrop{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 30%,rgba(0,255,65,.08),transparent 26%),linear-gradient(180deg,rgba(8,11,16,.05),var(--bg) 96%)}
+.hero-signal{position:absolute;inset:8% 4%;opacity:.62;background-image:linear-gradient(90deg,rgba(0,255,65,.08) 1px,transparent 1px),linear-gradient(rgba(167,139,250,.07) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(circle at 52% 44%,black 0%,transparent 68%);animation:signalGrid 20s linear infinite}
+.hero-signal::before,.hero-signal::after{content:"";position:absolute;inset:9% 16%;clip-path:polygon(50% 0,100% 88%,0 88%);border:1px solid rgba(0,255,65,.22);background:linear-gradient(135deg,rgba(0,255,65,.05),transparent);filter:drop-shadow(0 0 24px rgba(0,255,65,.16));animation:signalPulse 6.5s ease-in-out infinite}
+.hero-signal::after{inset:18% 26%;border-color:rgba(167,139,250,.22);animation-delay:-2.6s;opacity:.65}
+.hero-flare{position:absolute;left:50%;top:48%;width:min(86vw,1100px);height:38vh;transform:translate(-50%,-50%);background:radial-gradient(ellipse at 50% 50%,rgba(0,255,65,.12),rgba(45,212,191,.05) 34%,transparent 72%);filter:blur(24px);opacity:.6;animation:flarePulse 8s ease-in-out infinite}
+@keyframes signalGrid{to{background-position:128px 128px}}
+@keyframes signalPulse{0%,100%{opacity:.16;transform:scale(.96)}50%{opacity:.54;transform:scale(1.03)}}
+@keyframes flarePulse{0%,100%{opacity:.38;transform:translate(-50%,-50%) scale(.96)}50%{opacity:.68;transform:translate(-50%,-50%) scale(1.05)}}
 
 .hero-object{
   position:absolute;right:max(-6rem,-7vw);top:3.6rem;width:min(50vw,700px);height:min(70vh,660px);min-height:470px;
@@ -181,7 +184,11 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
 </style>
 </head>
 <body>
-<span class="bg-ghost"></span><span class="bg-ghost"></span><span class="bg-ghost"></span>
+<div class="ignis-field" aria-hidden="true">
+  <span class="field-beam b1"></span><span class="field-beam b2"></span><span class="field-beam b3"></span>
+  <span class="field-triangle t1"></span><span class="field-triangle t2"></span><span class="field-triangle t3"></span>
+  <span class="ember e1"></span><span class="ember e2"></span><span class="ember e3"></span><span class="ember e4"></span><span class="ember e5"></span>
+</div>
 
 <nav class="site-nav">
   <a class="brand" href="/">
@@ -203,7 +210,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
 <main>
   <section class="hero">
     <div class="hero-backdrop" aria-hidden="true">
-      <div class="hero-circuit a"></div><div class="hero-circuit b"></div><div class="scanline"></div><div class="data-rain a"></div><div class="data-rain b"></div>
+      <div class="hero-flare"></div><div class="hero-signal"></div>
     </div>
     <div class="hero-object" aria-hidden="true">
       <div class="tri-stage">
