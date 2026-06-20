@@ -1,0 +1,12 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/manifesto", "destination": "/index.html" },
+    { "source": "/protocol", "destination": "/index.html" },
+    { "source": "/features", "destination": "/index.html" },
+    { "source": "/terminal", "destination": "/terminal.html" },
+    { "source": "/proof", "destination": "/proof.html" },
+    { "source": "/reviewer", "destination": "/reviewer.html" }
+  ]
+}

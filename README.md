@@ -13,11 +13,11 @@
 </p>
 
 <p align="center">
-  <a href="https://ignis-lac-nine.vercel.app"><strong>Website</strong></a>
+  <a href="https://ignis-protocol.com"><strong>Website</strong></a>
   ·
-  <a href="https://ignis-lac-nine.vercel.app/terminal.html"><strong>Terminal</strong></a>
+  <a href="https://ignis-protocol.com/terminal"><strong>Terminal</strong></a>
   ·
-  <a href="https://ignis-production-1c71.up.railway.app/health"><strong>API</strong></a>
+  <a href="https://api.ignis-protocol.com/health"><strong>API</strong></a>
   ·
   <a href="https://x.com/IgnisAgent_Ai"><strong>X</strong></a>
 </p>
@@ -87,11 +87,11 @@ Solana proof layer
 
 | Surface | URL |
 |---|---|
-| Website | https://ignis-lac-nine.vercel.app |
-| Terminal | https://ignis-lac-nine.vercel.app/terminal.html |
-| Reviewer Console | https://ignis-lac-nine.vercel.app/reviewer.html |
-| Proof Verifier | https://ignis-lac-nine.vercel.app/proof.html |
-| API Health | https://ignis-production-1c71.up.railway.app/health |
+| Website | https://ignis-protocol.com |
+| Terminal | https://ignis-protocol.com/terminal |
+| Reviewer Console | https://ignis-protocol.com/reviewer |
+| Proof Verifier | https://ignis-protocol.com/proof |
+| API Health | https://api.ignis-protocol.com/health |
 | X | https://x.com/IgnisAgent_Ai |
 
 ---
@@ -192,7 +192,7 @@ Create a sealed submission:
 Cast a reviewer vote:
 
 ```bash
-curl -X POST https://ignis-production-1c71.up.railway.app/api/reviews/REVIEW_ID/votes \
+curl -X POST https://api.ignis-protocol.com/api/reviews/REVIEW_ID/votes \
   -H "Content-Type: application/json" \
   -H "X-Reviewer-Key: YOUR_REVIEWER_KEY" \
   -d '{"decision":"accept","score":9,"note":"Tests pass and the change is scoped."}'
@@ -242,7 +242,7 @@ Open:
 
 ```text
 http://localhost:5173
-http://localhost:5173/terminal.html
+http://localhost:5173/terminal
 ```
 
 ---

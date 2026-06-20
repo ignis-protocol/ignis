@@ -34,7 +34,7 @@
 </div>
 <div id="toast" class="toast hidden"></div>
 <script>
-const API = ['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3001' : 'https://ignis-production-1c71.up.railway.app';
+const API = ['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3001' : 'https://api.ignis-protocol.com';
 const ui = Object.fromEntries(['login','console','key','login-btn','login-error','status','queue-list','queue-count','detail','history-btn','logout-btn','toast'].map(id=>[id,document.getElementById(id)]));
 let token=sessionStorage.getItem('ignis_reviewer_token')||'';let reviews=[];let activeId='';let mode='queued';
 const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
