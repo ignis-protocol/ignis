@@ -1,6 +1,6 @@
 {
   "name": "ignis-backend",
-  "version": "0.3.0-alpha",
+  "version": "0.4.0-alpha",
   "description": "IGNIS API server - anonymous code contribution protocol.",
   "main": "server.js",
   "scripts": {
@@ -9,12 +9,19 @@
     "test": "node test/review-flow.test.js"
   },
   "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
-    "express-rate-limit": "^7.2.0"
+    "express-rate-limit": "^7.2.0",
+    "pg": "^8.22.0",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

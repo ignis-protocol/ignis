@@ -217,6 +217,8 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
     <li><a href="#protocol">Protocol</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="terminal.html">Terminal</a></li>
+    <li><a href="proof.html">Verify</a></li>
+    <li><a href="reviewer.html">Review</a></li>
     <li><a href="https://github.com/ignis-protocol/ignis" target="_blank" rel="noopener noreferrer">GitHub</a></li>
     <li><a href="https://x.com/IgnisAgent_Ai" target="_blank" rel="noopener noreferrer">X</a></li>
   </ul>
@@ -246,7 +248,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
         <div class="tri-shadow"></div>
       </div>
     </div>
-    <div class="hero-status"><span class="status-dot"></span>v0.3.0-alpha / blind review quorum live / Solana proof layer planned</div>
+    <div class="hero-status"><span class="status-dot"></span>v0.4.0-alpha / proof receipts live / Solana devnet anchoring ready</div>
     <h1 class="hero-title">IGNIS</h1>
     <p class="hero-copy">Code without a face. Strip identity from submissions, route work through relays, review the diff blind, and let Solana preserve the signal that survives.</p>
     <div class="hero-actions">
@@ -264,7 +266,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
           <div class="line"><span class="prompt">ignis@relay-0:~$</span><span class="cmd">ignis submit --blind-review</span></div>
           <div class="line"><span class="muted">&gt;</span><span class="ok">sealed bundle routed across 3 relays</span></div>
           <div class="line"><span class="prompt">ignis@relay-0:~$</span><span class="cmd">ignis signal</span></div>
-          <div class="line"><span class="muted">&gt;</span><span class="warn">score pending reviewer quorum / Solana proof queued</span></div>
+          <div class="line"><span class="muted">&gt;</span><span class="warn">receipt issued after accepted quorum / anchor queued</span></div>
         </div>
         <div class="relay-panel">
           <div class="relay-node"><div><span class="relay-id">R1</span><span class="relay-city">Jakarta</span></div><div class="relay-meta"><span>14ms</span><span>sealed</span></div><span class="relay-link"></span></div>
@@ -282,16 +284,16 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
 
   <div class="ticker">
     <div class="ticker-track">
-      <span class="ticker-item">ash_7f3a opened sealed review #482 <span class="diamond">/</span></span>
-      <span class="ticker-item">relay-r4 removed 18 metadata fields <span class="diamond">/</span></span>
-      <span class="ticker-item">ash_3c7e scored 9.4 on blind review <span class="diamond">/</span></span>
-      <span class="ticker-item">signal proof queued for Solana <span class="diamond">/</span></span>
-      <span class="ticker-item">reviewer quorum reached in 42s <span class="diamond">/</span></span>
-      <span class="ticker-item">ash_7f3a opened sealed review #482 <span class="diamond">/</span></span>
-      <span class="ticker-item">relay-r4 removed 18 metadata fields <span class="diamond">/</span></span>
-      <span class="ticker-item">ash_3c7e scored 9.4 on blind review <span class="diamond">/</span></span>
-      <span class="ticker-item">signal proof queued for Solana <span class="diamond">/</span></span>
-      <span class="ticker-item">reviewer quorum reached in 42s <span class="diamond">/</span></span>
+      <span class="ticker-item">blind review quorum active <span class="diamond">/</span></span>
+      <span class="ticker-item">wallet identity hidden by commitment <span class="diamond">/</span></span>
+      <span class="ticker-item">proof receipts independently verifiable <span class="diamond">/</span></span>
+      <span class="ticker-item">Solana devnet anchor queue ready <span class="diamond">/</span></span>
+      <span class="ticker-item">no token required <span class="diamond">/</span></span>
+      <span class="ticker-item">blind review quorum active <span class="diamond">/</span></span>
+      <span class="ticker-item">wallet identity hidden by commitment <span class="diamond">/</span></span>
+      <span class="ticker-item">proof receipts independently verifiable <span class="diamond">/</span></span>
+      <span class="ticker-item">Solana devnet anchor queue ready <span class="diamond">/</span></span>
+      <span class="ticker-item">no token required <span class="diamond">/</span></span>
     </div>
   </div>
 
@@ -315,7 +317,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
       <div class="steps">
         <article class="card"><div class="step-num">01 / init</div><h3>Become Ash</h3><p>A temporary keypair is generated locally. No account, no OAuth, no permanent handle. The session can prove continuity without exposing who you are.</p><div class="code">$ ignis init<br>&gt; identity: ash_7f3a2b9c<br>&gt; ttl: 72h</div></article>
         <article class="card"><div class="step-num">02 / strip</div><h3>Erase Metadata</h3><p>Author names, emails, timestamps, host fingerprints, and accidental identity markers are stripped before the submission enters review.</p><div class="code">$ ignis strip patch.diff<br>&gt; metadata: removed<br>&gt; bundle: sealed</div></article>
-        <article class="card"><div class="step-num">03 / signal</div><h3>Earn Signal</h3><p>Reviewers judge the code without profile context. Accepted work builds portable signal that can later unlock Solana-native incentives.</p><div class="code">$ ignis signal<br>&gt; review: blind<br>&gt; proof: queued</div></article>
+        <article class="card"><div class="step-num">03 / prove</div><h3>Preserve Signal</h3><p>Reviewers judge the code without profile context. Accepted work receives a verifiable receipt and can be anchored to Solana devnet.</p><div class="code">$ ignis proof<br>&gt; receipt: valid<br>&gt; anchor: queued</div></article>
       </div>
     </div>
   </section>
@@ -329,7 +331,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
         <div class="feature"><h3>Ephemeral Identity</h3><p>Local-only keypairs create signed anonymous sessions with expiry. Continuity without doxxing.</p></div>
         <div class="feature"><h3>Relay Routing</h3><p>Submission bundles move through relay nodes before landing in blind review queues.</p></div>
         <div class="feature"><h3>Blind Review</h3><p>Reviewers see the diff, tests, and context. They do not see username, network, country, or reputation graph.</p></div>
-        <div class="feature"><h3>Solana Signal Layer</h3><p>Accepted contribution proofs, reviewer stakes, relay bonds, and future IGNIS incentives are designed for Solana.</p></div>
+        <div class="feature"><h3>Verifiable Proof</h3><p>Accepted contributions receive privacy-preserving receipts with integrity checks and optional Solana devnet anchoring.</p></div>
       </div>
     </div>
   </section>
@@ -342,11 +344,13 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
 </main>
 
 <footer>
-  <span>IGNIS / v0.3.0-alpha / <span style="color:var(--violet)">code without a face.</span></span>
+  <span>IGNIS / v0.4.0-alpha / <span style="color:var(--violet)">code without a face.</span></span>
   <span class="footer-links">
     <a href="https://github.com/ignis-protocol/ignis" target="_blank" rel="noopener noreferrer">GitHub</a>
     <a href="https://x.com/IgnisAgent_Ai" target="_blank" rel="noopener noreferrer">X</a>
     <a href="terminal.html">Terminal</a>
+    <a href="proof.html">Verify</a>
+    <a href="reviewer.html">Review</a>
     <a href="#protocol">Protocol</a>
   </span>
   <span style="opacity:.45">built in the dark</span>

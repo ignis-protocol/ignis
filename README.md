@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Anonymous code contribution. Blind review. Portable signal. Solana-native proof layer.
+  Anonymous code contribution. Blind review. Verifiable receipts. Solana devnet proof anchoring.
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 <p align="center">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-00ff41?style=for-the-badge&labelColor=080b10">
   <img alt="Protocol" src="https://img.shields.io/badge/protocol-anonymous%20code-a78bfa?style=for-the-badge&labelColor=080b10">
-  <img alt="Layer" src="https://img.shields.io/badge/layer-Solana%20planned-2dd4bf?style=for-the-badge&labelColor=080b10">
+  <img alt="Layer" src="https://img.shields.io/badge/layer-Solana%20devnet-2dd4bf?style=for-the-badge&labelColor=080b10">
 </p>
 
 ---
@@ -77,7 +77,9 @@ Solana proof layer
 | Terminal | Interactive protocol interface for sessions, submissions, reviews, signal, and Solana status |
 | API | Creates anonymous sessions, stores sealed submissions, exposes review queue and signal state |
 | Signal Layer | Tracks contribution quality without exposing the builder's public identity |
-| Solana Layer | Planned receipts, reviewer stake, relay bonds, and future incentives |
+| Reviewer Console | Private short-lived reviewer sessions, blind queue, voting, and history |
+| Proof Verifier | Public receipt integrity and Solana anchor verification |
+| Solana Layer | Devnet receipt anchoring without a coin, staking, or rewards |
 
 ---
 
@@ -87,6 +89,8 @@ Solana proof layer
 |---|---|
 | Website | https://ignis-lac-nine.vercel.app |
 | Terminal | https://ignis-lac-nine.vercel.app/terminal.html |
+| Reviewer Console | https://ignis-lac-nine.vercel.app/reviewer.html |
+| Proof Verifier | https://ignis-lac-nine.vercel.app/proof.html |
 | API Health | https://ignis-production-1c71.up.railway.app/health |
 | X | https://x.com/IgnisAgent_Ai |
 
@@ -103,13 +107,18 @@ Completed:
 - Sealed submission API.
 - Relay, review, signal, and Solana status endpoints.
 - Terminal connected to backend API with local fallback.
+- Short-lived reviewer sessions and private reviewer dashboard.
+- Phantom sign-message authentication with nonce replay protection.
+- Privacy-preserving wallet commitments.
+- Verifiable proof receipts for accepted contributions.
+- Solana devnet memo anchoring with retry queue.
+- PostgreSQL storage support with JSON fallback.
 
 Not done yet:
 
 - Real metadata stripping CLI.
-- Production database.
-- Solana wallet auth.
-- On-chain proof program.
+- Production relay transport and anonymity audit.
+- Funded production devnet anchor signer.
 - IGNIS SPL incentive layer.
 
 ---
@@ -124,8 +133,10 @@ Not done yet:
 | `review` | Inspect the blind review queue |
 | `signal` | Read contribution signal state |
 | `network` | Inspect relay route state |
-| `solana` | Read planned proof and incentive layer status |
+| `solana` | Read devnet proof anchor state |
 | `wallet connect` | Attempt Phantom/Solana wallet connection |
+| `proof` | Inspect the accepted receipt for the current submission |
+| `verify [proof]` | Verify receipt integrity and anchor state |
 
 ---
 
@@ -142,6 +153,15 @@ GET  /api/submissions/:id
 GET  /api/reviews
 GET  /api/reviews/:id
 POST /api/reviews/:id/votes
+POST /api/reviewer/session
+GET  /api/reviewer/me
+POST /api/wallet/challenge
+POST /api/wallet/verify
+GET  /api/wallet/me
+GET  /api/proofs
+GET  /api/proofs/:id
+POST /api/proofs/verify
+POST /api/proofs/:id/anchor
 GET  /api/signal
 GET  /api/solana
 ```
@@ -183,6 +203,10 @@ The API stores reviewer fingerprints, blocks duplicate votes, and settles a revi
 after the configured odd-numbered quorum is reached. Partial decisions and scores
 stay hidden until settlement; settled feedback is exposed without reviewer identity.
 
+Wallet authentication uses an expiring nonce and Ed25519 `signMessage`. The wallet
+address never enters the reviewer bundle. Accepted receipts contain only a salted,
+private ownership commitment.
+
 ---
 
 ## Stack
@@ -191,9 +215,9 @@ stay hidden until settlement; settled feedback is exposed without reviewer ident
 |---|---|
 | Frontend | Vanilla HTML, CSS, JavaScript |
 | Backend | Node.js, Express |
-| Alpha Storage | JSON file persistence |
+| Storage | PostgreSQL with atomic JSON fallback |
 | Deployment | Vercel frontend, Railway backend |
-| Future Proof Layer | Solana |
+| Proof Layer | Solana devnet memo anchoring |
 
 ---
 
@@ -230,7 +254,7 @@ http://localhost:5173/terminal.html
 - [x] Backend Phase 1: foundation, storage, validation, health.
 - [x] Backend Phase 2: anonymous sessions and sealed submissions.
 - [x] Phase 3: blind review voting, quorum, and scoring.
-- [ ] Phase 4: Solana wallet auth and proof receipts.
+- [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana devnet anchor queue.
 - [ ] Phase 5: production hardening, monitoring, and incentive design.
 
 ---

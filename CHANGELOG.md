@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.4.0-alpha
+
+### Identity And Proof
+
+- Added Phantom-compatible Ed25519 challenge authentication with nonce expiry and replay protection.
+- Added unlinkable wallet ownership commitments that never enter blind review bundles.
+- Added accepted-contribution proof receipts and public integrity verification.
+- Added Solana devnet memo anchoring, explorer links, and bounded retry jobs.
+
+### Reviewer Product
+
+- Added a private reviewer console with short-lived bearer sessions.
+- Protected review queues and submission listings behind reviewer authentication.
+- Added review history, scoring, decisions, and feedback workflow.
+
+### Infrastructure
+
+- Added PostgreSQL state persistence with atomic JSON fallback and migration SQL.
+- Added structured audit events, auth-specific rate limits, and expanded security headers.
+- Added tests for wallet signatures, replay rejection, reviewer sessions, privacy boundaries, quorum, and proof integrity.
+- Updated dependencies and resolved all reported production dependency vulnerabilities.
+
 ## v0.3.0-alpha
 
 ### Blind Review
@@ -43,4 +65,4 @@
 - Persist sealed submissions.
 - Build blind reviewer workflow.
 - Add Solana wallet authentication.
-- Deploy the Solana signal proof program.
+- Anchor accepted proof receipts on Solana devnet.

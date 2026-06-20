@@ -85,12 +85,15 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
         <div class="sb-item" data-cmd="submit" onclick="runCmd('submit')"><span class="ic">&gt;</span>submit</div>
         <div class="sb-item" data-cmd="review" onclick="runCmd('review')"><span class="ic">R</span>review</div>
         <div class="sb-item" data-cmd="signal" onclick="runCmd('signal')"><span class="ic">*</span>signal</div>
+        <div class="sb-item" data-cmd="proof" onclick="runCmd('proof')"><span class="ic">P</span>proof</div>
       </div>
       <hr class="sb-divider">
       <div class="sb-section"><div class="sb-label">network</div>
         <div class="sb-item" data-cmd="network" onclick="runCmd('network')"><span class="ic">N</span>network</div>
         <div class="sb-item" data-cmd="solana" onclick="runCmd('solana')"><span class="ic">S</span>solana</div>
         <div class="sb-item" data-cmd="wallet" onclick="runCmd('wallet connect')"><span class="ic">W</span>wallet</div>
+        <a class="sb-item" href="proof.html"><span class="ic">V</span>verify page</a>
+        <a class="sb-item" href="reviewer.html"><span class="ic">R</span>review console</a>
         <div class="sb-item" data-cmd="clear" onclick="runCmd('clear')"><span class="ic">X</span>clear</div>
       </div>
       <hr class="sb-divider">
@@ -124,6 +127,8 @@ const state = {
   submission: null,
   score: null,
   wallet: null,
+  walletToken: sessionStorage.getItem('ignis_wallet_token') || null,
+  proof: null,
   relays: [
     {id:'R1', city:'Jakarta', ms:14, status:'sealed'},
     {id:'R4', city:'Singapore', ms:18, status:'forwarded'},
@@ -164,8 +169,8 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 async function api(path, options = {}){
   try {
     const res = await fetch(API_BASE + path, {
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-      ...options
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
@@ -189,10 +194,10 @@ async function boot(){
   const health = await api('/health');
   if (health) {
     ln(`>> api online  ${health.version}  storage:${health.storage.driver}  submissions:${health.submissions}`, 'g1');
-    const [reviews, signal] = await Promise.all([api('/api/reviews'), api('/api/signal')]);
+    const signal = await api('/api/signal');
     renderTicker([
       [`${health.submissions} sealed submissions`, 'info'],
-      [`${reviews?.queue_depth ?? health.reviews} reviews awaiting quorum`, 'hl'],
+      [`${health.reviews} blind reviews created`, 'hl'],
       [`${signal?.totals?.settled_reviews ?? 0} reviews settled`, 'up'],
       [`signal confidence: ${signal?.confidence || 'unproven'}`, 'info'],
       [`${health.relays_online}/${health.relays_total} relays online`, 'up']
@@ -218,6 +223,8 @@ const commands = {
   network: cmdNetwork,
   solana: cmdSolana,
   wallet: cmdWallet,
+  proof: cmdProof,
+  verify: cmdVerify,
   clear: () => { out.innerHTML=''; },
   about: cmdAbout,
   exit: () => { blank(); ln('there is no profile to exit from.', 'amber'); blank(); }
@@ -232,8 +239,10 @@ function cmdHelp(){
     ['review', 'show blind review queue state'],
     ['signal', 'show portable contribution signal'],
     ['network', 'inspect relay path'],
-    ['solana', 'show future proof/incentive layer'],
-    ['wallet connect', 'connect Phantom/Solana wallet if available'],
+    ['solana', 'show proof anchor network state'],
+    ['wallet connect', 'authenticate with a Phantom signature'],
+    ['proof', 'show receipt for the current submission'],
+    ['verify [proof]', 'verify an IGNIS proof receipt'],
     ['about', 'what IGNIS is now'],
     ['clear', 'clear terminal']
   ].forEach(([c,d]) => ln(`  ${c.padEnd(16)} ${d}`, 'dim'));
@@ -306,7 +315,7 @@ async function cmdSubmit(args=[]){
     ['author', state.identity],
     ['review mode', state.submission.review_mode],
     ['metadata', state.submission.metadata_removed ? 'removed' : 'pending'],
-    ['solana proof', state.submission.solana_proof]
+    ['proof status', state.submission.proof_status || 'awaiting acceptance']
   ]);
   blank();
 }
@@ -314,10 +323,9 @@ async function cmdSubmit(args=[]){
 async function cmdReview(){
   blank(); ln('BLIND REVIEW QUEUE', 'hdr'); sep();
   if(!state.submitted){ ln('no sealed submission yet. run submit after strip.', 'amber'); blank(); return; }
-  const [queueData, submissionData] = await Promise.all([
-    api('/api/reviews'),
-    state.submission?.id ? api(`/api/submissions/${encodeURIComponent(state.submission.id)}`) : null
-  ]);
+  const submissionData = state.submission?.id
+    ? await api(`/api/submissions/${encodeURIComponent(state.submission.id)}`)
+    : null;
   const review = submissionData?.review;
   const checks = review ? [
     ['review', review.id],
@@ -326,11 +334,9 @@ async function cmdReview(){
     ['remaining', String(review.votes_remaining)],
     ['decision', review.decision || 'pending'],
     ['score', review.score === null ? 'pending' : `${review.score} / 10`],
-    ['queue depth', String(queueData?.queue_depth ?? 0)],
     ['identity fields', 'hidden']
   ] : [
-    ['queue depth', String(queueData?.queue_depth ?? 0)],
-    ['quorum', `${queueData?.quorum_required || 3} reviewers`],
+    ['quorum', '3 reviewers'],
     ['identity fields', 'hidden'],
     ['status', 'waiting for API']
   ];
@@ -374,13 +380,15 @@ async function cmdSolana(){
   blank(); ln('SOLANA SIGNAL LAYER', 'hdr'); sep();
   const data = await api('/api/solana');
   panel([
-    ['network', data?.network || 'devnet planned'],
-    ['proof program', data?.proof_program || 'not deployed'],
-    ['token mint', data?.token_mint || 'not deployed'],
-    ['uses', data ? data.uses.join(', ') : 'receipts, reviewer stake, relay bonds'],
+    ['network', data?.cluster || 'devnet'],
+    ['wallet auth', data?.wallet_auth || 'signMessage'],
+    ['proof receipts', data?.proof_receipts || 'live'],
+    ['anchor signer', data?.configured ? 'configured' : 'awaiting funded devnet signer'],
+    ['anchors confirmed', String(data?.anchor_queue?.confirmed ?? 0)],
+    ['token', data?.token_mint || 'not part of Phase 4'],
     ['wallet', state.wallet ? state.wallet : 'not connected']
   ]);
-  ln('Solana is the proof and incentive layer. The protocol works off-chain first.', 'dim');
+  ln('Receipts remain independently verifiable even while an anchor waits for its devnet signer.', 'dim');
   blank();
 }
 
@@ -397,18 +405,80 @@ async function cmdWallet(args=[]){
     const resp = await window.solana.connect();
     state.wallet = resp.publicKey.toString();
     ln(`connected   ${state.wallet}`, 'g1');
+    ln('requesting one-time authentication challenge...', 'dim');
+    const challengeData = await api('/api/wallet/challenge', {
+      method: 'POST',
+      body: JSON.stringify({ wallet: state.wallet, session_id: state.identity, domain: location.host })
+    });
+    if(!challengeData) return;
+    const encoded = new TextEncoder().encode(challengeData.challenge.message);
+    const signed = await window.solana.signMessage(encoded, 'utf8');
+    const signature = bytesToBase64(signed.signature);
+    const verified = await api('/api/wallet/verify', {
+      method: 'POST',
+      body: JSON.stringify({ challenge_id: challengeData.challenge.id, signature })
+    });
+    if(verified){
+      state.walletToken = verified.token;
+      sessionStorage.setItem('ignis_wallet_token', verified.token);
+      ln(`authenticated commitment ${verified.wallet_commitment.slice(0,24)}...`, 'g2');
+      ln('wallet address remains hidden from reviewers and public receipts.', 'dim');
+    }
   } catch(e) {
-    ln('Phantom/Solana wallet not available in this browser.', 'amber');
-    ln('That is fine for alpha: relay and review flows work without wallet.', 'dim');
+    ln(`wallet authentication failed: ${e.message}`, 'amber');
+    ln('Anonymous submission and review remain available without a wallet.', 'dim');
   }
   blank();
+}
+
+async function cmdProof(){
+  blank(); ln('PROOF RECEIPT', 'hdr'); sep();
+  if(!state.submission?.id){ ln('no submission selected. run submit first.', 'amber'); blank(); return; }
+  const data = await api(`/api/submissions/${encodeURIComponent(state.submission.id)}`);
+  const proof = data?.proof;
+  if(!proof){
+    ln(`status      ${data?.submission?.proof_status || 'awaiting acceptance'}`, 'amber');
+    ln('a receipt is issued automatically after an accepted reviewer quorum.', 'dim');
+    blank(); return;
+  }
+  state.proof = proof;
+  panel([
+    ['proof', proof.id],
+    ['hash', proof.proof_hash],
+    ['score', `${proof.score} / 10`],
+    ['quorum', String(proof.quorum)],
+    ['owner', proof.owner_commitment ? 'private commitment attached' : 'anonymous session only'],
+    ['Solana anchor', proof.anchor.status]
+  ]);
+  ln(`verify publicly: ${location.origin}/proof.html?id=${encodeURIComponent(proof.id)}`, 'g2');
+  blank();
+}
+
+async function cmdVerify(args=[]){
+  blank(); ln('VERIFY RECEIPT', 'hdr'); sep();
+  const proofId = args[0] || state.proof?.id;
+  if(!proofId){ ln('usage: verify proof_xxx', 'amber'); blank(); return; }
+  const data = await api(`/api/proofs/${encodeURIComponent(proofId)}`);
+  if(!data) return;
+  ln(`receipt integrity   ${data.valid ? 'valid' : 'invalid'}`, data.valid ? 'g1' : 'red');
+  ln(`proof hash          ${data.proof.proof_hash}`, 'dim');
+  ln(`Solana anchor       ${data.proof.anchor.status}`, 'dim');
+  if(data.proof.anchor.explorer_url) ln(`explorer            ${data.proof.anchor.explorer_url}`, 'g2');
+  blank();
+}
+
+function bytesToBase64(bytes){
+  let binary = '';
+  const view = new Uint8Array(bytes);
+  for(let i=0;i<view.length;i++) binary += String.fromCharCode(view[i]);
+  return btoa(binary);
 }
 
 function cmdAbout(){
   blank(); ln('ABOUT IGNIS', 'hdr'); sep();
   ln('IGNIS is an anonymous code contribution protocol: code without a face.', 'g0');
   blank();
-  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review queues','portable signal anchored to Solana later'].forEach(x => ln('  - ' + x, 'dim'));
+  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana devnet anchor queue'].forEach(x => ln('  - ' + x, 'dim'));
   blank();
 }
 
