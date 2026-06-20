@@ -3,777 +3,268 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IGNIS — Forge tokens from code.</title>
-<meta name="description" content="Terminal-style token launchpad on gitlawb × Base. Push code. Forge tokens. Own the repo.">
-<meta property="og:title" content="IGNIS — Forge tokens from code.">
-<meta property="og:description" content="Terminal-style token launchpad on gitlawb × Base. No hype. Just commits.">
+<title>IGNIS - Code without a face.</title>
+<meta name="description" content="IGNIS is an anonymous code contribution protocol. Strip identity, route submissions through relays, review blind, and preserve signal on Solana.">
+<meta property="og:title" content="IGNIS - Code without a face.">
+<meta property="og:description" content="Anonymous code contribution. Blind review. Portable signal. Solana-native incentives.">
+<meta name="theme-color" content="#080b10">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
 :root{
-  --g0:#00ff41;--g1:#00cc34;--g2:#008f24;--g3:#004d14;--g4:#001a07;
-  --amber:#e8a030;--blue:#4fc3f7;--red:#e84545;
-  --bg:#060b06;--surface:#090e09;
-  --dim:#2a4a2a;--dim2:#1a301a;
-  --white:#eef4ee;
-  --font:'IBM Plex Mono',monospace;
+  --bg:#080b10;--bg2:#0d1117;--bg3:#111820;--panel:rgba(13,17,23,.88);
+  --text:#e2e8f0;--muted:#94a3b8;--faint:#475569;
+  --violet:#a78bfa;--violet2:#7c3aed;--teal:#2dd4bf;--green:#4ade80;--yellow:#facc15;
+  --border:rgba(167,139,250,.16);--border2:rgba(167,139,250,.08);
+  --sans:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+  --display:"Syne",var(--sans);
 }
-
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:hidden}
 body{
-  background:var(--bg);color:var(--g0);font-family:var(--font);
-  font-size:13px;line-height:1.6;overflow-x:hidden;
-  cursor:crosshair;
+  min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--sans);
+  font-size:16px;line-height:1.6;letter-spacing:0;overflow-x:hidden;cursor:crosshair;
 }
-
-/* scanlines */
 body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
-  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px);
+  content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.42;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
 }
-
-/* noise grain */
 body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:0.025;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size:200px;
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(167,139,250,.028) 1px,transparent 0),linear-gradient(90deg,rgba(167,139,250,.028) 1px,transparent 0);
+  background-size:42px 42px;
 }
-
 a{color:inherit;text-decoration:none}
-button{cursor:pointer;font-family:var(--font)}
+button{font-family:inherit;cursor:pointer}
+.bg-ghost{
+  position:fixed;border-radius:50% 50% 0 0;pointer-events:none;z-index:0;opacity:.03;
+  background:var(--violet);animation:float 9s ease-in-out infinite;
+}
+.bg-ghost:nth-child(1){width:180px;height:210px;top:12%;left:4%}
+.bg-ghost:nth-child(2){width:120px;height:150px;right:7%;bottom:20%;background:var(--teal);animation-duration:13s}
+.bg-ghost:nth-child(3){width:80px;height:96px;right:2%;top:55%;animation-duration:7s;animation-delay:2s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 
-/* ambient identity layer */
-#ignis-bg{
-  position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
-  color:rgba(0,255,65,0.06);font-size:12px;letter-spacing:0.22em;
+.site-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;min-height:70px;padding:1rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);
+  background:rgba(8,11,16,.82);backdrop-filter:blur(18px);
 }
-.bg-row{
-  position:absolute;left:-20vw;width:140vw;white-space:nowrap;
-  transform:rotate(-7deg);animation:bg-drift var(--dur,42s) linear infinite;
+.brand{display:inline-flex;align-items:center;gap:.72rem;font-family:var(--display);font-weight:800;font-size:1.05rem}
+.brand-mark{
+  width:34px;height:34px;border-radius:50%;position:relative;display:grid;place-items:center;perspective:120px;
+  filter:drop-shadow(0 0 16px rgba(45,212,191,.25));
 }
-.bg-row:nth-child(1){top:13%;--dur:48s}
-.bg-row:nth-child(2){top:36%;--dur:60s;animation-direction:reverse;color:rgba(232,160,48,0.045)}
-.bg-row:nth-child(3){top:61%;--dur:52s}
-.bg-row:nth-child(4){top:82%;--dur:66s;animation-direction:reverse;color:rgba(232,160,48,0.04)}
-@keyframes bg-drift{0%{transform:translateX(0) rotate(-7deg)}100%{transform:translateX(-28vw) rotate(-7deg)}}
+.brand-mark::before,.brand-mark::after{
+  content:"";position:absolute;border-radius:50%;border:1px dotted rgba(226,232,240,.78);inset:3px;
+  animation:spin 8s linear infinite;
+}
+.brand-mark::after{inset:8px 4px;border-color:rgba(167,139,250,.58);animation-direction:reverse;animation-duration:6s}
+.brand-mark span{position:relative;z-index:1;font-family:var(--mono);font-weight:900;color:var(--text);text-shadow:0 0 12px rgba(226,232,240,.42)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.nav-links{display:flex;align-items:center;gap:1.45rem;list-style:none;color:var(--muted);font-size:.78rem;font-weight:700;text-transform:uppercase}
+.nav-links a:hover{color:var(--text)}
+.nav-actions{display:flex;gap:.75rem;align-items:center}
+.nav-secondary,.nav-cta{min-height:38px;display:inline-flex;align-items:center;border-radius:999px;font-size:.84rem;font-weight:800}
+.nav-secondary{color:var(--muted)}
+.nav-secondary:hover{color:var(--text)}
+.nav-cta{padding:.55rem 1rem;border:1px solid color-mix(in srgb,var(--violet) 70%,transparent);background:linear-gradient(135deg,rgba(167,139,250,.2),rgba(45,212,191,.08))}
+.nav-cta:hover{border-color:var(--teal);transform:translateY(-1px)}
 
-.brand-sigil{
-  position:absolute;right:7vw;top:18vh;width:min(34vw,420px);aspect-ratio:1;
-  pointer-events:none;opacity:0.18;animation:sigil-breathe 5s ease-in-out infinite;
+.hero{
+  position:relative;z-index:1;min-height:96vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:7rem 1.5rem 3rem;text-align:center;overflow:hidden;isolation:isolate;
 }
-.brand-sigil::before{
-  content:'△';position:absolute;inset:0;display:grid;place-items:center;
-  font-size:min(28vw,340px);line-height:1;color:transparent;
-  -webkit-text-stroke:2px var(--g0);text-shadow:0 0 24px rgba(0,255,65,0.25);
-}
-.brand-sigil::after{
-  content:'IGNIS';position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);
-  color:var(--amber);font-size:min(4vw,44px);font-weight:700;letter-spacing:0.18em;
-  text-shadow:0 0 18px rgba(232,160,48,0.28);
-}
-@keyframes sigil-breathe{0%,100%{opacity:0.12;transform:scale(0.98)}50%{opacity:0.22;transform:scale(1.02)}}
+.hero-backdrop{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(8,11,16,.1),var(--bg) 92%),linear-gradient(90deg,rgba(45,212,191,.08),transparent 36%,rgba(167,139,250,.09))}
+.hero-circuit{position:absolute;border:1px solid rgba(45,212,191,.14);opacity:.45;background-image:linear-gradient(90deg,rgba(45,212,191,.11) 1px,transparent 0),linear-gradient(rgba(167,139,250,.1) 1px,transparent 0);background-size:28px 28px;transform:skewY(-8deg);animation:gridDrift 18s linear infinite}
+.hero-circuit.a{width:min(820px,90vw);height:260px;left:-14rem;top:8rem}
+.hero-circuit.b{width:min(760px,86vw);height:220px;right:-16rem;bottom:6rem;animation-direction:reverse;animation-duration:22s}
+.scanline{position:absolute;left:0;right:0;top:20%;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:.55;animation:scan 4.8s ease-in-out infinite}
+.data-rain{position:absolute;width:1px;height:44vh;top:12vh;background:linear-gradient(180deg,transparent,rgba(45,212,191,.42),transparent);box-shadow:64px 40px 0 rgba(167,139,250,.2),138px -20px 0 rgba(96,165,250,.22),220px 72px 0 rgba(45,212,191,.18),322px 8px 0 rgba(250,204,21,.14),418px 90px 0 rgba(45,212,191,.16);opacity:.32;animation:dataRain 9s linear infinite}
+.data-rain.a{left:8%}.data-rain.b{right:22%;animation-duration:12s;animation-delay:-4s;opacity:.22}
+@keyframes gridDrift{to{background-position:56px 56px}}
+@keyframes scan{0%,100%{transform:translateY(0);opacity:.18}50%{transform:translateY(46vh);opacity:.62}}
+@keyframes dataRain{0%{transform:translateY(-16vh)}100%{transform:translateY(74vh)}}
 
-/* ── NAV ── */
-#nav{
-  position:fixed;top:32px;left:0;right:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 40px;height:48px;
-  border-bottom:1px solid var(--dim2);background:rgba(6,11,6,0.92);
-  backdrop-filter:blur(8px);
-  font-size:11px;letter-spacing:0.08em;
-}
-.nav-logo{color:var(--g0);font-weight:700;font-size:14px;letter-spacing:0.06em;animation:logo-glow 3.8s ease-in-out infinite}
-.nav-logo span{color:var(--amber);display:inline-block;animation:mark-pulse 2.8s ease-in-out infinite}
-@keyframes logo-glow{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 12px rgba(0,255,65,0.45)}}
-@keyframes mark-pulse{0%,100%{transform:translateY(0);text-shadow:0 0 0 transparent}50%{transform:translateY(-1px);text-shadow:0 0 12px rgba(232,160,48,0.55)}}
-.nav-links{display:flex;gap:28px;color:var(--dim)}
-.nav-links a{transition:color 0.15s}
-.nav-links a:hover{color:var(--g0)}
-.nav-cta{
-  background:none;border:1px solid var(--g2);color:var(--g0);
-  padding:6px 18px;font-size:11px;letter-spacing:0.08em;
-  transition:all 0.15s;
-}
-.nav-cta:hover{background:var(--g3);border-color:var(--g0)}
+.hero-object{position:absolute;right:max(-6rem,-7vw);top:5.5rem;width:min(46vw,620px);height:min(58vh,540px);min-height:360px;pointer-events:none;filter:drop-shadow(0 28px 80px rgba(45,212,191,.16));animation:objectFloat 7s ease-in-out infinite}
+.orb{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(226,232,240,.18),transparent 12%),radial-gradient(circle at 50% 50%,rgba(167,139,250,.16),transparent 42%);border:1px dotted rgba(226,232,240,.34)}
+.orb::before,.orb::after{content:"";position:absolute;inset:14%;border-radius:50%;border:1px dashed rgba(45,212,191,.34);animation:spin 12s linear infinite}
+.orb::after{inset:28% 8%;border-color:rgba(167,139,250,.44);animation-direction:reverse;animation-duration:9s}
+.orb-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-weight:900;font-size:clamp(2rem,6vw,4.5rem);color:var(--text);text-shadow:0 0 32px rgba(226,232,240,.35)}
+@keyframes objectFloat{0%,100%{transform:translateZ(0) rotate(-1deg)}50%{transform:translate3d(-10px,14px,0) rotate(1.5deg)}}
 
-/* ── SECTIONS ── */
-section{padding:100px 40px;max-width:1100px;margin:0 auto}
-section:first-of-type{padding-top:140px}
+.hero-status{
+  position:relative;z-index:2;display:inline-flex;align-items:center;gap:.6rem;border:1px solid var(--border);
+  background:rgba(13,17,23,.72);padding:.5rem .95rem;color:var(--violet);font-size:.78rem;font-weight:700;text-transform:uppercase;animation:fadeUp .6s ease both;
+}
+.status-dot{width:7px;height:7px;border-radius:999px;background:var(--green);box-shadow:0 0 18px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-title{position:relative;z-index:2;margin-top:1.15rem;font-family:var(--display);font-size:clamp(3.6rem,9.2vw,7.6rem);font-weight:800;line-height:.9;letter-spacing:0;text-shadow:0 0 34px rgba(167,139,250,.18);animation:slideUp .8s ease .08s both}
+.hero-copy{position:relative;z-index:2;width:min(740px,92vw);margin:1.2rem auto 0;color:var(--muted);font-size:1.05rem;line-height:1.75;animation:slideUp .8s ease .16s both}
+.hero-actions{position:relative;z-index:2;display:flex;gap:.9rem;justify-content:center;flex-wrap:wrap;margin:1.6rem 0 2rem;animation:slideUp .8s ease .24s both}
+.btn-primary,.btn-secondary{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:.78rem 1.35rem;font-size:.92rem;font-weight:800;transition:transform .18s,border-color .18s,background .18s}
+.btn-primary{background:var(--text);color:var(--bg);border:1px solid var(--text)}.btn-primary:hover{background:var(--teal);border-color:var(--teal);transform:translateY(-2px)}
+.btn-secondary{color:var(--text);border:1px solid rgba(148,163,184,.34);background:rgba(226,232,240,.08)}.btn-secondary:hover{border-color:var(--teal);transform:translateY(-2px)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
 
-.section-num{
-  color:var(--dim);font-size:11px;letter-spacing:0.12em;
-  margin-bottom:6px;display:block;
-}
-.section-sep{
-  border:none;border-top:1px solid var(--dim2);
-  margin:0 0 48px;
-}
+.console{position:relative;z-index:2;width:min(980px,94vw);border:1px solid var(--border);background:rgba(8,11,16,.92);box-shadow:0 24px 80px rgba(0,0,0,.34),inset 0 1px 0 hsla(0,0%,100%,.04);text-align:left;overflow:hidden;animation:slideUp .8s ease .34s both;font-family:var(--mono)}
+.console::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 5px,hsla(0,0%,100%,.012) 0,hsla(0,0%,100%,.012) 6px);pointer-events:none}
+.console-head,.console-foot{position:relative;z-index:1;display:flex;align-items:center;gap:1rem;border-bottom:1px solid var(--border);background:rgba(17,24,32,.76);padding:.9rem 1rem}
+.console-foot{border-top:1px solid var(--border);border-bottom:none;justify-content:space-between;background:rgba(13,17,23,.78)}
+.dots{display:flex;gap:.45rem}.dot{width:10px;height:10px;border-radius:999px}.red{background:#f87171}.yellow{background:#facc15}.green{background:#4ade80}
+.console-title{flex:1;color:var(--muted);font-size:.72rem;text-align:center;text-transform:uppercase}.console-state{color:var(--green);font-size:.72rem;font-weight:800}
+.console-body{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(260px,.8fr);min-height:350px}
+.console-lines{padding:1.35rem 1.5rem;font-size:.9rem;line-height:1.85}.line{display:flex;gap:.55rem;white-space:pre-wrap;overflow-wrap:anywhere;animation:row .26s ease both}.prompt{color:var(--violet)}.cmd{color:var(--text);font-weight:800}.muted{color:var(--muted)}.ok{color:var(--green)}.info{color:var(--teal)}.warn{color:var(--yellow)}
+@keyframes row{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.relay-panel{border-left:1px solid var(--border);padding:1rem;display:flex;flex-direction:column;justify-content:center;gap:.8rem;background:linear-gradient(180deg,rgba(45,212,191,.05),transparent),rgba(13,17,23,.52)}
+.relay-node{position:relative;border:1px solid rgba(45,212,191,.18);background:rgba(8,11,16,.74);padding:.95rem}.relay-id{color:var(--teal);font-weight:800;margin-right:.7rem}.relay-city{font-size:.9rem}.relay-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:.76rem;margin-top:.55rem}.relay-link{position:absolute;left:1.1rem;bottom:-.82rem;width:1px;height:.82rem;background:var(--teal);opacity:.55}
+.metric-label,.metric-value{display:block;font-size:.76rem}.metric-label{color:var(--muted);text-transform:uppercase;margin-bottom:.18rem}.metric-value{font-weight:800}
 
-/* ── HERO ── */
-#hero{
-  min-height:100vh;display:flex;flex-direction:column;
-  justify-content:center;padding-top:80px;padding-bottom:60px;
-  max-width:100%;position:relative;overflow:hidden;
-}
+.ticker{position:relative;z-index:1;width:100%;overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2);padding:.6rem 0}
+.ticker-track{display:flex;gap:3rem;width:max-content;min-width:200%;animation:ticker 30s linear infinite}.ticker-item{display:inline-flex;gap:.75rem;color:var(--muted);font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;white-space:nowrap}.diamond{color:var(--violet);opacity:.35}@keyframes ticker{to{transform:translateX(-50%)}}
 
-.hero-inner{max-width:1100px;margin:0 auto;padding:0 40px;width:100%;position:relative;z-index:2}
-
-.hero-tag{
-  display:inline-flex;align-items:center;gap:8px;
-  border:1px solid var(--dim2);padding:4px 14px;
-  font-size:10px;letter-spacing:0.12em;color:var(--dim);
-  margin-bottom:32px;
-}
-.hero-tag .dot{width:5px;height:5px;border-radius:50%;background:var(--g0);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-
-.hero-prompt{
-  color:var(--dim);font-size:13px;letter-spacing:0.04em;margin-bottom:4px;
-}
-
-.hero-h1{
-  font-size:clamp(42px,7vw,88px);font-weight:700;
-  color:var(--white);letter-spacing:-0.02em;line-height:1.0;
-  margin-bottom:8px;
-  animation:title-rise 0.7s ease-out both;
-}
-.hero-h1 .accent{color:var(--g0)}
-.hero-h1 .amber{color:var(--amber)}
-@keyframes title-rise{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
-
-.hero-sub{
-  font-size:clamp(14px,2vw,18px);color:var(--dim);
-  font-weight:400;letter-spacing:0.02em;margin-bottom:48px;
-  max-width:600px;
-}
-
-.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:64px}
-
-.btn-primary{
-  background:var(--g0);color:var(--bg);
-  border:none;padding:12px 32px;font-size:12px;
-  font-weight:700;letter-spacing:0.1em;
-  transition:all 0.15s;
-}
-.btn-primary:hover{background:var(--g1)}
-
-.btn-secondary{
-  background:none;border:1px solid var(--dim);color:var(--dim);
-  padding:12px 32px;font-size:12px;letter-spacing:0.1em;
-  transition:all 0.15s;
-}
-.btn-secondary:hover{border-color:var(--g0);color:var(--g0)}
-
-.hero-stats{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
-  border:1px solid var(--dim2);max-width:700px;
-}
-.stat{
-  padding:16px 20px;border-right:1px solid var(--dim2);
-}
-.stat:last-child{border-right:none}
-.stat-val{font-size:22px;font-weight:700;color:var(--g0);display:block}
-.stat-lbl{font-size:10px;color:var(--dim);letter-spacing:0.1em;display:block;margin-top:2px}
-
-/* big green glow bg */
-.hero-glow{
-  position:absolute;right:-200px;top:50%;transform:translateY(-50%);
-  width:700px;height:700px;border-radius:50%;
-  background:radial-gradient(circle,rgba(0,255,65,0.04) 0%,transparent 70%);
-  pointer-events:none;
-}
-
-/* ── THESIS ── */
-#thesis .big-text{
-  font-size:clamp(20px,3vw,32px);color:var(--white);
-  line-height:1.4;font-weight:400;margin-bottom:40px;
-  border-left:2px solid var(--g0);padding-left:24px;
-}
-#thesis .big-text em{color:var(--g0);font-style:normal;font-weight:700}
-
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:48px}
-
-.col-text{color:var(--dim);line-height:1.8;font-size:13px}
-.col-text p{margin-bottom:16px}
-.col-text p:last-child{margin-bottom:0}
-
-.code-block{
-  background:var(--surface);border:1px solid var(--dim2);
-  padding:20px 24px;font-size:12px;color:var(--dim);
-  line-height:2;
-}
-.code-block .prompt{color:var(--g2)}
-.code-block .cmd{color:var(--white)}
-.code-block .out{color:var(--g0)}
-.code-block .cmt{color:var(--dim)}
-
-/* ── UTILITIES ── */
-#utilities h2{
-  font-size:clamp(22px,3vw,36px);color:var(--white);
-  font-weight:700;letter-spacing:-0.01em;margin-bottom:48px;
-}
-
-.util-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:2px}
-
-.util-card{
-  background:var(--surface);border:1px solid var(--dim2);
-  padding:32px;transition:border-color 0.2s;position:relative;
-  overflow:hidden;
-}
-.util-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--g0);transform:scaleX(0);transform-origin:left;
-  transition:transform 0.3s;
-}
-.util-card:hover{border-color:var(--dim)}
-.util-card:hover::before{transform:scaleX(1)}
-
-.util-num{
-  font-size:10px;color:var(--dim);letter-spacing:0.12em;
-  margin-bottom:12px;display:block;
-}
-.util-icon{font-size:20px;margin-bottom:12px;display:block}
-.util-title{
-  font-size:16px;font-weight:700;color:var(--white);
-  margin-bottom:8px;letter-spacing:0.02em;
-}
-.util-desc{font-size:12px;color:var(--dim);line-height:1.7}
-.util-tag{
-  display:inline-block;margin-top:16px;padding:3px 10px;
-  border:1px solid var(--dim2);font-size:10px;color:var(--dim);
-  letter-spacing:0.08em;
-}
-
-/* ── HOW IT WORKS ── */
-#how h2{
-  font-size:clamp(22px,3vw,36px);color:var(--white);
-  font-weight:700;margin-bottom:48px;
-}
-
-.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative}
-.steps::before{
-  content:'';position:absolute;top:20px;left:10%;right:10%;height:1px;
-  background:linear-gradient(90deg,transparent,var(--dim2) 20%,var(--dim2) 80%,transparent);
-}
-
-.step{padding:0 16px;text-align:center}
-.step-num{
-  width:40px;height:40px;border:1px solid var(--dim2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;color:var(--g0);margin:0 auto 16px;
-  background:var(--bg);position:relative;z-index:1;
-}
-.step-title{font-size:12px;color:var(--white);font-weight:600;margin-bottom:6px;letter-spacing:0.04em}
-.step-desc{font-size:11px;color:var(--dim);line-height:1.6}
-.step-cmd{
-  display:inline-block;margin-top:10px;padding:3px 8px;
-  background:var(--g4);border:1px solid var(--g3);
-  font-size:10px;color:var(--g0);letter-spacing:0.04em;
-}
-
-/* ── LAUNCH ── */
-#launch{
-  background:var(--surface);border:1px solid var(--dim2);
-  padding:64px;text-align:center;max-width:700px;margin:0 auto 100px;
-}
-#launch .launch-tag{
-  font-size:10px;color:var(--dim);letter-spacing:0.12em;margin-bottom:16px;display:block
-}
-#launch h2{
-  font-size:clamp(24px,4vw,44px);color:var(--white);
-  font-weight:700;margin-bottom:12px;
-}
-#launch p{color:var(--dim);margin-bottom:32px;font-size:13px}
-#launch .launch-note{
-  font-size:11px;color:var(--dim2);margin-top:16px;letter-spacing:0.06em
-}
-
-/* ── BUILT ON ── */
-#builton{
-  display:flex;align-items:center;justify-content:center;gap:0;
-  border-top:1px solid var(--dim2);border-bottom:1px solid var(--dim2);
-  padding:20px 0;max-width:100%;margin:0;
-  overflow:hidden;background:var(--surface);
-}
-.built-item{
-  padding:0 40px;border-right:1px solid var(--dim2);
-  font-size:11px;color:var(--dim);letter-spacing:0.1em;
-  display:flex;align-items:center;gap:8px;
-}
-.built-item:last-child{border-right:none}
-.built-item .bi-dot{width:4px;height:4px;border-radius:50%;background:var(--g0)}
-
-/* ── FOOTER ── */
-footer{
-  max-width:1100px;margin:0 auto;padding:48px 40px;
-  display:flex;justify-content:space-between;align-items:center;
-  border-top:1px solid var(--dim2);font-size:11px;color:var(--dim);
-  flex-wrap:wrap;gap:16px;
-}
-.footer-links{display:flex;gap:24px}
-.footer-links a:hover{color:var(--g0)}
-.footer-ca{
-  display:flex;align-items:center;gap:8px;
-  border:1px solid var(--dim2);padding:6px 14px;
-}
-.footer-ca span{color:var(--g0)}
-
-/* ── TICKER ── */
-#ticker-wrap{
-  overflow:hidden;border-bottom:1px solid var(--dim2);
-  padding:8px 0;background:var(--surface);
-  font-size:11px;color:var(--dim);letter-spacing:0.06em;
-  white-space:nowrap;
-}
-#ticker-inner{
-  display:inline-block;
-  animation:ticker 40s linear infinite;
-}
-@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.t-sep{color:var(--dim2);margin:0 20px}
-.t-g{color:var(--g0)}
-.t-a{color:var(--amber)}
-
-/* ── ANIMATIONS ── */
-.fade-in{opacity:0;transform:translateY(16px);transition:opacity 0.6s,transform 0.6s}
-.fade-in.visible{opacity:1;transform:translateY(0)}
-
-/* ── RESPONSIVE ── */
-@media(max-width:768px){
-  #nav{padding:0 20px}
-  .nav-links{display:none}
-  section{padding:60px 20px}
-  .hero-inner{padding:0 20px}
-  .brand-sigil{right:-18vw;top:18vh;width:78vw;opacity:0.1}
-  #ignis-bg{font-size:10px}
-  .two-col{grid-template-columns:1fr}
-  .util-grid{grid-template-columns:1fr}
-  .steps{grid-template-columns:1fr 1fr;gap:24px}
-  .steps::before{display:none}
-  .hero-stats{grid-template-columns:1fr 1fr}
-  .stat{border-bottom:1px solid var(--dim2)}
-  #launch{padding:40px 24px}
-  footer{flex-direction:column;align-items:flex-start}
-}
-
-/* ── FIRE ANIMATION ── */
-#fire-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 180px;
-  pointer-events: none;
-  z-index: 10;
-  overflow: hidden;
-}
-
-.flame {
-  position: absolute;
-  bottom: 0;
-  border-radius: 50% 50% 20% 20%;
-  transform-origin: bottom center;
-  animation: flicker var(--dur, 3s) ease-in-out infinite alternate;
-  opacity: var(--op, 0.7);
-}
-
-@keyframes flicker {
-  0%   { transform: scaleX(1)   scaleY(1)   rotate(var(--rot, -2deg)); opacity: var(--op, 0.7); }
-  25%  { transform: scaleX(0.95) scaleY(1.05) rotate(calc(var(--rot, -2deg) + 3deg)); }
-  50%  { transform: scaleX(1.05) scaleY(0.95) rotate(calc(var(--rot, -2deg) - 2deg)); opacity: calc(var(--op, 0.7) * 0.85); }
-  75%  { transform: scaleX(0.98) scaleY(1.08) rotate(calc(var(--rot, -2deg) + 1deg)); }
-  100% { transform: scaleX(1)   scaleY(1)   rotate(var(--rot, -2deg)); opacity: var(--op, 0.7); }
-}
-
-/* Ember particles */
-.ember {
-  position: absolute;
-  border-radius: 50%;
-  animation: rise var(--rdur, 4s) ease-out infinite;
-  opacity: 0;
-}
-@keyframes rise {
-  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.8; }
-  100% { transform: translateY(-160px) translateX(var(--dx, 20px)) scale(0); opacity: 0; }
-}
-
-/* fade out fire on scroll — show only at top */
-#fire-container.hidden { opacity: 0; transition: opacity 0.6s; }
-
+section{position:relative;z-index:1}.manifesto{padding:5rem 2rem;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);background:var(--bg2)}.wrap{max-width:1100px;margin:0 auto}.tag{font-size:.72rem;text-transform:uppercase;color:var(--violet);margin-bottom:1rem;font-weight:800;display:flex;align-items:center;gap:.75rem}.tag::before{content:"";width:24px;height:1px;background:var(--violet)}.manifesto-lines{max-width:860px;margin:0 auto}.m-line{font-family:var(--display);font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:800;letter-spacing:0;line-height:1.1;padding:.5rem 0;border-bottom:1px solid var(--border2);transition:color .25s}.m-line:hover{color:var(--text)!important}
+.protocol{padding:6rem 2rem}.section-title{font-family:var(--display);font-size:clamp(2.4rem,4.5vw,4.5rem);line-height:.98;font-weight:800;margin-bottom:1rem}.section-copy{max-width:560px;color:var(--muted);line-height:1.8}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:4rem}.card{padding:2.5rem 2rem;border:1px solid var(--border);background:var(--bg2);position:relative;overflow:hidden;transition:.25s}.card:hover{border-color:rgba(167,139,250,.45);background:var(--bg3)}.card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--violet2),var(--teal));transform:scaleX(0);transform-origin:left;transition:.3s}.card:hover::before{transform:scaleX(1)}.step-num{font-size:.63rem;color:var(--violet);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1.5rem;opacity:.75}.card h3{font-family:var(--display);font-size:1.05rem;margin-bottom:.75rem}.card p{font-size:.78rem;color:var(--muted);line-height:1.9}.code{margin-top:1.25rem;padding:.8rem;background:var(--bg);border-left:2px solid var(--violet2);font-family:var(--mono);font-size:.72rem;color:var(--muted);line-height:1.85}
+.features{padding:6rem 2rem}.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:4rem;border:1px solid var(--border);background:var(--border)}.feature{padding:2rem;background:var(--bg2)}.feature h3{font-family:var(--display);font-size:1rem;margin-bottom:.5rem}.feature p{color:var(--muted);font-size:.76rem;line-height:1.9}
+.install{padding:7rem 2rem;text-align:center;border-top:1px solid var(--border)}.install h2{font-family:var(--display);font-size:clamp(2.5rem,5vw,5rem);line-height:.95;margin-bottom:1rem}.install h2 span{color:var(--violet)}.install p{color:var(--muted);margin-bottom:2rem}.install-command{display:inline-flex;align-items:center;gap:1rem;max-width:min(100%,760px);padding:.95rem 1.25rem;border:1px solid var(--border);border-radius:12px;background:var(--bg2);font-family:var(--mono);color:var(--teal);overflow-wrap:anywhere}
+footer{position:relative;z-index:1;display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:2rem 3rem;border-top:1px solid var(--border);color:var(--muted);font-size:.78rem}.footer-links{display:flex;gap:1rem}.footer-links a:hover{color:var(--violet)}
+@media(max-width:900px){.nav-links{display:none}.hero-object{opacity:.65;right:-7rem}.steps,.feature-grid{grid-template-columns:1fr}.console-body{grid-template-columns:1fr}.relay-panel{border-left:none;border-top:1px solid var(--border)}}
+@media(max-width:600px){.site-nav{padding:.9rem 1.25rem}.brand span:last-child{display:none}.nav-secondary{display:none}.nav-cta{padding:.55rem .8rem}.hero{padding-top:6rem}.hero-title{font-size:clamp(3rem,18vw,4.6rem)}.hero-object{position:relative;inset:auto;width:min(92vw,380px);height:250px;min-height:250px;opacity:.95;margin:.5rem auto 1rem}.console-lines{font-size:.7rem;padding:1rem}.console-foot{flex-direction:column;align-items:flex-start}.m-line{font-size:clamp(1.5rem,8vw,2.2rem)}footer{flex-direction:column;align-items:flex-start;padding:1.5rem}}
 </style>
 </head>
 <body>
-<div id="ignis-bg" aria-hidden="true">
-  <div class="bg-row">IGNIS △ FORGE FROM CODE △ BASE 8453 △ GITLAWB △ REPO BOND △ </div>
-  <div class="bg-row">COMMIT TIP △ PROOF OF BUILDER △ LAUNCH KEY △ IGNIS △ </div>
-  <div class="bg-row">△ △ △ CODE IS CAPITAL △ △ △ FORGE TOKENS FROM CODE △ </div>
-  <div class="bg-row">BASE MAINNET △ BANKR DEPLOY API △ AUTO LP △ NO GAS △ </div>
-</div>
+<span class="bg-ghost"></span><span class="bg-ghost"></span><span class="bg-ghost"></span>
 
-<!-- NAV -->
-<!-- ALPHA BANNER -->
-<div style="background:#1a0d00;border-bottom:1px solid #e8a030;padding:8px 40px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#e8a030;letter-spacing:0.06em;text-align:center;position:fixed;top:0;left:0;right:0;z-index:9999">
-  ⚠ ALPHA — $IGNIS token not yet deployed. Token launching via bankr.bot is live. Utilities run in simulated mode until $IGNIS contract is set.
-</div>
-<nav id="nav">
-  <div class="nav-logo">IGNIS <span>△</span></div>
-  <div class="nav-links">
-    <a href="#thesis">▸THESIS</a>
-    <a href="#utilities">▸UTILITIES</a>
-    <a href="#how">▸HOW_IT_WORKS</a>
-    <a href="https://github.com/ignis-protocol/ignis">▸GITHUB</a>
+<nav class="site-nav">
+  <a class="brand" href="/">
+    <span class="brand-mark" aria-hidden="true"><span>I</span></span>
+    <span>IGNIS</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#protocol">Protocol</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="terminal.html">Terminal</a></li>
+    <li><a href="https://github.com/ignis-protocol/ignis">GitHub</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a class="nav-secondary" href="#manifesto">Manifesto</a>
+    <a class="nav-cta" href="terminal.html">Open terminal</a>
   </div>
-  <button class="nav-cta" onclick="document.getElementById('launch').scrollIntoView({behavior:'smooth'})">▸ FORGE_NOW</button>
 </nav>
 
-<!-- TICKER -->
-<div id="ticker-wrap">
-  <div id="ticker-inner">
-    <span>△_IGNIS_V0.1</span><span class="t-sep">◆</span>
-    <span>BUILT_ON_GITLAWB</span><span class="t-sep">◆</span>
-    <span>BASE_MAINNET_8453</span><span class="t-sep">◆</span>
-    <span class="t-g">$IGNIS · LAUNCHED_VIA_BANKR</span><span class="t-sep">◆</span>
-    <span>FAIR_LAUNCH</span><span class="t-sep">◆</span>
-    <span class="t-a">CODE_IS_THE_NEW_CAPITAL</span><span class="t-sep">◆</span>
-    <span>FORGE_TOKENS_FROM_CODE</span><span class="t-sep">◆</span>
-    <span>IGNIS_·_LATIN_FOR_FIRE</span><span class="t-sep">◆</span>
-    <span>△_IGNIS_V0.1</span><span class="t-sep">◆</span>
-    <span>BUILT_ON_GITLAWB</span><span class="t-sep">◆</span>
-    <span>BASE_MAINNET_8453</span><span class="t-sep">◆</span>
-    <span class="t-g">$IGNIS · LAUNCHED_VIA_BANKR</span><span class="t-sep">◆</span>
-    <span>FAIR_LAUNCH</span><span class="t-sep">◆</span>
-    <span class="t-a">CODE_IS_THE_NEW_CAPITAL</span><span class="t-sep">◆</span>
-    <span>FORGE_TOKENS_FROM_CODE</span><span class="t-sep">◆</span>
-    <span>IGNIS_·_LATIN_FOR_FIRE</span><span class="t-sep">◆</span>
-  </div>
-</div>
+<main>
+  <section class="hero">
+    <div class="hero-backdrop" aria-hidden="true">
+      <div class="hero-circuit a"></div><div class="hero-circuit b"></div><div class="scanline"></div><div class="data-rain a"></div><div class="data-rain b"></div>
+    </div>
+    <div class="hero-object" aria-hidden="true"><div class="orb"><div class="orb-core">I</div></div></div>
+    <div class="hero-status"><span class="status-dot"></span>v0.1.0-alpha / Solana-native signal layer / relay testnet forming</div>
+    <h1 class="hero-title">IGNIS</h1>
+    <p class="hero-copy">Code without a face. Strip identity from submissions, route work through relays, review the diff blind, and let Solana preserve the signal that survives.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="terminal.html">enter the relay</a>
+      <a class="btn-secondary" href="#protocol">inspect protocol</a>
+    </div>
+    <section class="console" aria-label="IGNIS relay terminal preview">
+      <div class="console-head"><div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div><span class="console-title">anonymous submission / sealed diff bundle</span><span class="console-state">LIVE</span></div>
+      <div class="console-body">
+        <div class="console-lines">
+          <div class="line"><span class="prompt">ignis@relay-0:~$</span><span class="cmd">ignis init --ephemeral</span></div>
+          <div class="line"><span class="muted">&gt;</span><span class="info">identity: ash_7f3a2b9c / ttl: 72h / stored local only</span></div>
+          <div class="line"><span class="prompt">ignis@relay-0:~$</span><span class="cmd">ignis strip ./patch.diff</span></div>
+          <div class="line"><span class="muted">&gt;</span><span class="ok">author, timezone, email, host metadata removed</span></div>
+          <div class="line"><span class="prompt">ignis@relay-0:~$</span><span class="cmd">ignis submit --blind-review</span></div>
+          <div class="line"><span class="muted">&gt;</span><span class="ok">sealed bundle routed across 3 relays</span></div>
+          <div class="line"><span class="prompt">ignis@relay-0:~$</span><span class="cmd">ignis signal</span></div>
+          <div class="line"><span class="muted">&gt;</span><span class="warn">score pending reviewer quorum / Solana proof queued</span></div>
+        </div>
+        <div class="relay-panel">
+          <div class="relay-node"><div><span class="relay-id">R1</span><span class="relay-city">Jakarta</span></div><div class="relay-meta"><span>14ms</span><span>sealed</span></div><span class="relay-link"></span></div>
+          <div class="relay-node"><div><span class="relay-id">R4</span><span class="relay-city">Singapore</span></div><div class="relay-meta"><span>18ms</span><span>forwarded</span></div><span class="relay-link"></span></div>
+          <div class="relay-node"><div><span class="relay-id">R9</span><span class="relay-city">Amsterdam</span></div><div class="relay-meta"><span>23ms</span><span>exit</span></div></div>
+        </div>
+      </div>
+      <div class="console-foot">
+        <div><span class="metric-label">metadata removed</span><span class="metric-value">100%</span></div>
+        <div><span class="metric-label">identity ttl</span><span class="metric-value">72h</span></div>
+        <div><span class="metric-label">review mode</span><span class="metric-value">blind</span></div>
+      </div>
+    </section>
+  </section>
 
-<!-- HERO -->
-<section id="hero">
-  <div class="hero-glow"></div>
-  <div class="brand-sigil" aria-hidden="true"></div>
-  <div class="hero-inner">
-    <div class="hero-tag">
-      <span class="dot"></span>
-      BASE_MAINNET · CHAIN_8453 · LIVE
-    </div>
-    <div class="hero-prompt">ignis@base:~$ </div>
-    <h1 class="hero-h1">
-      <span class="accent">FORGE</span> TOKENS<br>
-      FROM <span class="amber">CODE.</span>
-    </h1>
-    <p class="hero-sub">
-      The first token launchpad where your repo is your credibility.<br>
-      No hype. No forms. Push code. Forge tokens. Own the repo.
-    </p>
-    <div class="hero-btns">
-      <button class="btn-primary" onclick="window.location.href='terminal.html'">▸ OPEN_TERMINAL</button>
-      <button class="btn-secondary" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">▸ HOW_IT_WORKS</button>
-    </div>
-    <div class="hero-stats">
-      <div class="stat">
-        <span class="stat-val" id="s-tokens">0</span>
-        <span class="stat-lbl">TOKENS_FORGED</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">3</span>
-        <span class="stat-lbl">NODES_ONLINE</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">8453</span>
-        <span class="stat-lbl">CHAIN_ID</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">0%</span>
-        <span class="stat-lbl">TEAM_ALLOC</span>
-      </div>
+  <div class="ticker">
+    <div class="ticker-track">
+      <span class="ticker-item">ash_7f3a opened sealed review #482 <span class="diamond">/</span></span>
+      <span class="ticker-item">relay-r4 removed 18 metadata fields <span class="diamond">/</span></span>
+      <span class="ticker-item">ash_3c7e scored 9.4 on blind review <span class="diamond">/</span></span>
+      <span class="ticker-item">signal proof queued for Solana <span class="diamond">/</span></span>
+      <span class="ticker-item">reviewer quorum reached in 42s <span class="diamond">/</span></span>
+      <span class="ticker-item">ash_7f3a opened sealed review #482 <span class="diamond">/</span></span>
+      <span class="ticker-item">relay-r4 removed 18 metadata fields <span class="diamond">/</span></span>
+      <span class="ticker-item">ash_3c7e scored 9.4 on blind review <span class="diamond">/</span></span>
+      <span class="ticker-item">signal proof queued for Solana <span class="diamond">/</span></span>
+      <span class="ticker-item">reviewer quorum reached in 42s <span class="diamond">/</span></span>
     </div>
   </div>
-</section>
 
-<!-- BUILT ON -->
-<div id="builton">
-  <div class="built-item"><span class="bi-dot"></span>GITLAWB</div>
-  <div class="built-item"><span class="bi-dot"></span>BASE_MAINNET</div>
-  <div class="built-item"><span class="bi-dot"></span>BANKR.BOT</div>
-  <div class="built-item"><span class="bi-dot"></span>UNISWAP_V3</div>
-  <div class="built-item"><span class="bi-dot"></span>FAIR_LAUNCH</div>
-</div>
-
-<!-- THESIS -->
-<section id="thesis">
-  <span class="section-num">[ 01 ]</span>
-  <hr class="section-sep">
-
-  <div class="big-text fade-in">
-    Every other launchpad creates tokens from <em>hype.</em><br>
-    Ignis creates tokens from <em>code.</em>
-  </div>
-
-  <div class="two-col">
-    <div class="col-text fade-in">
-      <p>
-        Pump.fun, Moonshot, every launchpad you know —
-        tokens are born from one sentence, one image, one tweet.
-        Nobody can verify if there's anything real behind it.
-        Everyone knows this. Everyone buys anyway.
-        Because there's no alternative.
-      </p>
-      <p>
-        Ignis is the alternative.
-        Tokens launched here are attached to a real repo with
-        commit history, contributor DIDs, and activity that's
-        on-chain verifiable forever on gitlawb.
-      </p>
-      <p>
-        <strong style="color:var(--white)">Token as proof of work.</strong>
-        Not proof of narrative.
-      </p>
+  <section id="manifesto" class="manifesto">
+    <div class="manifesto-lines">
+      <div class="tag">// manifesto</div>
+      <div class="m-line" style="color:var(--text)">Your code has no face.</div>
+      <div class="m-line" style="color:var(--violet)">Your commits have no country.</div>
+      <div class="m-line" style="color:var(--faint)">Your pull request has no follower count.</div>
+      <div class="m-line" style="color:var(--teal)">No resume. No clout. No bias.</div>
+      <div class="m-line" style="color:var(--faint)">Just the diff. Just the signal.</div>
+      <div class="m-line" style="color:var(--text)">Burn identity. Preserve proof.</div>
     </div>
-    <div class="code-block fade-in">
-      <div><span class="prompt">$</span> <span class="cmd">git push gitlawb main</span></div>
-      <div class="cmt">// Enumerating objects: 12, done.</div>
-      <div class="cmt">// Pinning 6 objects to IPFS...</div>
-      <div class="out">// CID: bafkreihu5qziap...</div>
-      <br>
-      <div><span class="prompt">$</span> <span class="cmd">forge</span></div>
-      <div class="cmt">// submitting to bankr.bot...</div>
-      <div class="cmt">// job: job_abc123</div>
-      <div class="out">// ✓ TOKEN FORGED: MYTOKEN (MYT)</div>
-      <div class="out">// contract: 0x4f2a...b3c1</div>
-      <div class="out">// lp: auto-seeded by bankr.bot</div>
-      <div class="out">// fee: 57% swaps → your wallet</div>
-      <br>
-      <div><span class="prompt">$</span> <span class="cmd">bond owner/myrepo 100</span></div>
-      <div class="out">// ✓ 100 $IGNIS bonded to repo</div>
-      <div class="cmt">// slash timer: 90 days</div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<!-- UTILITIES -->
-<section id="utilities">
-  <span class="section-num">[ 02 ]</span>
-  <hr class="section-sep">
-  <h2 class="fade-in">> $IGNIS_UTILITY</h2>
-
-  <div class="util-grid">
-    <div class="util-card fade-in">
-      <span class="util-num">UTILITY_01</span>
-      <span class="util-icon">🗝</span>
-      <div class="util-title">LAUNCH_KEY</div>
-      <div class="util-desc">
-        Hold $IGNIS to unlock token forging on Ignis.
-        Not a fee — a hold. Your stake in the ecosystem is
-        what gives you access. Sell below threshold, access goes dark.
+  <section id="protocol" class="protocol">
+    <div class="wrap">
+      <div class="tag">Protocol</div>
+      <h2 class="section-title">Anonymous push.<br>Accountable signal.</h2>
+      <p class="section-copy">IGNIS separates authorship from contribution quality. A local ephemeral identity signs the work, relays remove identifying metadata, reviewers score the diff blind, and accepted signal can be anchored to Solana.</p>
+      <div class="steps">
+        <article class="card"><div class="step-num">01 / init</div><h3>Become Ash</h3><p>A temporary keypair is generated locally. No account, no OAuth, no permanent handle. The session can prove continuity without exposing who you are.</p><div class="code">$ ignis init<br>&gt; identity: ash_7f3a2b9c<br>&gt; ttl: 72h</div></article>
+        <article class="card"><div class="step-num">02 / strip</div><h3>Erase Metadata</h3><p>Author names, emails, timestamps, host fingerprints, and accidental identity markers are stripped before the submission enters review.</p><div class="code">$ ignis strip patch.diff<br>&gt; metadata: removed<br>&gt; bundle: sealed</div></article>
+        <article class="card"><div class="step-num">03 / signal</div><h3>Earn Signal</h3><p>Reviewers judge the code without profile context. Accepted work builds portable signal that can later unlock Solana-native incentives.</p><div class="code">$ ignis signal<br>&gt; review: blind<br>&gt; proof: queued</div></article>
       </div>
-      <span class="util-tag">HOLD_TO_FORGE</span>
     </div>
+  </section>
 
-    <div class="util-card fade-in">
-      <span class="util-num">UTILITY_02</span>
-      <span class="util-icon">⬡</span>
-      <div class="util-title">REPO_BOND</div>
-      <div class="util-desc">
-        Bond $IGNIS to your repo at launch. Repo goes 90 days
-        without a commit? Bond is slashed to treasury. Buyers
-        can filter "active repos only." This is skin in the game,
-        not a checkbox.
+  <section id="features" class="features">
+    <div class="wrap">
+      <div class="tag">Features</div>
+      <h2 class="section-title">Built for<br>disappearing.</h2>
+      <p class="section-copy">IGNIS is a privacy-first contribution layer for builders who want code to speak before identity does.</p>
+      <div class="feature-grid">
+        <div class="feature"><h3>Ephemeral Identity</h3><p>Local-only keypairs create signed anonymous sessions with expiry. Continuity without doxxing.</p></div>
+        <div class="feature"><h3>Relay Routing</h3><p>Submission bundles move through relay nodes before landing in blind review queues.</p></div>
+        <div class="feature"><h3>Blind Review</h3><p>Reviewers see the diff, tests, and context. They do not see username, network, country, or reputation graph.</p></div>
+        <div class="feature"><h3>Solana Signal Layer</h3><p>Accepted contribution proofs, reviewer stakes, relay bonds, and future IGNIS incentives are designed for Solana.</p></div>
       </div>
-      <span class="util-tag">SLASH_IF_INACTIVE</span>
     </div>
+  </section>
 
-    <div class="util-card fade-in">
-      <span class="util-num">UTILITY_03</span>
-      <span class="util-icon">◎</span>
-      <div class="util-title">COMMIT_CURRENCY</div>
-      <div class="util-desc">
-        Tip merged PRs with $IGNIS. Every tip is an on-chain
-        record of value assigned to a specific commit. Contributors
-        build a portable reputation that follows their DID
-        everywhere in the gitlawb ecosystem.
-      </div>
-      <span class="util-tag">ON-CHAIN_PROOF_OF_VALUE</span>
-    </div>
+  <section class="install">
+    <h2>Enter the<br><span>relay.</span></h2>
+    <p>No account. No face. Ship the signal.</p>
+    <a class="install-command" href="terminal.html"><span>$</span><code>open ignis terminal</code></a>
+  </section>
+</main>
 
-    <div class="util-card fade-in">
-      <span class="util-num">UTILITY_04</span>
-      <span class="util-icon">◈</span>
-      <div class="util-title">PROOF_OF_BUILDER</div>
-      <div class="util-desc">
-        $IGNIS balance boosts your gitlawb trust score.
-        Higher trust = access to larger bounties, higher-value
-        tasks, and more credibility when agents delegate work
-        to your DID. Capital as proof of commitment.
-      </div>
-      <span class="util-tag">TRUST_SCORE_BOOST</span>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section id="how">
-  <span class="section-num">[ 03 ]</span>
-  <hr class="section-sep">
-  <h2 class="fade-in">> HOW_IT_WORKS</h2>
-
-  <div class="steps fade-in">
-    <div class="step">
-      <div class="step-num">01</div>
-      <div class="step-title">CONNECT</div>
-      <div class="step-desc">Connect wallet to Base Mainnet. Sign to authenticate.</div>
-      <span class="step-cmd">wallet connect</span>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <div class="step-title">SETUP_FEE</div>
-      <div class="step-desc">Use your connected wallet as the creator fee recipient.</div>
-      <span class="step-cmd">57% fee share</span>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <div class="step-title">FORGE</div>
-      <div class="step-desc">Name, symbol, repo link, bond amount. 4 steps, no forms.</div>
-      <span class="step-cmd">forge</span>
-    </div>
-    <div class="step">
-      <div class="step-num">04</div>
-      <div class="step-title">LAUNCH</div>
-      <div class="step-desc">bankr.bot deploys. Fair launch. Auto LP. Zero gas.</div>
-      <span class="step-cmd">Base Mainnet</span>
-    </div>
-    <div class="step">
-      <div class="step-num">05</div>
-      <div class="step-title">EARN</div>
-      <div class="step-desc">Push commits. Contributors get tipped. Bond stays alive.</div>
-      <span class="step-cmd">tip + bond</span>
-    </div>
-  </div>
-</section>
-
-<!-- CTA LAUNCH -->
-<div style="max-width:1100px;margin:0 auto;padding:0 40px">
-  <div id="launch" class="fade-in">
-    <span class="launch-tag">[ LAUNCH_YOUR_TOKEN ]</span>
-    <h2>> FORGE_NOW.</h2>
-    <p>No gas. No forms. No hype required.<br>Just a repo and something worth building.</p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn-primary" onclick="window.location.href='terminal.html'">▸ OPEN_TERMINAL</button>
-      <button class="btn-secondary" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">▸ VIEW_FLOW</button>
-    </div>
-    <div class="launch-note">
-      LAUNCHED_VIA_BANKR · FAIR_LAUNCH · 0%_TEAM_ALLOCATION · BASE_MAINNET
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER -->
 <footer>
-  <div style="display:flex;flex-direction:column;gap:6px">
-    <div style="font-weight:700;color:var(--g0);font-size:14px;letter-spacing:0.06em">GIT<span style="color:var(--amber)">FORGE</span>//2025</div>
-    <div style="color:var(--dim2);font-size:10px">forge tokens from code.</div>
-  </div>
-  <div class="footer-links">
-    <a href="https://x.com/ignis">@ignis</a>
-    <a href="https://github.com/ignis-protocol/ignis">GITHUB</a>
-    <a href="https://gitlawb.com">GITLAWB</a>
-    <a href="terminal.html">TERMINAL</a>
-  </div>
-  <div class="footer-ca">
-    CA: <span>TBA</span>
-  </div>
+  <span>IGNIS / v0.1.0-alpha / <span style="color:var(--violet)">code without a face.</span></span>
+  <span class="footer-links">
+    <a href="https://github.com/ignis-protocol/ignis">GitHub</a>
+    <a href="terminal.html">Terminal</a>
+    <a href="#protocol">Protocol</a>
+  </span>
+  <span style="opacity:.45">built in the dark</span>
 </footer>
-
-<script>
-// Animate counter
-function animateCounter(el, target, duration=1500){
-  let start = 0;
-  const step = timestamp => {
-    if(!start) start = timestamp;
-    const progress = Math.min((timestamp-start)/duration, 1);
-    el.textContent = Math.floor(progress * target);
-    if(progress < 1) requestAnimationFrame(step);
-    else el.textContent = target;
-  };
-  requestAnimationFrame(step);
-}
-
-// Fetch real token count from backend
-async function loadStats(){
-  try {
-    const resp = await fetch('https://ignis-production-1c71.up.railway.app/api/stats');
-    const json = await resp.json();
-    if(json.stats?.tokens_total !== undefined){
-      animateCounter(document.getElementById('s-tokens'), json.stats.tokens_total);
-    }
-  } catch(_){
-    animateCounter(document.getElementById('s-tokens'), 0);
-  }
-}
-
-// Fade in on scroll
-const observer = new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      e.target.classList.add('visible');
-      observer.unobserve(e.target);
-    }
-  });
-},{threshold:0.1});
-
-document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
-
-// Load on boot
-loadStats();
-</script>
-
-<!-- FIRE ANIMATION -->
-<div id="fire-container" aria-hidden="true">
-  <!-- Main flames - left cluster -->
-  <div class="flame" style="left:2%;width:90px;height:130px;background:linear-gradient(to top,#cc3300,#ff6600,#ffaa00,transparent);--dur:2.8s;--rot:-3deg;--op:0.55"></div>
-  <div class="flame" style="left:5%;width:60px;height:100px;background:linear-gradient(to top,#ee4400,#ff7700,#ffcc00,transparent);--dur:2.2s;--rot:2deg;--op:0.45"></div>
-  <div class="flame" style="left:9%;width:40px;height:70px;background:linear-gradient(to top,#ff5500,#ffaa00,transparent);--dur:3.1s;--rot:-1deg;--op:0.35"></div>
-  <!-- left glow -->
-  <div class="flame" style="left:0%;width:200px;height:80px;background:radial-gradient(ellipse at bottom,rgba(255,80,0,0.18),transparent);border-radius:0;--dur:4s;--op:1"></div>
-
-  <!-- Main flames - right cluster -->
-  <div class="flame" style="right:2%;width:90px;height:130px;background:linear-gradient(to top,#cc3300,#ff6600,#ffaa00,transparent);--dur:3.1s;--rot:3deg;--op:0.55"></div>
-  <div class="flame" style="right:5%;width:60px;height:100px;background:linear-gradient(to top,#ee4400,#ff7700,#ffcc00,transparent);--dur:2.5s;--rot:-2deg;--op:0.45"></div>
-  <div class="flame" style="right:9%;width:40px;height:70px;background:linear-gradient(to top,#ff5500,#ffaa00,transparent);--dur:2.9s;--rot:1deg;--op:0.35"></div>
-  <!-- right glow -->
-  <div class="flame" style="right:0%;width:200px;height:80px;background:radial-gradient(ellipse at bottom,rgba(255,80,0,0.18),transparent);border-radius:0;--dur:4.2s;--op:1"></div>
-
-  <!-- Center subtle flames -->
-  <div class="flame" style="left:50%;transform:translateX(-50%);width:50px;height:60px;background:linear-gradient(to top,#ff4400,#ffaa00,transparent);--dur:3.5s;--rot:0deg;--op:0.12"></div>
-
-  <!-- Ember particles - left -->
-  <div class="ember" style="left:6%;width:3px;height:3px;background:#ffcc00;--rdur:3.2s;--dx:-15px;animation-delay:0.2s"></div>
-  <div class="ember" style="left:4%;width:2px;height:2px;background:#ff8800;--rdur:2.8s;--dx:10px;animation-delay:0.8s"></div>
-  <div class="ember" style="left:8%;width:2px;height:2px;background:#ffdd00;--rdur:3.6s;--dx:-8px;animation-delay:1.4s"></div>
-  <div class="ember" style="left:3%;width:3px;height:3px;background:#ffaa00;--rdur:4.1s;--dx:20px;animation-delay:2.1s"></div>
-  <div class="ember" style="left:7%;width:2px;height:2px;background:#ff6600;--rdur:2.6s;--dx:-12px;animation-delay:0.5s"></div>
-
-  <!-- Ember particles - right -->
-  <div class="ember" style="right:6%;width:3px;height:3px;background:#ffcc00;--rdur:3.4s;--dx:15px;animation-delay:0.4s"></div>
-  <div class="ember" style="right:4%;width:2px;height:2px;background:#ff8800;--rdur:2.9s;--dx:-10px;animation-delay:1.1s"></div>
-  <div class="ember" style="right:8%;width:2px;height:2px;background:#ffdd00;--rdur:3.8s;--dx:8px;animation-delay:1.7s"></div>
-  <div class="ember" style="right:3%;width:3px;height:3px;background:#ffaa00;--rdur:4.3s;--dx:-20px;animation-delay:2.4s"></div>
-  <div class="ember" style="right:7%;width:2px;height:2px;background:#ff6600;--rdur:2.7s;--dx:12px;animation-delay:0.7s"></div>
-</div>
-
-<script>
-// Hide fire on scroll (show only near top)
-window.addEventListener('scroll', () => {
-  const fire = document.getElementById('fire-container');
-  if (fire) {
-    if (window.scrollY > 300) fire.classList.add('hidden');
-    else fire.classList.remove('hidden');
-  }
-}, { passive: true });
-</script>
-
 </body>
 </html>

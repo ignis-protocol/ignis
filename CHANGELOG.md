@@ -1,35 +1,29 @@
 # Changelog
 
-## [0.1.0-alpha] — 2025-05 — Initial Release
+## v0.1.0-alpha
 
-> ⚠️ **Alpha Release** — $IGNIS token not yet deployed. Token launching via bankr.bot is fully functional. All $IGNIS utilities implemented but run in simulated mode until `IGNIS_CONTRACT` is configured.
+### Rebrand
 
-### Added
-- Terminal UI with fire animation (Ignis △ identity)
-- Landing page with flame effects, circuit grid, WAKE-style aesthetic
-- 5-step token forge wizard via bankr.bot (no gas, auto LP, 57% fee share)
-- Wallet connect (MetaMask / Coinbase Wallet) on Base Mainnet (8453)
-- EIP-191 wallet signature auth — session-based, 24hr expiry
-- Token registry — sql.js, searchable, paginated
-- **△ Launch Key** — $IGNIS balance check for forge eligibility
-- **△ Repo Bond** — bond $IGNIS to repo, slash after 90 days inactive
-- **△ Commit Currency** — tip merged PRs with $IGNIS, leaderboard
-- **△ Proof of Builder** — gitlawb trust score via DID resolution
-- Bond watcher — GraphQL subscription + HTTP polling, auto-slash every 6hr
-- gitlawb API proxy — live repos, agents, bounties, DID resolution
-- Live Base RPC data — block, gas, tx lookup
-- Platform stats endpoint
+- Repositioned IGNIS as an anonymous code contribution protocol.
+- Adopted the tagline: `code without a face.`
+- Replaced the previous narrative with metadata stripping, relay routing, blind review, portable signal, and Solana-native proof/incentive planning.
 
-### Infrastructure
-- Express backend with rate limiting (60 req/min)
-- sql.js (pure JS SQLite) — no native compile, works everywhere
-- `workers/bondWatcher.js` — starts with server, auto-reconnects
-- `routes/auth.js` — challenge/verify/session management
-- `.env.example` — all vars documented
+### Frontend
 
-## [Unreleased]
-- Deploy $IGNIS token on Base → activate on-chain utilities
-- On-chain bond + tip transactions
-- Uniswap V3 LP position viewer
-- GitlawbGovernance.sol integration
-- Farcaster Frame for token sharing
+- Rebuilt the landing page around the new protocol direction.
+- Rebuilt the terminal UI around `init`, `strip`, `submit`, `review`, `signal`, `network`, `solana`, and `wallet connect`.
+- Added a darker editorial/terminal identity with relay visuals, signal copy, and animated identity elements.
+
+### Backend
+
+- Replaced the public API surface with relay, submission, review, signal, and Solana status endpoints.
+- Removed legacy routes and server boot behavior.
+- Simplified backend dependencies to the active protocol API.
+
+### Roadmap
+
+- Implement real metadata stripping.
+- Persist sealed submissions.
+- Build blind reviewer workflow.
+- Add Solana wallet authentication.
+- Deploy the Solana signal proof program.

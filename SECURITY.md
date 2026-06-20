@@ -1,25 +1,37 @@
-# Security
+# Security Policy
 
-## Reporting vulnerabilities
+IGNIS is privacy-sensitive software. Treat metadata leaks, relay bypasses, identity correlation, and reviewer deanonymization as security issues.
 
-Please do NOT open a public issue for security vulnerabilities.
+## Current Status
 
-Email: security@ignis-protocol.xyz (or DM @ignisbase on X)
+IGNIS is alpha software. The current app demonstrates the protocol surface and API shape, but it is not yet a production anonymity system.
+
+Do not assume production-grade privacy until the following exist:
+
+- Real metadata stripping tests.
+- Sealed bundle validation.
+- Relay transport hardening.
+- Reviewer deanonymization protections.
+- Solana proof program audit.
+- Abuse and spam controls.
+
+## Report Issues
+
+Please open a private security advisory on GitHub or contact the maintainers directly.
 
 Include:
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
 
-We'll respond within 48 hours.
+- A concise description.
+- Steps to reproduce.
+- What identity or metadata can leak.
+- Expected impact.
+- Suggested mitigation if known.
 
-## Known limitations (current alpha)
+## High Priority Findings
 
-- `$IGNIS` token not yet deployed — bond/tip amounts recorded off-chain in sql.js
-- Session tokens stored in `sessionStorage` — cleared on tab close
-- No rate limiting on gitlawb proxy endpoints beyond the global 60 req/min
-- Bond watcher polling interval is configurable but not adaptive
-
-## Responsible disclosure
-
-We'll credit all valid vulnerability reports in the changelog.
+- Submission exposes author identity.
+- Metadata stripping misses emails, usernames, hostnames, paths, timestamps, or remote URLs.
+- Relay path can be bypassed.
+- Reviewer can infer contributor identity from hidden fields.
+- Solana proof links anonymous submissions to a public wallet without consent.
+- API allows spam or stored payload abuse.

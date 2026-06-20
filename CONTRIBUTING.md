@@ -1,37 +1,44 @@
-# Contributing to Ignis
+# Contributing to IGNIS
 
-Thanks for wanting to contribute. Ignis is built on the thesis that open source work deserves capital — so contributions here are taken seriously.
+IGNIS is an anonymous code contribution protocol. Contributions should move the project toward metadata stripping, relay routing, blind review, portable signal, and Solana-native proof/incentive infrastructure.
 
-## How to contribute
+## Areas That Need Work
 
-1. Fork the repo
-2. Create a branch: `git checkout -b feat/your-feature`
-3. Make your changes
-4. Open a PR with a clear description of what changed and why
+- **Frontend** - protocol landing page, terminal UX, reviewer screens.
+- **Relay API** - sealed submission flow, relay status, rate limits, abuse controls.
+- **Metadata stripping** - real diff/bundle sanitization.
+- **Blind review** - reviewer queues, scoring, quorum, audit trail.
+- **Solana** - wallet auth, contribution receipts, reviewer stake, relay bonds.
+- **Security** - privacy threat modeling, metadata leak tests, relay abuse prevention.
 
-## What we need help with
-
-- **Smart contracts** — $IGNIS token, on-chain bond/tip contracts on Base
-- **Frontend** — UI improvements, new terminal commands, mobile support
-- **Backend** — new gitlawb API integrations, performance, caching
-- **Tests** — unit tests for routes, integration tests for forge wizard
-- **Docs** — tutorials, guides, translations
-
-## Code style
-
-- No transpilation — vanilla JS frontend, Node.js backend
-- Every route has error handling + meaningful error messages
-- No breaking changes to existing API endpoints without discussion
-
-## Gitlawb
-
-Preferred: push to gitlawb so your contribution earns trust score.
+## Local Development
 
 ```bash
-git remote add gitlawb https://node.gitlawb.com
-git push gitlawb main
+cd backend
+npm install
+npm start
 ```
 
-## Questions
+Open:
 
-Open an issue or reach out on X: @ignisbase
+```text
+frontend/index.html
+frontend/terminal.html
+```
+
+## Contribution Standard
+
+- Keep public copy aligned with `code without a face.`
+- Do not reintroduce the previous product terminology.
+- Treat privacy claims carefully. If a guarantee is not implemented, label it as alpha/planned.
+- Prefer small, inspectable changes with clear tests or manual verification notes.
+
+## Commit Style
+
+Use concise imperative commits:
+
+```text
+feat: add sealed submission endpoint
+fix: prevent metadata field leak in strip preview
+docs: update relay threat model
+```
