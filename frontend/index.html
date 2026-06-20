@@ -109,10 +109,6 @@ button{font-family:inherit;cursor:pointer}
 }
 .tri-stage{position:absolute;inset:0;display:grid;place-items:center;transform:translate3d(var(--tx),var(--ty),0);transition:transform .42s cubic-bezier(.2,.8,.2,1)}
 .tri-aura{position:absolute;width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(45,212,191,.2),transparent 52%),radial-gradient(circle at 70% 28%,rgba(167,139,250,.18),transparent 38%);filter:blur(18px);opacity:.76;animation:auraPulse 5.8s ease-in-out infinite}
-.tri-ring,.tri-ring::before,.tri-ring::after{position:absolute;content:"";border-radius:50%;transform-style:preserve-3d}
-.tri-ring{width:82%;aspect-ratio:1;border:1px solid rgba(45,212,191,.22);transform:rotateX(66deg) rotateZ(-18deg);animation:ringSpin 16s linear infinite}
-.tri-ring::before{inset:12%;border:1px dashed rgba(167,139,250,.38);animation:ringSpin 12s linear reverse infinite}
-.tri-ring::after{inset:28%;border:1px solid rgba(226,232,240,.15);box-shadow:0 0 32px rgba(45,212,191,.08)}
 .tri-core{
   position:relative;width:min(42%,250px);aspect-ratio:1;transform-style:preserve-3d;
   transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(-8deg);transition:transform .45s cubic-bezier(.2,.8,.2,1);animation:triangleIdle 7s ease-in-out infinite;
@@ -137,7 +133,6 @@ button{font-family:inherit;cursor:pointer}
 .tri-nodes span:nth-child(1){left:50%;top:3%;transform:translate(-50%,-50%)}.tri-nodes span:nth-child(2){right:3%;bottom:12%;transform:translate(50%,50%)}.tri-nodes span:nth-child(3){left:3%;bottom:12%;transform:translate(-50%,50%)}
 .tri-shadow{position:absolute;bottom:12%;width:40%;height:9%;border-radius:50%;background:rgba(0,0,0,.56);filter:blur(16px);transform:rotateX(72deg);animation:shadowPulse 7s ease-in-out infinite}
 @keyframes auraPulse{0%,100%{opacity:.52;transform:scale(.96)}50%{opacity:.88;transform:scale(1.04)}}
-@keyframes ringSpin{to{rotate:360deg}}
 @keyframes triangleIdle{0%,100%{translate:0 0 0}50%{translate:-8px 12px 24px}}
 @keyframes triangleGlint{0%,58%{transform:translateX(-115%);opacity:0}70%{opacity:.52}88%{transform:translateX(115%);opacity:.28}100%{transform:translateX(115%);opacity:0}}
 @keyframes shadowPulse{0%,100%{opacity:.42;transform:rotateX(72deg) scale(.96)}50%{opacity:.24;transform:rotateX(72deg) scale(1.08)}}
@@ -211,7 +206,6 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
     <div class="hero-object" aria-hidden="true">
       <div class="tri-stage">
         <div class="tri-aura"></div>
-        <div class="tri-ring"></div>
         <div class="tri-core">
           <div class="tri-face back"></div>
           <div class="tri-face front"></div>
