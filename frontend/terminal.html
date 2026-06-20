@@ -58,6 +58,7 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
 #input-bar{flex-shrink:0;display:flex;align-items:center;padding:9px 20px 11px;border-top:1px solid var(--border);background:rgba(13,17,23,.92);box-shadow:0 -18px 48px rgba(0,0,0,.18)}
 #prompt-path{color:var(--blue)}#prompt-branch{color:var(--yellow)}#prompt-sym{color:var(--violet);margin:0 7px 0 2px}#cmd-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:13px;caret-color:var(--violet)}
 .panel{border:1px solid var(--border);background:rgba(13,17,23,.72);padding:12px 14px;margin:8px 0;max-width:720px}.grid{display:grid;grid-template-columns:150px 1fr;gap:4px 14px}.tag{display:inline-block;border:1px solid var(--border);padding:2px 7px;margin:2px 5px 2px 0;color:var(--teal);font-size:10px}.cursor{display:inline-block;width:8px;height:14px;background:var(--violet);animation:blink 1s step-end infinite;vertical-align:middle}@keyframes blink{50%{opacity:0}}
+.diff-panel{position:fixed;right:22px;bottom:58px;z-index:20;width:min(680px,calc(100vw - 44px));border:1px solid var(--border);background:rgba(8,11,16,.98);box-shadow:0 24px 90px rgba(0,0,0,.42);padding:14px;display:none}.diff-panel.open{display:block}.diff-panel textarea{width:100%;min-height:260px;resize:vertical;background:#06090d;color:var(--text);border:1px solid rgba(167,139,250,.22);padding:12px;font-family:var(--mono);font-size:12px;outline:none}.diff-panel textarea:focus{border-color:var(--violet)}.diff-panel-actions{display:flex;justify-content:space-between;gap:8px;margin-top:10px}.diff-panel button{border:1px solid var(--border);background:#111820;color:var(--text);padding:8px 12px;font-family:var(--mono);font-size:11px}.diff-panel button.primary{background:var(--violet);border-color:var(--violet);color:#080b10;font-weight:800}
 @media(max-width:760px){#topbar{grid-template-columns:1fr;gap:2px;height:auto;padding:8px 12px}.tb-center,.tb-right{display:none}#sidebar{display:none}#term-wrap{padding:14px 12px}.grid{grid-template-columns:1fr}.ambient-mark{width:70vw;right:-20vw;opacity:.08}}
 </style>
 </head>
@@ -105,6 +106,16 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
     </aside>
     <main id="term-wrap"><div id="output"></div></main>
   </div>
+  <div id="diff-panel" class="diff-panel" aria-label="Paste diff bundle">
+    <div class="label">sealed diff intake</div>
+    <textarea id="diff-input" spellcheck="false" placeholder="Paste a unified diff or patch here. IGNIS will strip identity metadata before review."></textarea>
+    <div class="diff-panel-actions">
+      <button id="diff-close">cancel</button>
+      <button id="diff-load-sample">load sample</button>
+      <button id="diff-save" class="primary">stage diff</button>
+    </div>
+  </div>
+  <input id="diff-file" type="file" accept=".diff,.patch,text/x-diff,text/plain" hidden>
   <div id="input-bar">
     <span id="prompt-path">ash@ignis</span><span id="prompt-branch">(relay)</span><span id="prompt-sym">$</span>
     <input id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
@@ -115,6 +126,9 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
 const out = document.getElementById('output');
 const input = document.getElementById('cmd-input');
 const ticker = document.getElementById('ticker-track');
+const diffPanel = document.getElementById('diff-panel');
+const diffInput = document.getElementById('diff-input');
+const diffFile = document.getElementById('diff-file');
 const API_BASE = window.IGNIS_API_BASE || (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3001' : 'https://api.ignis-protocol.com');
 const sessionId = 'ASH-' + Math.random().toString(16).slice(2,6).toUpperCase();
 document.getElementById('session-id').textContent = sessionId;
@@ -122,6 +136,8 @@ document.getElementById('session-id').textContent = sessionId;
 const state = {
   identity: null,
   session: null,
+  rawDiff: '',
+  sanitized: null,
   stripped: false,
   submitted: false,
   submission: null,
@@ -216,8 +232,11 @@ async function boot(){
 const commands = {
   help: cmdHelp,
   init: cmdInit,
+  paste: cmdPaste,
+  upload: cmdUpload,
   strip: cmdStrip,
   submit: cmdSubmit,
+  status: cmdStatus,
   review: cmdReview,
   signal: cmdSignal,
   network: cmdNetwork,
@@ -234,8 +253,11 @@ function cmdHelp(){
   blank(); ln('COMMANDS', 'hdr'); sep();
   [
     ['init', 'create local ephemeral identity'],
-    ['strip [file]', 'remove author, timezone, email, and host metadata'],
+    ['paste', 'open diff intake panel'],
+    ['upload', 'load a .diff or .patch file'],
+    ['strip', 'sanitize staged diff via backend'],
     ['submit [repo]', 'seal diff bundle and route through relays'],
+    ['status', 'show current submission and review status'],
     ['review', 'show blind review queue state'],
     ['signal', 'show portable contribution signal'],
     ['network', 'inspect relay path'],
@@ -257,7 +279,7 @@ async function cmdInit(){
   });
   state.session = data?.session || null;
   state.identity = data?.session?.id || id();
-  state.stripped = false; state.submitted = false; state.score = null;
+  state.stripped = false; state.submitted = false; state.score = null; state.sanitized = null;
   panel([
     ['identity', `<span class="violet">${state.identity}</span>`],
     ['ttl', state.session ? state.session.expires_at : '72h'],
@@ -269,21 +291,53 @@ async function cmdInit(){
   blank();
 }
 
-function cmdStrip(args=[]){
+function cmdPaste(){
+  diffPanel.classList.add('open');
+  diffInput.focus();
+  blank(); ln('DIFF INTAKE', 'hdr'); sep();
+  ln('paste a unified diff into the intake panel, then click stage diff.', 'dim');
+  blank();
+}
+
+function cmdUpload(){
+  diffFile.click();
+  blank(); ln('DIFF UPLOAD', 'hdr'); sep();
+  ln('select a .diff or .patch file. the content stays local until strip/submit.', 'dim');
+  blank();
+}
+
+async function cmdStrip(){
   blank(); ln('METADATA STRIP', 'hdr'); sep();
   if(!state.identity) ln('no identity found. creating ephemeral identity first...', 'amber'), state.identity = id();
-  const target = args.join(' ') || './patch.diff';
-  ln(`>> scanning ${target}`, 'dim');
-  const removed = ['author.name','author.email','commit.timezone','machine.hostname','editor.backup.path','git.remote.url','os.username','ip.hint'];
-  removed.forEach((x,i) => ln(`   removed ${String(i+1).padStart(2,'0')}  ${x}`, i % 2 ? 'g2':'g1'));
+  if(!state.rawDiff){ ln('no diff staged. run paste or upload first.', 'amber'); blank(); return; }
+  ln(`>> scanning staged diff  ${state.rawDiff.length} chars`, 'dim');
+  const data = await api('/api/sanitize', {
+    method: 'POST',
+    body: JSON.stringify({ diff: state.rawDiff })
+  });
+  if(!data) return;
+  state.sanitized = data.sanitized;
   state.stripped = true;
-  blank(); ln('sealed diff bundle ready for blind review.', 'g1'); blank();
+  const findings = state.sanitized.report.findings || [];
+  if(findings.length){
+    findings.forEach(item => ln(`   ${item.severity.padEnd(6)} ${String(item.count).padStart(2)}  ${item.label}`, item.severity === 'high' ? 'amber' : 'g2'));
+  } else {
+    ln('   clean   no identity-bearing metadata detected', 'g1');
+  }
+  panel([
+    ['risk', state.sanitized.report.risk],
+    ['original hash', state.sanitized.original_hash],
+    ['sanitized hash', state.sanitized.sanitized_hash],
+    ['lines', `${state.sanitized.report.original_lines} -> ${state.sanitized.report.sanitized_lines}`]
+  ]);
+  blank(); ln('sanitized bundle ready. run submit owner/repo when ready.', 'g1'); blank();
 }
 
 async function cmdSubmit(args=[]){
   blank(); ln('SEALED SUBMISSION', 'hdr'); sep();
   if(!state.identity){ ln('identity missing. run init first.', 'amber'); blank(); return; }
   if(!state.stripped){ ln('bundle is not stripped. run strip first.', 'amber'); blank(); return; }
+  if(!state.rawDiff){ ln('no diff staged. run paste or upload first.', 'amber'); blank(); return; }
   const repo = args.join(' ') || 'owner/repo';
   const summary = 'Sealed anonymous code submission from IGNIS terminal.';
   ln(`>> target       ${repo}`, 'dim');
@@ -293,9 +347,10 @@ async function cmdSubmit(args=[]){
       session: state.identity,
       repo,
       summary,
-      metadata: { author: 'removed', email: 'removed', timezone: 'removed', hostname: 'removed' }
+      diff: state.rawDiff
     })
   });
+  if(!data) return;
   const path = data?.submission?.relay_path || state.relays.map(r => r.id);
   for(const relayId of path){
     const r = state.relays.find(item => item.id === relayId) || { id: relayId, city: relayId, ms: 18, status: 'forwarded' };
@@ -312,10 +367,28 @@ async function cmdSubmit(args=[]){
   };
   panel([
     ['submission', state.submission.id],
-    ['author', state.identity],
+    ['status command', `status ${state.submission.id}`],
     ['review mode', state.submission.review_mode],
-    ['metadata', state.submission.metadata_removed ? 'removed' : 'pending'],
+    ['metadata', state.submission.metadata_report?.risk || (state.submission.metadata_removed ? 'removed' : 'pending')],
     ['proof status', state.submission.proof_status || 'awaiting acceptance']
+  ]);
+  blank();
+}
+
+async function cmdStatus(args=[]){
+  blank(); ln('SUBMISSION STATUS', 'hdr'); sep();
+  const id = args[0] || state.submission?.id;
+  if(!id){ ln('no submission selected. run submit first or pass a submission id.', 'amber'); blank(); return; }
+  const data = await api(`/api/submissions/${encodeURIComponent(id)}/status`);
+  if(!data) return;
+  const review = data.review;
+  panel([
+    ['submission', data.submission.id],
+    ['status', data.submission.status],
+    ['metadata risk', data.submission.metadata_report?.risk || 'unknown'],
+    ['review', review ? review.id : 'pending'],
+    ['votes', review ? `${review.reviewers_responded} / ${review.quorum_required}` : 'pending'],
+    ['proof', data.proof ? `${location.origin}/proof?id=${data.proof.id}` : 'not issued']
   ]);
   blank();
 }
@@ -385,7 +458,7 @@ async function cmdSolana(){
     ['proof receipts', data?.proof_receipts || 'live'],
     ['anchor signer', data?.configured ? 'configured' : 'awaiting funded devnet signer'],
     ['anchors confirmed', String(data?.anchor_queue?.confirmed ?? 0)],
-    ['token', data?.token_mint || 'not part of Phase 4'],
+    ['token', data?.token_mint || 'none in current scope'],
     ['wallet', state.wallet ? state.wallet : 'not connected']
   ]);
   ln('Receipts remain independently verifiable even while an anchor waits for its devnet signer.', 'dim');
@@ -505,7 +578,37 @@ input.addEventListener('keydown', e => {
     runCmd(v);
   }
 });
-document.getElementById('app').addEventListener('click', () => input.focus());
+document.getElementById('app').addEventListener('click', event => {
+  if(event.target.closest('#diff-panel')) return;
+  input.focus();
+});
+document.getElementById('diff-close').addEventListener('click', () => diffPanel.classList.remove('open'));
+document.getElementById('diff-save').addEventListener('click', () => {
+  if(!diffInput.value.trim()){
+    blank(); ln('diff intake is empty. paste a unified diff or load the sample first.', 'amber'); blank();
+    diffInput.focus();
+    return;
+  }
+  state.rawDiff = diffInput.value;
+  state.stripped = false;
+  state.sanitized = null;
+  diffPanel.classList.remove('open');
+  blank(); ln(`staged diff: ${state.rawDiff.length} chars. run strip to sanitize.`, 'g1'); blank();
+  input.focus();
+});
+document.getElementById('diff-load-sample').addEventListener('click', () => {
+  diffInput.value = `From 4bd3a1f Mon Sep 17 00:00:00 2001\nAuthor: Builder <builder@example.com>\nDate: 2026-06-20T10:11:12+07:00\ndiff --git a/C:\\Users\\builder\\project\\agent.js b/src/agent.js\n--- a/C:\\Users\\builder\\project\\agent.js\n+++ b/src/agent.js\n@@ -1,2 +1,2 @@\n-const remote = "git@github.com:builder/private-repo.git";\n+const status = "code without a face";\n`;
+});
+diffFile.addEventListener('change', async () => {
+  const file = diffFile.files?.[0];
+  if(!file) return;
+  state.rawDiff = await file.text();
+  state.stripped = false;
+  state.sanitized = null;
+  blank(); ln(`uploaded ${file.name}: ${state.rawDiff.length} chars. run strip to sanitize.`, 'g1'); blank();
+  diffFile.value = '';
+  input.focus();
+});
 
 boot();
 </script>

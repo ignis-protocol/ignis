@@ -6,7 +6,7 @@ IGNIS is an anonymous code contribution protocol. Contributions should move the 
 
 - **Frontend** - protocol landing page, terminal UX, reviewer screens.
 - **Relay API** - sealed submission flow, relay status, rate limits, abuse controls.
-- **Metadata stripping** - real diff/bundle sanitization.
+- **Metadata stripping** - sanitizer coverage, leak tests, and reviewer-safe bundle previews.
 - **Blind review** - reviewer queues, scoring, quorum, audit trail.
 - **Solana** - wallet auth, contribution receipts, and optional devnet anchoring.
 - **Security** - privacy threat modeling, metadata leak tests, relay abuse prevention.
@@ -30,7 +30,7 @@ http://localhost:5173/terminal
 
 - Keep public copy aligned with `code without a face.`
 - Do not reintroduce the previous product terminology.
-- Treat privacy claims carefully. If a guarantee is not implemented, label it as alpha/planned.
+- Treat privacy claims carefully. Sanitized diff intake is live, but relay anonymity and Solana anchoring still need independent audit before stronger guarantees.
 - Prefer small, inspectable changes with clear tests or manual verification notes.
 
 ## Commit Style

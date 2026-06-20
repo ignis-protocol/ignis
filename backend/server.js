@@ -11,6 +11,7 @@ const { PublicKey } = require('@solana/web3.js');
 const { IgnisStorage } = require('./lib/storage');
 const { canonicalHash, createTokenService, sha256 } = require('./lib/security');
 const { SolanaAnchor } = require('./lib/solana-anchor');
+const { sanitizeDiff } = require('./lib/sanitizer');
 
 const bs58 = bs58Module.default || bs58Module;
 const app = express();
@@ -98,6 +99,7 @@ app.get('/', (req, res) => ok(res, req, {
   phases: {
     active: [
       'anonymous sessions + sealed submissions',
+      'diff intake + metadata sanitizer',
       'blind review + quorum settlement',
       'wallet signature authentication',
       'verifiable proof receipts',
@@ -111,7 +113,9 @@ app.get('/', (req, res) => ok(res, req, {
     'POST /api/wallet/challenge',
     'POST /api/wallet/verify',
     'POST /api/sessions',
+    'POST /api/sanitize',
     'POST /api/submissions',
+    'GET  /api/submissions/:id/status',
     'GET  /api/reviews',
     'POST /api/reviews/:id/votes',
     'GET  /api/proofs/:id',
@@ -264,6 +268,19 @@ app.get('/api/relays', (req, res) => ok(res, req, {
   guarantee: 'protocol preview; hardened anonymity guarantees require independent review',
 }));
 
+app.post('/api/sanitize', asyncHandler(async (req, res) => {
+  const result = sanitizeDiff(req.body.diff || req.body.diff_text || req.body.patch || '', { previewBytes: 8000 });
+  return ok(res, req, {
+    sanitized: {
+      original_hash: result.original_hash,
+      sanitized_hash: result.sanitized_hash,
+      sanitized_diff: result.sanitized_diff,
+      report: result.report,
+      preview: result.preview,
+    },
+  });
+}));
+
 app.post('/api/submissions', asyncHandler(async (req, res) => {
   const submission = createSubmission(req.body || {});
   storage.state.submissions.unshift(submission);
@@ -296,6 +313,22 @@ app.get('/api/submissions/:id', (req, res, next) => {
       submission: serializeSubmission(submission),
       review: review ? serializeReview(review) : null,
       proof: proof ? serializeProof(proof) : null,
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/api/submissions/:id/status', (req, res, next) => {
+  try {
+    const submission = findSubmission(req.params.id);
+    if (!submission) throw new ApiError(404, 'submission_not_found', 'Submission does not exist.');
+    const review = storage.state.reviews.find(item => item.submission_id === submission.id) || null;
+    const proof = storage.state.proofs.find(item => item.submission_id === submission.id) || null;
+    return ok(res, req, {
+      submission: serializeSubmission(submission),
+      review: review ? serializeReview(review) : null,
+      proof: proof ? { id: proof.id, anchor: proof.anchor, issued_at: proof.issued_at } : null,
     });
   } catch (error) {
     return next(error);
@@ -467,14 +500,18 @@ function createSubmission(body) {
   if (isExpired(session.expires_at)) throw new ApiError(410, 'session_expired', 'Session has expired.');
   const repo = requiredText(body.repo, 'repo', 140);
   const summary = requiredText(body.summary, 'summary', 700);
+  const sanitized = sanitizeDiff(body.diff || body.diff_text || body.patch || '');
   return {
     id: newId('sealed'),
     session: session.id,
     repo,
     summary,
-    diff_hash: optionalText(body.diff_hash, 96) || sha256(`${sessionId}:${repo}:${summary}:${Date.now()}`),
+    diff_hash: sanitized.sanitized_hash,
+    original_hash: sanitized.original_hash,
+    sanitized_hash: sanitized.sanitized_hash,
+    sanitized_diff: sanitized.sanitized_diff,
     metadata_removed: true,
-    metadata_report: stripMetadataPreview(body.metadata || {}),
+    metadata_report: sanitized.report,
     review_mode: 'blind',
     status: 'queued',
     relay_path: relays.map(item => item.id),
@@ -611,6 +648,7 @@ async function processAnchorQueue() {
 function serializeSubmission(submission, options = {}) {
   const result = { ...submission };
   delete result.session;
+  if (!options.includeBundle) delete result.sanitized_diff;
   if (options.includeSession) result.session = submission.session;
   return result;
 }
@@ -641,6 +679,9 @@ function serializeReview(review, options = {}) {
       repo: submission.repo,
       summary: submission.summary,
       diff_hash: submission.diff_hash,
+      sanitized_hash: submission.sanitized_hash,
+      sanitized_diff: submission.sanitized_diff,
+      metadata_report: submission.metadata_report,
       metadata_removed: submission.metadata_removed,
       relay_path: submission.relay_path,
     };
@@ -742,15 +783,6 @@ function linkWallet(sessionId, walletCommitment) {
       created_at: new Date().toISOString(),
     });
   }
-}
-
-function stripMetadataPreview(metadata) {
-  const keys = ['author', 'email', 'timezone', 'hostname', 'username', 'ip', 'remote_url', 'editor_path'];
-  const present = keys.filter(key => Object.prototype.hasOwnProperty.call(metadata, key));
-  return {
-    removed_fields: present.length ? present : ['author', 'email', 'timezone', 'hostname'],
-    retained_fields: ['repo', 'summary', 'diff_hash'],
-  };
 }
 
 function pruneTransient() {

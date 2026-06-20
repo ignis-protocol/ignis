@@ -9,12 +9,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#080b10;color:#e2e8f0;font:14px/1.5 Inter,sans-serif;min-height:100vh}button,input,textarea{font:inherit}button{cursor:pointer}.shell{display:grid;grid-template-rows:58px 1fr;min-height:100vh}.top{display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid rgba(167,139,250,.16);background:rgba(13,17,23,.94)}.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700}.brand img{width:30px;height:30px;filter:drop-shadow(0 0 12px rgba(0,255,65,.35))}.status{font:12px JetBrains Mono;color:#2dd4bf}.layout{display:grid;grid-template-columns:310px 1fr;min-height:0}.queue{border-right:1px solid rgba(167,139,250,.16);background:#0d1117;padding:18px;overflow:auto}.main{padding:28px;overflow:auto}.label{font:11px JetBrains Mono;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em}.login{max-width:460px;margin:10vh auto;border:1px solid rgba(167,139,250,.24);background:#0d1117;padding:28px}.login h1{margin:8px 0 10px;font-size:24px}.login p,.muted{color:#94a3b8}.field{width:100%;border:1px solid rgba(167,139,250,.2);background:#080b10;color:#e2e8f0;padding:11px 12px;border-radius:4px;outline:none}.field:focus{border-color:#a78bfa}.btn{border:1px solid rgba(167,139,250,.28);background:#111820;color:#e2e8f0;padding:10px 14px;border-radius:4px}.btn:hover{border-color:#a78bfa}.primary{background:#a78bfa;color:#080b10;border-color:#a78bfa;font-weight:700}.danger{border-color:rgba(248,113,113,.45);color:#f87171}.accept{border-color:rgba(74,222,128,.45);color:#4ade80}.login .btn{width:100%;margin-top:12px}.queue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.count{font:12px JetBrains Mono;color:#a78bfa}.item{width:100%;text-align:left;padding:13px;margin-bottom:8px;border:1px solid rgba(167,139,250,.13);background:#080b10;color:#e2e8f0;border-radius:4px}.item:hover,.item.active{border-color:#a78bfa;background:#111820}.item strong,.item span{display:block}.item span{color:#94a3b8;font:11px JetBrains Mono;margin-top:5px}.empty{color:#475569;padding:18px 0}.detail{max-width:900px}.eyebrow{font:12px JetBrains Mono;color:#2dd4bf}.detail h1{font-size:28px;margin:8px 0 20px}.grid{display:grid;grid-template-columns:140px 1fr;gap:9px 18px;padding:18px;border:1px solid rgba(167,139,250,.16);background:#0d1117}.grid dt{color:#94a3b8}.grid dd{margin:0;font-family:JetBrains Mono;overflow-wrap:anywhere}.privacy{margin:16px 0;padding:12px;border-left:2px solid #4ade80;color:#94a3b8;background:rgba(74,222,128,.04)}.vote{margin-top:20px;border-top:1px solid rgba(167,139,250,.16);padding-top:20px}.score-row{display:flex;align-items:center;gap:16px;margin:12px 0}.score-row input{flex:1}.score-value{font:700 18px JetBrains Mono;color:#a78bfa;min-width:45px}.actions{display:flex;gap:10px;margin-top:12px}.hidden{display:none!important}.toast{position:fixed;right:20px;bottom:20px;background:#111820;border:1px solid rgba(167,139,250,.3);padding:12px 16px;max-width:360px;border-radius:4px}.history{margin-top:28px}@media(max-width:760px){.layout{grid-template-columns:1fr}.queue{border-right:0;border-bottom:1px solid rgba(167,139,250,.16);max-height:280px}.main{padding:18px}.grid{grid-template-columns:1fr}.top{padding:0 14px}}
+*{box-sizing:border-box}body{margin:0;background:#080b10;color:#e2e8f0;font:14px/1.5 Inter,sans-serif;min-height:100vh}button,input,textarea{font:inherit}button{cursor:pointer}.shell{display:grid;grid-template-rows:58px 1fr;min-height:100vh}.top{display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid rgba(167,139,250,.16);background:rgba(13,17,23,.94)}.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700}.brand img{width:30px;height:30px;filter:drop-shadow(0 0 12px rgba(0,255,65,.35))}.status{font:12px JetBrains Mono;color:#2dd4bf}.layout{display:grid;grid-template-columns:310px 1fr;min-height:0}.queue{border-right:1px solid rgba(167,139,250,.16);background:#0d1117;padding:18px;overflow:auto}.main{padding:28px;overflow:auto}.label{font:11px JetBrains Mono;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em}.login{max-width:460px;margin:10vh auto;border:1px solid rgba(167,139,250,.24);background:#0d1117;padding:28px}.login h1{margin:8px 0 10px;font-size:24px}.login p,.muted{color:#94a3b8}.field{width:100%;border:1px solid rgba(167,139,250,.2);background:#080b10;color:#e2e8f0;padding:11px 12px;border-radius:4px;outline:none}.field:focus{border-color:#a78bfa}.btn{border:1px solid rgba(167,139,250,.28);background:#111820;color:#e2e8f0;padding:10px 14px;border-radius:4px}.btn:hover{border-color:#a78bfa}.primary{background:#a78bfa;color:#080b10;border-color:#a78bfa;font-weight:700}.danger{border-color:rgba(248,113,113,.45);color:#f87171}.accept{border-color:rgba(74,222,128,.45);color:#4ade80}.login .btn{width:100%;margin-top:12px}.queue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.count{font:12px JetBrains Mono;color:#a78bfa}.item{width:100%;text-align:left;padding:13px;margin-bottom:8px;border:1px solid rgba(167,139,250,.13);background:#080b10;color:#e2e8f0;border-radius:4px}.item:hover,.item.active{border-color:#a78bfa;background:#111820}.item strong,.item span{display:block}.item span{color:#94a3b8;font:11px JetBrains Mono;margin-top:5px}.empty{color:#475569;padding:18px 0}.detail{max-width:1040px}.eyebrow{font:12px JetBrains Mono;color:#2dd4bf}.detail h1{font-size:28px;margin:8px 0 20px}.grid{display:grid;grid-template-columns:150px 1fr;gap:9px 18px;padding:18px;border:1px solid rgba(167,139,250,.16);background:#0d1117}.grid dt{color:#94a3b8}.grid dd{margin:0;font-family:JetBrains Mono;overflow-wrap:anywhere}.privacy{margin:16px 0;padding:12px;border-left:2px solid #4ade80;color:#94a3b8;background:rgba(74,222,128,.04)}.bundle{display:grid;grid-template-columns:280px 1fr;gap:16px;margin-top:16px}.report,.diffbox{border:1px solid rgba(167,139,250,.16);background:#0d1117}.report{padding:16px}.report h2,.diffbox h2{margin:0 0 12px;font-size:14px}.finding{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px;padding:9px;border:1px solid rgba(167,139,250,.12);background:#080b10;font-family:JetBrains Mono;font-size:12px}.finding strong{color:#e2e8f0}.finding span{color:#94a3b8}.risk-high{color:#fbbf24}.risk-medium{color:#2dd4bf}.risk-low{color:#4ade80}.diffbox{min-width:0}.diffbox h2{padding:16px 16px 0}.diffbox pre{margin:0;padding:16px;max-height:420px;overflow:auto;color:#cbd5e1;font:12px/1.55 JetBrains Mono,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.vote{margin-top:20px;border-top:1px solid rgba(167,139,250,.16);padding-top:20px}.score-row{display:flex;align-items:center;gap:16px;margin:12px 0}.score-row input{flex:1}.score-value{font:700 18px JetBrains Mono;color:#a78bfa;min-width:45px}.actions{display:flex;gap:10px;margin-top:12px}.hidden{display:none!important}.toast{position:fixed;right:20px;bottom:20px;background:#111820;border:1px solid rgba(167,139,250,.3);padding:12px 16px;max-width:360px;border-radius:4px}.history{margin-top:28px}@media(max-width:900px){.bundle{grid-template-columns:1fr}}@media(max-width:760px){.layout{grid-template-columns:1fr}.queue{border-right:0;border-bottom:1px solid rgba(167,139,250,.16);max-height:280px}.main{padding:18px}.grid{grid-template-columns:1fr}.top{padding:0 14px}}
 </style>
 </head>
 <body>
 <div class="shell">
-  <header class="top"><a class="brand" href="/"><img src="/ignis-mark.svg?v=2" alt=""><span>IGNIS / REVIEW</span></a><span class="status" id="status">LOCKED</span></header>
+  <header class="top">
+    <a class="brand" href="/"><img src="/ignis-mark.svg?v=2" alt=""><span>IGNIS / REVIEW</span></a>
+    <span class="status" id="status">LOCKED</span>
+  </header>
   <section id="login" class="login">
     <div class="label">Private reviewer access</div>
     <h1>Blind review console</h1>
@@ -35,19 +38,153 @@
 <div id="toast" class="toast hidden"></div>
 <script>
 const API = ['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3001' : 'https://api.ignis-protocol.com';
-const ui = Object.fromEntries(['login','console','key','login-btn','login-error','status','queue-list','queue-count','detail','history-btn','logout-btn','toast'].map(id=>[id,document.getElementById(id)]));
-let token=sessionStorage.getItem('ignis_reviewer_token')||'';let reviews=[];let activeId='';let mode='queued';
-const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-async function request(path,options={}){const response=await fetch(API+path,{...options,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{}) ,...(options.headers||{})}});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error?.message||`HTTP ${response.status}`);return data}
-function toast(message){ui.toast.textContent=message;ui.toast.classList.remove('hidden');setTimeout(()=>ui.toast.classList.add('hidden'),2800)}
-async function login(){ui['login-error'].textContent='';try{const data=await request('/api/reviewer/session',{method:'POST',body:JSON.stringify({key:ui.key.value})});token=data.token;sessionStorage.setItem('ignis_reviewer_token',token);ui.key.value='';await openConsole(data.reviewer.label)}catch(error){ui['login-error'].textContent=error.message}}
-async function openConsole(label){ui.login.classList.add('hidden');ui.console.classList.remove('hidden');ui.status.textContent=`ACTIVE / ${label||'REVIEWER'}`;await loadReviews()}
-async function loadReviews(){const data=await request(`/api/reviews?status=${mode}&limit=100`);reviews=data.queue;ui['queue-count'].textContent=String(reviews.length);ui['queue-list'].innerHTML=reviews.length?reviews.map(r=>`<button class="item ${r.id===activeId?'active':''}" data-id="${escapeHtml(r.id)}"><strong>${escapeHtml(r.bundle?.repo||r.id)}</strong><span>${escapeHtml(r.status)} / ${r.reviewers_responded} of ${r.quorum_required} votes</span></button>`).join(''):'<p class="empty">Queue is clear.</p>';document.querySelectorAll('.item').forEach(el=>el.addEventListener('click',()=>selectReview(el.dataset.id)));if(activeId&&!reviews.some(r=>r.id===activeId)){activeId='';ui.detail.innerHTML='<p class="empty">Select a sealed submission.</p>'}}
-function selectReview(id){activeId=id;const r=reviews.find(item=>item.id===id);loadReviews();if(!r)return;const settled=r.status!=='queued';ui.detail.innerHTML=`<div class="eyebrow">${escapeHtml(r.id)}</div><h1>${escapeHtml(r.bundle?.repo||'Sealed contribution')}</h1><dl class="grid"><dt>Summary</dt><dd>${escapeHtml(r.bundle?.summary)}</dd><dt>Diff hash</dt><dd>${escapeHtml(r.bundle?.diff_hash)}</dd><dt>Relay path</dt><dd>${escapeHtml((r.bundle?.relay_path||[]).join(' -> '))}</dd><dt>Status</dt><dd>${escapeHtml(r.status)}</dd><dt>Quorum</dt><dd>${r.reviewers_responded} / ${r.quorum_required}</dd>${settled?`<dt>Decision</dt><dd>${escapeHtml(r.decision)}</dd><dt>Score</dt><dd>${escapeHtml(r.score)} / 10</dd>`:''}</dl><div class="privacy">Identity, wallet, location, social graph, and session identifiers are not included in this review surface.</div>${settled?'<p class="muted">This review is settled and cannot receive more votes.</p>':`<section class="vote"><div class="label">Quality score</div><div class="score-row"><input id="score" type="range" min="1" max="10" value="8"><span id="score-value" class="score-value">8/10</span></div><textarea id="note" class="field" rows="5" maxlength="500" placeholder="Optional technical feedback"></textarea><div class="actions"><button class="btn accept" data-vote="accept">Accept</button><button class="btn danger" data-vote="reject">Reject</button></div></section>`}`;const score=document.getElementById('score');if(score)score.addEventListener('input',()=>document.getElementById('score-value').textContent=`${score.value}/10`);document.querySelectorAll('[data-vote]').forEach(el=>el.addEventListener('click',()=>vote(el.dataset.vote)))}
-async function vote(decision){try{const score=Number(document.getElementById('score').value);const note=document.getElementById('note').value;await request(`/api/reviews/${activeId}/votes`,{method:'POST',body:JSON.stringify({decision,score,note})});toast(`Vote recorded: ${decision}`);activeId='';await loadReviews()}catch(error){toast(error.message)}}
-function logout(){token='';sessionStorage.removeItem('ignis_reviewer_token');location.reload()}
-ui['login-btn'].addEventListener('click',login);ui.key.addEventListener('keydown',event=>{if(event.key==='Enter')login()});ui['history-btn'].addEventListener('click',async()=>{mode=mode==='queued'?'all':'queued';ui['history-btn'].textContent=mode==='queued'?'View settled':'View queue';activeId='';await loadReviews()});ui['logout-btn'].addEventListener('click',logout);
-if(token){request('/api/reviewer/me').then(data=>openConsole(data.reviewer.label)).catch(logout)}
+const ui = Object.fromEntries(['login','console','key','login-btn','login-error','status','queue-list','queue-count','detail','history-btn','logout-btn','toast'].map(id => [id, document.getElementById(id)]));
+let token = sessionStorage.getItem('ignis_reviewer_token') || '';
+let reviews = [];
+let activeId = '';
+let mode = 'queued';
+
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[char]));
+
+async function request(path, options = {}) {
+  const response = await fetch(API + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error?.message || `HTTP ${response.status}`);
+  return data;
+}
+
+function toast(message) {
+  ui.toast.textContent = message;
+  ui.toast.classList.remove('hidden');
+  setTimeout(() => ui.toast.classList.add('hidden'), 2800);
+}
+
+async function login() {
+  ui['login-error'].textContent = '';
+  try {
+    const data = await request('/api/reviewer/session', { method: 'POST', body: JSON.stringify({ key: ui.key.value }) });
+    token = data.token;
+    sessionStorage.setItem('ignis_reviewer_token', token);
+    ui.key.value = '';
+    await openConsole(data.reviewer.label);
+  } catch (error) {
+    ui['login-error'].textContent = error.message;
+  }
+}
+
+async function openConsole(label) {
+  ui.login.classList.add('hidden');
+  ui.console.classList.remove('hidden');
+  ui.status.textContent = `ACTIVE / ${label || 'REVIEWER'}`;
+  await loadReviews();
+}
+
+async function loadReviews() {
+  const data = await request(`/api/reviews?status=${mode}&limit=100`);
+  reviews = data.queue;
+  ui['queue-count'].textContent = String(reviews.length);
+  ui['queue-list'].innerHTML = reviews.length
+    ? reviews.map(review => `<button class="item ${review.id === activeId ? 'active' : ''}" data-id="${escapeHtml(review.id)}"><strong>${escapeHtml(review.bundle?.repo || review.id)}</strong><span>${escapeHtml(review.status)} / ${review.reviewers_responded} of ${review.quorum_required} votes</span></button>`).join('')
+    : '<p class="empty">Queue is clear.</p>';
+  document.querySelectorAll('.item').forEach(element => element.addEventListener('click', () => selectReview(element.dataset.id)));
+  if (activeId && !reviews.some(review => review.id === activeId)) {
+    activeId = '';
+    ui.detail.innerHTML = '<p class="empty">Select a sealed submission.</p>';
+  }
+}
+
+function renderFindings(report) {
+  const findings = report?.findings || [];
+  if (!findings.length) return '<p class="muted">No identity-bearing metadata was detected.</p>';
+  return findings.map(item => `<div class="finding"><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.severity)} x ${escapeHtml(item.count)}</span></div>`).join('');
+}
+
+function selectReview(id) {
+  activeId = id;
+  const review = reviews.find(item => item.id === id);
+  loadReviews();
+  if (!review) return;
+
+  const bundle = review.bundle || {};
+  const report = bundle.metadata_report || {};
+  const settled = review.status !== 'queued';
+  const risk = report.risk || 'unknown';
+  const diff = bundle.sanitized_diff || 'Sanitized diff is not available for this review.';
+
+  ui.detail.innerHTML = `
+    <div class="eyebrow">${escapeHtml(review.id)}</div>
+    <h1>${escapeHtml(bundle.repo || 'Sealed contribution')}</h1>
+    <dl class="grid">
+      <dt>Summary</dt><dd>${escapeHtml(bundle.summary)}</dd>
+      <dt>Diff hash</dt><dd>${escapeHtml(bundle.diff_hash)}</dd>
+      <dt>Sanitized hash</dt><dd>${escapeHtml(bundle.sanitized_hash)}</dd>
+      <dt>Metadata risk</dt><dd class="risk-${escapeHtml(risk)}">${escapeHtml(risk)}</dd>
+      <dt>Relay path</dt><dd>${escapeHtml((bundle.relay_path || []).join(' -> '))}</dd>
+      <dt>Status</dt><dd>${escapeHtml(review.status)}</dd>
+      <dt>Quorum</dt><dd>${review.reviewers_responded} / ${review.quorum_required}</dd>
+      ${settled ? `<dt>Decision</dt><dd>${escapeHtml(review.decision)}</dd><dt>Score</dt><dd>${escapeHtml(review.score)} / 10</dd>` : ''}
+    </dl>
+    <div class="privacy">Identity, wallet, location, social graph, session identifiers, local paths, remotes, and author fields are excluded from this review surface.</div>
+    <section class="bundle">
+      <aside class="report">
+        <h2>Metadata report</h2>
+        <dl class="grid">
+          <dt>Status</dt><dd>${escapeHtml(report.status || 'unknown')}</dd>
+          <dt>Original bytes</dt><dd>${escapeHtml(report.original_bytes)}</dd>
+          <dt>Sanitized bytes</dt><dd>${escapeHtml(report.sanitized_bytes)}</dd>
+          <dt>Lines</dt><dd>${escapeHtml(report.original_lines)} -> ${escapeHtml(report.sanitized_lines)}</dd>
+        </dl>
+        ${renderFindings(report)}
+      </aside>
+      <section class="diffbox">
+        <h2>Sanitized diff bundle</h2>
+        <pre>${escapeHtml(diff)}</pre>
+      </section>
+    </section>
+    ${settled ? '<p class="muted">This review is settled and cannot receive more votes.</p>' : `<section class="vote"><div class="label">Quality score</div><div class="score-row"><input id="score" type="range" min="1" max="10" value="8"><span id="score-value" class="score-value">8/10</span></div><textarea id="note" class="field" rows="5" maxlength="500" placeholder="Optional technical feedback"></textarea><div class="actions"><button class="btn accept" data-vote="accept">Accept</button><button class="btn danger" data-vote="reject">Reject</button></div></section>`}
+  `;
+
+  const score = document.getElementById('score');
+  if (score) score.addEventListener('input', () => document.getElementById('score-value').textContent = `${score.value}/10`);
+  document.querySelectorAll('[data-vote]').forEach(element => element.addEventListener('click', () => vote(element.dataset.vote)));
+}
+
+async function vote(decision) {
+  try {
+    const score = Number(document.getElementById('score').value);
+    const note = document.getElementById('note').value;
+    await request(`/api/reviews/${activeId}/votes`, { method: 'POST', body: JSON.stringify({ decision, score, note }) });
+    toast(`Vote recorded: ${decision}`);
+    activeId = '';
+    await loadReviews();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+function logout() {
+  token = '';
+  sessionStorage.removeItem('ignis_reviewer_token');
+  location.reload();
+}
+
+ui['login-btn'].addEventListener('click', login);
+ui.key.addEventListener('keydown', event => { if (event.key === 'Enter') login(); });
+ui['history-btn'].addEventListener('click', async () => {
+  mode = mode === 'queued' ? 'all' : 'queued';
+  ui['history-btn'].textContent = mode === 'queued' ? 'View settled' : 'View queue';
+  activeId = '';
+  await loadReviews();
+});
+ui['logout-btn'].addEventListener('click', logout);
+if (token) request('/api/reviewer/me').then(data => openConsole(data.reviewer.label)).catch(logout);
 </script>
 </body>
 </html>

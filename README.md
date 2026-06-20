@@ -106,6 +106,11 @@ Completed:
 - Persistent alpha backend storage.
 - Sealed submission API.
 - Relay, review, signal, and Solana status endpoints.
+- Real diff intake for pasted or uploaded `.diff` / `.patch` files.
+- Backend metadata sanitizer with size, line, and binary payload validation.
+- Sealed bundle storage with original hash, sanitized hash, sanitized diff, and metadata report.
+- Submission status endpoint for terminal follow-up checks.
+- Reviewer console shows sanitized bundles and metadata reports without exposing identity fields.
 - Terminal connected to backend API with local fallback.
 - Short-lived reviewer sessions and private reviewer dashboard.
 - Phantom sign-message authentication with nonce replay protection.
@@ -116,7 +121,6 @@ Completed:
 
 Not done yet:
 
-- Real metadata stripping CLI.
 - Production relay transport and anonymity audit.
 - Funded production devnet anchor signer.
 - IGNIS SPL incentive layer.
@@ -128,8 +132,11 @@ Not done yet:
 | Command | Description |
 |---|---|
 | `init` | Create an ephemeral anonymous identity |
-| `strip [file]` | Simulate metadata stripping for a diff bundle |
+| `paste` | Open the diff intake panel |
+| `upload` | Load a local `.diff` or `.patch` file into the terminal |
+| `strip` | Sanitize the staged diff through the backend |
 | `submit [repo]` | Create a sealed anonymous submission |
+| `status [submission]` | Check review/proof status for a sealed submission |
 | `review` | Inspect the blind review queue |
 | `signal` | Read contribution signal state |
 | `network` | Inspect relay route state |
@@ -147,9 +154,11 @@ GET  /health
 POST /api/sessions
 GET  /api/sessions/:id
 GET  /api/relays
+POST /api/sanitize
 POST /api/submissions
 GET  /api/submissions
 GET  /api/submissions/:id
+GET  /api/submissions/:id/status
 GET  /api/reviews
 GET  /api/reviews/:id
 POST /api/reviews/:id/votes
@@ -182,12 +191,13 @@ Create a sealed submission:
   "session": "ash_ab12cd34ef",
   "repo": "owner/repo",
   "summary": "Refactor auth module and add regression tests",
-  "metadata": {
-    "author": "removed",
-    "email": "removed"
-  }
+  "diff": "diff --git a/src/auth.js b/src/auth.js\n..."
 }
 ```
+
+Diff intake accepts unified diffs and patches. The backend rejects blank input,
+oversized payloads, excessive line counts, and binary diff markers before a
+bundle reaches blind review.
 
 Cast a reviewer vote:
 

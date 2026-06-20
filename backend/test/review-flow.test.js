@@ -24,6 +24,35 @@ process.env.RATE_LIMIT_PER_MINUTE = '1000';
 process.env.AUTH_SECRET = 'test-auth-secret-with-at-least-32-bytes';
 
 const app = require('../server');
+const { sanitizeDiff } = require('../lib/sanitizer');
+
+const dirtyDiff = [
+  'From 4bd3a1f Mon Sep 17 00:00:00 2001',
+  'Author: Jane Builder <jane.builder@example.com>',
+  'Date: 2026-06-20T10:11:12+07:00',
+  'diff --git a/C:\\Users\\jane\\project\\secret.js b/src/secret.js',
+  '--- a/C:\\Users\\jane\\project\\secret.js',
+  '+++ b/src/secret.js',
+  '@@ -1,2 +1,2 @@',
+  '-const remote = "git@github.com:jane/private-repo.git";',
+  '+const remote = "https://github.com/jane/private-repo.git";',
+  '+const host = "/home/jane/.ssh/id_ed25519";',
+].join('\n');
+
+test('sanitizer removes identity-bearing diff metadata', () => {
+  const result = sanitizeDiff(dirtyDiff);
+  assert.equal(result.sanitized_diff.includes('jane.builder@example.com'), false);
+  assert.equal(result.sanitized_diff.includes('C:\\Users\\jane'), false);
+  assert.equal(result.sanitized_diff.includes('/home/jane'), false);
+  assert.equal(result.sanitized_diff.includes('github.com/jane/private-repo'), false);
+  assert.equal(result.report.risk, 'high');
+  assert.ok(result.report.findings.length >= 4);
+});
+
+test('sanitizer rejects empty and binary diff payloads', () => {
+  assert.throws(() => sanitizeDiff('   '), /Diff content is required/);
+  assert.throws(() => sanitizeDiff('diff --git a/logo.png b/logo.png\nBinary files differ'), /Binary or unsafe payloads/);
+});
 
 test('blind review reaches quorum and settles a submission', async t => {
   const server = app.listen(0);
@@ -88,7 +117,7 @@ test('blind review reaches quorum and settles a submission', async t => {
       session: sessionId,
       repo: 'ignis/test',
       summary: 'Add quorum settlement regression coverage.',
-      metadata: { author: 'hidden', email: 'hidden' },
+      diff: dirtyDiff,
     }),
   });
   assert.equal(submissionResult.response.status, 201);
@@ -97,6 +126,13 @@ test('blind review reaches quorum and settles a submission', async t => {
 
   const publicSubmission = await request(`/api/submissions/${submissionId}`);
   assert.equal(publicSubmission.body.submission.session, undefined);
+  assert.equal(publicSubmission.body.submission.sanitized_diff, undefined);
+  assert.equal(publicSubmission.body.submission.metadata_report.risk, 'high');
+
+  const statusResult = await request(`/api/submissions/${submissionId}/status`);
+  assert.equal(statusResult.response.status, 200);
+  assert.equal(statusResult.body.submission.id, submissionId);
+
   const reviewerSession = await request('/api/reviewer/session', {
     method: 'POST',
     body: JSON.stringify({ key: reviewerKeys[0] }),
@@ -115,6 +151,9 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.equal(reviewerQueue.response.status, 200);
   assert.equal(JSON.stringify(reviewerQueue.body).includes(wallet), false);
   assert.equal(JSON.stringify(reviewerQueue.body).includes(sessionId), false);
+  assert.equal(JSON.stringify(reviewerQueue.body).includes('jane.builder@example.com'), false);
+  assert.equal(JSON.stringify(reviewerQueue.body).includes('github.com/jane/private-repo'), false);
+  assert.match(JSON.stringify(reviewerQueue.body), /redacted/);
 
   const unauthorized = await request(`/api/reviews/${reviewId}/votes`, {
     method: 'POST',
