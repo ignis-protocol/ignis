@@ -46,7 +46,7 @@ The product principle is simple:
 |---|---|
 | Frontend | Vanilla HTML/CSS/JS |
 | Backend | Node.js + Express |
-| API State | In-memory alpha state |
+| API State | JSON file persistence for alpha deployments |
 | Settlement / Incentives | Solana planned |
 | Wallet | Phantom/Solana support planned |
 
@@ -65,6 +65,7 @@ ignis/
     +-- server.js       # relay/submission/signal API
     +-- package.json
     +-- .env.example
+    +-- data/           # ignored runtime JSON store
 ```
 
 Legacy route files may still exist while the product is being migrated, but the active public server surface is the anonymous code protocol API in `backend/server.js`.
@@ -114,21 +115,50 @@ Open `frontend/index.html` or `frontend/terminal.html` directly in a browser, or
 
 ```text
 GET  /health
+POST /api/sessions
+GET  /api/sessions/:id
 GET  /api/relays
 POST /api/submissions
 GET  /api/submissions
+GET  /api/submissions/:id
 GET  /api/reviews
 GET  /api/signal
 GET  /api/solana
+```
+
+### `POST /api/sessions`
+
+```json
+{
+  "label": "terminal ephemeral identity",
+  "public_key": "optional-client-key"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "session": {
+    "id": "ash_ab12cd34ef",
+    "status": "active",
+    "expires_at": "2026-06-23T00:00:00.000Z"
+  }
+}
 ```
 
 ### `POST /api/submissions`
 
 ```json
 {
-  "session": "ash_7f3a2b9c",
+  "session": "ash_ab12cd34ef",
   "repo": "owner/repo",
-  "summary": "Refactor auth module and add regression tests"
+  "summary": "Refactor auth module and add regression tests",
+  "metadata": {
+    "author": "removed",
+    "email": "removed"
+  }
 }
 ```
 
@@ -153,8 +183,11 @@ Response:
 - [x] Rebrand to anonymous code protocol
 - [x] Replace public UI with relay/protocol UI
 - [x] Replace active backend API with relay/submission/signal endpoints
+- [x] Add persistent alpha API storage
+- [x] Add anonymous session creation
+- [x] Connect terminal flow to backend API with local fallback
 - [ ] Implement real metadata stripping CLI
-- [ ] Implement persistent sealed submission queue
+- [ ] Move sealed queue from JSON alpha storage to production database
 - [ ] Add reviewer workflow and scoring
 - [ ] Add Solana wallet auth
 - [ ] Deploy Solana signal proof program

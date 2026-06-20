@@ -99,13 +99,16 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
 const out = document.getElementById('output');
 const input = document.getElementById('cmd-input');
 const ticker = document.getElementById('ticker-track');
+const API_BASE = window.IGNIS_API_BASE || (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3001' : 'https://ignis-production-1c71.up.railway.app');
 const sessionId = 'ASH-' + Math.random().toString(16).slice(2,6).toUpperCase();
 document.getElementById('session-id').textContent = sessionId;
 
 const state = {
   identity: null,
+  session: null,
   stripped: false,
   submitted: false,
+  submission: null,
   score: null,
   wallet: null,
   relays: [
@@ -146,6 +149,21 @@ function panel(rows){
 function promptEcho(cmd){ ln(`ash@ignis(relay)$ ${cmd}`, 'cmd-echo'); }
 function id(){ return 'ash_' + Math.random().toString(16).slice(2,10); }
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+async function api(path, options = {}){
+  try {
+    const res = await fetch(API_BASE + path, {
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      ...options
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+    return data;
+  } catch (err) {
+    ln(`api offline: ${err.message}`, 'amber');
+    ln('continuing in local simulation mode.', 'dim');
+    return null;
+  }
+}
 function setActiveCommand(name){
   const key = name === 'wallet' ? 'wallet' : name;
   document.querySelectorAll('.sb-item').forEach((item) => item.classList.toggle('active', item.dataset.cmd === key));
@@ -156,6 +174,8 @@ async function boot(){
   sep();
   ln('anonymous code contribution protocol. strip identity, route through relays, review blind, preserve signal on Solana.', 'dim');
   blank();
+  const health = await api('/health');
+  if (health) ln(`>> api online  ${health.version}  storage:${health.storage.driver}  submissions:${health.submissions}`, 'g1');
   ln('>> initializing relay session...', 'dim');
   await sleep(180); ln('>> relay-jkt-01  online  14ms  sealed ingress', 'g1');
   await sleep(130); ln('>> relay-sgp-04  online  18ms  forwarding', 'g1');
@@ -198,13 +218,18 @@ function cmdHelp(){
   blank();
 }
 
-function cmdInit(){
+async function cmdInit(){
   blank(); ln('EPHEMERAL IDENTITY', 'hdr'); sep();
-  state.identity = id();
+  const data = await api('/api/sessions', {
+    method: 'POST',
+    body: JSON.stringify({ label: 'terminal ephemeral identity' })
+  });
+  state.session = data?.session || null;
+  state.identity = data?.session?.id || id();
   state.stripped = false; state.submitted = false; state.score = null;
   panel([
     ['identity', `<span class="violet">${state.identity}</span>`],
-    ['ttl', '72h'],
+    ['ttl', state.session ? state.session.expires_at : '72h'],
     ['storage', 'local only'],
     ['real user', 'not collected'],
     ['public face', 'none']
@@ -229,26 +254,51 @@ async function cmdSubmit(args=[]){
   if(!state.identity){ ln('identity missing. run init first.', 'amber'); blank(); return; }
   if(!state.stripped){ ln('bundle is not stripped. run strip first.', 'amber'); blank(); return; }
   const repo = args.join(' ') || 'owner/repo';
+  const summary = 'Sealed anonymous code submission from IGNIS terminal.';
   ln(`>> target       ${repo}`, 'dim');
-  for(const r of state.relays){
+  const data = await api('/api/submissions', {
+    method: 'POST',
+    body: JSON.stringify({
+      session: state.identity,
+      repo,
+      summary,
+      metadata: { author: 'removed', email: 'removed', timezone: 'removed', hostname: 'removed' }
+    })
+  });
+  const path = data?.submission?.relay_path || state.relays.map(r => r.id);
+  for(const relayId of path){
+    const r = state.relays.find(item => item.id === relayId) || { id: relayId, city: relayId, ms: 18, status: 'forwarded' };
     await sleep(150);
-    ln(`>> ${r.id.padEnd(3)} ${r.city.padEnd(10)} ${String(r.ms).padStart(2)}ms  ${r.status}`, 'g2');
+    ln(`>> ${r.id.padEnd(12)} ${String(r.ms).padStart(2)}ms  ${r.status}`, 'g2');
   }
   state.submitted = true;
+  state.submission = data?.submission || {
+    id: 'sealed_' + Math.random().toString(16).slice(2,8),
+    session: state.identity,
+    metadata_removed: true,
+    review_mode: 'blind',
+    solana_proof: 'queued_after_acceptance'
+  };
   panel([
-    ['submission', 'sealed-review-' + Math.random().toString(16).slice(2,8)],
+    ['submission', state.submission.id],
     ['author', state.identity],
-    ['review mode', 'blind'],
-    ['metadata', 'removed'],
-    ['solana proof', 'queued after acceptance']
+    ['review mode', state.submission.review_mode],
+    ['metadata', state.submission.metadata_removed ? 'removed' : 'pending'],
+    ['solana proof', state.submission.solana_proof]
   ]);
   blank();
 }
 
-function cmdReview(){
+async function cmdReview(){
   blank(); ln('BLIND REVIEW QUEUE', 'hdr'); sep();
   if(!state.submitted){ ln('no sealed submission yet. run submit after strip.', 'amber'); blank(); return; }
-  const checks = [
+  const data = await api('/api/reviews');
+  const checks = data ? [
+    ['queue depth', String(data.queue_depth)],
+    ['quorum', `${data.quorum_required} reviewers`],
+    ['visible', data.visible_to_reviewers.join(', ')],
+    ['hidden', data.hidden_from_reviewers.join(', ')]
+  ] : [
     ['tests', 'pass'],
     ['lint', 'pass'],
     ['reviewers', '3 requested / 2 responded'],
@@ -259,39 +309,43 @@ function cmdReview(){
   blank();
 }
 
-function cmdSignal(){
+async function cmdSignal(){
   blank(); ln('SIGNAL SCORE', 'hdr'); sep();
   if(!state.submitted){ ln('signal requires an accepted submission. demo score shown.', 'amber'); }
-  state.score = state.score || (8.7 + Math.random() * 1.1).toFixed(1);
+  const data = await api('/api/signal');
+  state.score = data?.portable_score || state.score || (8.7 + Math.random() * 1.1).toFixed(1);
   panel([
     ['identity', state.identity || 'ash_demo'],
     ['score', `<span class="g1">${state.score} / 10</span>`],
-    ['basis', 'tests, review quality, merge acceptance'],
-    ['portable proof', 'Solana anchor planned'],
-    ['token incentives', 'future IGNIS SPL reward layer']
+    ['basis', data ? data.signal_inputs.join(', ') : 'tests, review quality, merge acceptance'],
+    ['portable proof', data ? data.proof_target : 'Solana anchor planned'],
+    ['token incentives', data ? data.incentive_layer : 'future IGNIS SPL reward layer']
   ]);
   blank();
 }
 
-function cmdNetwork(){
+async function cmdNetwork(){
   blank(); ln('RELAY NETWORK', 'hdr'); sep();
-  state.relays.forEach((r, i) => {
+  const data = await api('/api/relays');
+  const relays = data?.relays || state.relays;
+  relays.forEach((r, i) => {
     const chain = i < state.relays.length - 1 ? '  |' : '';
-    ln(`  ${r.id}  ${r.city.padEnd(10)} ${String(r.ms).padStart(2)}ms  ${r.status}`, 'g2');
+    ln(`  ${r.id}  ${(r.city || r.region).padEnd(10)} ${String(r.ms || r.latency_ms).padStart(2)}ms  ${r.status}`, 'g2');
     if(chain) ln(chain, 'dim2');
   });
   blank();
-  ln('route policy: ingress -> mixer -> exit. target receives sealed diff only.', 'dim');
+  ln(`route policy: ${data?.policy || 'ingress -> mixer -> exit'}. target receives sealed diff only.`, 'dim');
   blank();
 }
 
-function cmdSolana(){
+async function cmdSolana(){
   blank(); ln('SOLANA SIGNAL LAYER', 'hdr'); sep();
+  const data = await api('/api/solana');
   panel([
-    ['status', 'designed / not yet mainnet'],
-    ['proofs', 'accepted contribution receipts'],
-    ['incentives', 'future IGNIS SPL rewards'],
-    ['staking', 'reviewer stake + relay operator bonds'],
+    ['network', data?.network || 'devnet planned'],
+    ['proof program', data?.proof_program || 'not deployed'],
+    ['token mint', data?.token_mint || 'not deployed'],
+    ['uses', data ? data.uses.join(', ') : 'receipts, reviewer stake, relay bonds'],
     ['wallet', state.wallet ? state.wallet : 'not connected']
   ]);
   ln('Solana is the proof and incentive layer. The protocol works off-chain first.', 'dim');
@@ -336,7 +390,10 @@ function runCmd(raw){
   const fn = commands[name];
   if(!fn){ ln(`command not found: ${name}`, 'red'); ln('type help', 'dim'); blank(); return; }
   setActiveCommand(name);
-  fn(args);
+  Promise.resolve(fn(args)).catch(err => {
+    ln(`command failed: ${err.message}`, 'red');
+    blank();
+  });
 }
 
 input.addEventListener('keydown', e => {
