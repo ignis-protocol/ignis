@@ -104,17 +104,18 @@ button{font-family:inherit;cursor:pointer}
 @keyframes dataRain{0%{transform:translateY(-16vh)}100%{transform:translateY(74vh)}}
 
 .hero-object{
-  position:absolute;right:max(-6rem,-7vw);top:4.8rem;width:min(48vw,650px);height:min(62vh,560px);min-height:390px;
+  position:absolute;right:max(-6rem,-7vw);top:3.6rem;width:min(50vw,700px);height:min(70vh,660px);min-height:470px;
   pointer-events:auto;perspective:1100px;touch-action:none;filter:drop-shadow(0 34px 90px rgba(45,212,191,.16));--rx:-12deg;--ry:-18deg;--tx:0px;--ty:0px;
 }
 .tri-stage{position:absolute;inset:0;display:grid;place-items:center;transform:translate3d(var(--tx),var(--ty),0);transition:transform .42s cubic-bezier(.2,.8,.2,1)}
 .tri-aura{position:absolute;width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(45,212,191,.2),transparent 52%),radial-gradient(circle at 70% 28%,rgba(167,139,250,.18),transparent 38%);filter:blur(18px);opacity:.76;animation:auraPulse 5.8s ease-in-out infinite}
 .tri-core{
-  position:relative;width:min(42%,250px);aspect-ratio:1;transform-style:preserve-3d;
+  position:relative;width:min(50%,320px);aspect-ratio:1;transform-style:preserve-3d;
   transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(-8deg);transition:transform .45s cubic-bezier(.2,.8,.2,1);animation:triangleIdle 7s ease-in-out infinite;
 }
 .tri-core::before,.tri-core::after{content:"";position:absolute;inset:-28%;clip-path:polygon(50% 2%,96% 88%,4% 88%);background:radial-gradient(circle at 50% 48%,rgba(0,255,65,.2),transparent 58%);filter:blur(20px);opacity:.62;transform:translateZ(-42px)}
 .tri-core::after{inset:-12%;filter:blur(7px);opacity:.42}
+.tri-model{position:absolute;inset:0;transform-style:preserve-3d;animation:modelSpin 8.5s linear infinite}
 .tri-face{
   position:absolute;inset:0;clip-path:polygon(50% 3%,96% 88%,4% 88%);
   background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(0,255,65,.2) 24%,rgba(8,11,16,.92) 48%,rgba(167,139,250,.18) 76%,rgba(45,212,191,.28));
@@ -134,6 +135,7 @@ button{font-family:inherit;cursor:pointer}
 .tri-shadow{position:absolute;bottom:12%;width:40%;height:9%;border-radius:50%;background:rgba(0,0,0,.56);filter:blur(16px);transform:rotateX(72deg);animation:shadowPulse 7s ease-in-out infinite}
 @keyframes auraPulse{0%,100%{opacity:.52;transform:scale(.96)}50%{opacity:.88;transform:scale(1.04)}}
 @keyframes triangleIdle{0%,100%{translate:0 0 0}50%{translate:-8px 12px 24px}}
+@keyframes modelSpin{to{transform:rotateY(360deg)}}
 @keyframes triangleGlint{0%,58%{transform:translateX(-115%);opacity:0}70%{opacity:.52}88%{transform:translateX(115%);opacity:.28}100%{transform:translateX(115%);opacity:0}}
 @keyframes shadowPulse{0%,100%{opacity:.42;transform:rotateX(72deg) scale(.96)}50%{opacity:.24;transform:rotateX(72deg) scale(1.08)}}
 
@@ -175,7 +177,7 @@ section{position:relative;z-index:1}.manifesto{padding:5rem 2rem;border-top:1px 
 .install{padding:7rem 2rem;text-align:center;border-top:1px solid var(--border)}.install h2{font-family:var(--display);font-size:clamp(2.5rem,5vw,5rem);line-height:.95;margin-bottom:1rem}.install h2 span{color:var(--violet)}.install p{color:var(--muted);margin-bottom:2rem}.install-command{display:inline-flex;align-items:center;gap:1rem;max-width:min(100%,760px);padding:.95rem 1.25rem;border:1px solid var(--border);border-radius:12px;background:var(--bg2);font-family:var(--mono);color:var(--teal);overflow-wrap:anywhere}
 footer{position:relative;z-index:1;display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:2rem 3rem;border-top:1px solid var(--border);color:var(--muted);font-size:.78rem}.footer-links{display:flex;gap:1rem}.footer-links a:hover{color:var(--violet)}
 @media(max-width:900px){.nav-links{display:none}.hero-object{opacity:.78;right:-7rem}.steps,.feature-grid{grid-template-columns:1fr}.console-body{grid-template-columns:1fr}.relay-panel{border-left:none;border-top:1px solid var(--border)}}
-@media(max-width:600px){.site-nav{padding:.9rem 1.25rem}.brand span:last-child{display:none}.nav-secondary{display:none}.nav-cta{padding:.55rem .8rem}.hero{padding-top:6rem}.hero-title{font-size:clamp(3rem,18vw,4.6rem)}.hero-object{position:relative;inset:auto;width:min(92vw,390px);height:280px;min-height:280px;opacity:.98;margin:.4rem auto 1.1rem}.tri-core{width:min(48%,180px)}.console-lines{font-size:.7rem;padding:1rem}.console-foot{flex-direction:column;align-items:flex-start}.m-line{font-size:clamp(1.5rem,8vw,2.2rem)}footer{flex-direction:column;align-items:flex-start;padding:1.5rem}}
+@media(max-width:600px){.site-nav{padding:.9rem 1.25rem}.brand span:last-child{display:none}.nav-secondary{display:none}.nav-cta{padding:.55rem .8rem}.hero{padding-top:6rem}.hero-title{font-size:clamp(3rem,18vw,4.6rem)}.hero-object{position:relative;inset:auto;width:min(94vw,420px);height:340px;min-height:340px;opacity:.98;margin:.2rem auto 1.1rem}.tri-core{width:min(56%,230px)}.console-lines{font-size:.7rem;padding:1rem}.console-foot{flex-direction:column;align-items:flex-start}.m-line{font-size:clamp(1.5rem,8vw,2.2rem)}footer{flex-direction:column;align-items:flex-start;padding:1.5rem}}
 </style>
 </head>
 <body>
@@ -207,10 +209,12 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
       <div class="tri-stage">
         <div class="tri-aura"></div>
         <div class="tri-core">
-          <div class="tri-face back"></div>
-          <div class="tri-face front"></div>
-          <span class="tri-edge e1"></span><span class="tri-edge e2"></span><span class="tri-edge e3"></span>
-          <div class="tri-nodes"><span></span><span></span><span></span></div>
+          <div class="tri-model">
+            <div class="tri-face back"></div>
+            <div class="tri-face front"></div>
+            <span class="tri-edge e1"></span><span class="tri-edge e2"></span><span class="tri-edge e3"></span>
+            <div class="tri-nodes"><span></span><span></span><span></span></div>
+          </div>
         </div>
         <div class="tri-shadow"></div>
       </div>
