@@ -1,6 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ignis">
-  <rect width="64" height="64" rx="14" fill="#050805"/>
-  <path d="M32 9 55 52H9L32 9Z" fill="#071307" stroke="#00ff41" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M32 25 42 46H22L32 25Z" fill="#e8a030"/>
-  <path d="M32 33 37 46H27L32 33Z" fill="#00ff41"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="IGNIS">
+  <defs>
+    <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.05 0 0 0 0 1 0 0 0 0 0.25 0 0 0 0.85 0" result="green"/>
+      <feMerge>
+        <feMergeNode in="green"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ff41" stop-opacity="0.28"/>
+      <stop offset="48%" stop-color="#00ff41" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="strokeGrad" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#baffc8"/>
+      <stop offset="42%" stop-color="#00ff41"/>
+      <stop offset="100%" stop-color="#20ff74"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .halo { animation: breathe 3.6s ease-in-out infinite; transform-origin: 64px 64px; }
+    .mark {
+      fill: rgba(0, 20, 7, 0.48);
+      stroke: url(#strokeGrad);
+      stroke-width: 7;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      filter: url(#softGlow);
+      stroke-dasharray: 330;
+      animation: draw 4.8s ease-in-out infinite, pulse 2.8s ease-in-out infinite;
+    }
+    .inner {
+      fill: none;
+      stroke: rgba(186, 255, 200, 0.42);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-dasharray: 18 12;
+      animation: drift 5.8s linear infinite;
+    }
+    @keyframes breathe {
+      0%,100% { opacity: .72; transform: scale(.98); }
+      50% { opacity: 1; transform: scale(1.04); }
+    }
+    @keyframes draw {
+      0% { stroke-dashoffset: 330; }
+      30%,70% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -330; }
+    }
+    @keyframes pulse {
+      0%,100% { opacity: .9; }
+      50% { opacity: 1; }
+    }
+    @keyframes drift {
+      to { stroke-dashoffset: -60; }
+    }
+  </style>
+  <rect width="128" height="128" rx="18" fill="#000000"/>
+  <circle class="halo" cx="64" cy="64" r="48" fill="url(#halo)"/>
+  <path class="mark" d="M34 22H94V42L78 51V77L94 86V106H34V86L50 77V51L34 42V22Z"/>
+  <path class="inner" d="M42 30H86V37L68 47V81L86 91V98H42V91L60 81V47L42 37V30Z"/>
 </svg>

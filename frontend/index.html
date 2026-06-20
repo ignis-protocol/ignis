@@ -54,13 +54,26 @@ button{font-family:inherit;cursor:pointer}
 }
 .brand{display:inline-flex;align-items:center;gap:.72rem;font-family:var(--display);font-weight:800;font-size:1.05rem}
 .brand-mark{
-  width:34px;height:34px;border-radius:8px;position:relative;display:grid;place-items:center;
-  filter:drop-shadow(0 0 16px rgba(45,212,191,.25));
+  width:38px;height:38px;border-radius:10px;position:relative;display:grid;place-items:center;
+  isolation:isolate;overflow:visible;filter:drop-shadow(0 0 18px rgba(0,255,65,.24));
+  animation:logoFloat 4.6s ease-in-out infinite;
 }
 .brand-mark::before,.brand-mark::after{
-  display:none;
+  content:"";position:absolute;pointer-events:none;border-radius:12px;
 }
-.brand-mark img{width:100%;height:100%;display:block;border-radius:8px}
+.brand-mark::before{
+  inset:-7px;border:1px solid rgba(0,255,65,.22);
+  background:conic-gradient(from 90deg,transparent,rgba(0,255,65,.38),transparent 32%,transparent 100%);
+  filter:blur(.2px);animation:logoOrbit 5.4s linear infinite;z-index:-2;
+}
+.brand-mark::after{
+  inset:2px;background:linear-gradient(115deg,transparent 18%,rgba(255,255,255,.42) 45%,transparent 68%);
+  transform:translateX(-150%) skewX(-16deg);mix-blend-mode:screen;animation:logoSweep 3.8s ease-in-out infinite;z-index:2;
+}
+.brand-mark img{width:100%;height:100%;display:block;border-radius:10px;position:relative;z-index:1}
+@keyframes logoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1px) scale(1.035)}}
+@keyframes logoOrbit{to{transform:rotate(360deg)}}
+@keyframes logoSweep{0%,58%{transform:translateX(-150%) skewX(-16deg);opacity:0}70%{opacity:.72}100%{transform:translateX(150%) skewX(-16deg);opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .nav-links{display:flex;align-items:center;gap:1.45rem;list-style:none;color:var(--muted);font-size:.78rem;font-weight:700;text-transform:uppercase}
 .nav-links a:hover{color:var(--text)}
