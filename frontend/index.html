@@ -55,7 +55,7 @@ button{font-family:inherit;cursor:pointer}
 .brand{display:inline-flex;align-items:center;gap:.72rem;font-family:var(--display);font-weight:800;font-size:1.05rem}
 .brand-mark{
   width:38px;height:38px;border-radius:10px;position:relative;display:grid;place-items:center;
-  isolation:isolate;overflow:hidden;filter:drop-shadow(0 0 18px rgba(0,255,65,.24));
+  isolation:isolate;overflow:visible;filter:drop-shadow(0 0 18px rgba(0,255,65,.24));
   animation:logoFloat 4.6s ease-in-out infinite;
 }
 .brand-mark::before,.brand-mark::after{
@@ -72,7 +72,7 @@ button{font-family:inherit;cursor:pointer}
 }
 .brand-mark img{
   width:100%;height:100%;display:block;border-radius:10px;position:relative;z-index:1;
-  object-fit:cover;transform:scale(2.18);transform-origin:center;
+  object-fit:contain;
 }
 @keyframes logoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1px) scale(1.035)}}
 @keyframes logoOrbit{to{transform:rotate(360deg)}}
@@ -155,7 +155,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
 
 <nav class="site-nav">
   <a class="brand" href="/">
-    <span class="brand-mark" aria-hidden="true"><img src="/ignis-logo.jpg?v=1" alt=""></span>
+    <span class="brand-mark" aria-hidden="true"><img src="/ignis-mark.svg?v=2" alt=""></span>
     <span>IGNIS</span>
   </a>
   <ul class="nav-links">
@@ -175,7 +175,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
     <div class="hero-backdrop" aria-hidden="true">
       <div class="hero-circuit a"></div><div class="hero-circuit b"></div><div class="scanline"></div><div class="data-rain a"></div><div class="data-rain b"></div>
     </div>
-    <div class="hero-object" aria-hidden="true"><div class="orb"><img class="orb-logo" src="/favicon.svg" alt=""></div></div>
+    <div class="hero-object" aria-hidden="true"><div class="orb"><img class="orb-logo" src="/ignis-mark.svg?v=2" alt=""></div></div>
     <div class="hero-status"><span class="status-dot"></span>v0.1.0-alpha / Solana-native signal layer / relay testnet forming</div>
     <h1 class="hero-title">IGNIS</h1>
     <p class="hero-copy">Code without a face. Strip identity from submissions, route work through relays, review the diff blind, and let Solana preserve the signal that survives.</p>

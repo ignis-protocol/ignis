@@ -56,7 +56,6 @@
       to { stroke-dashoffset: -60; }
     }
   </style>
-  <rect width="128" height="128" rx="18" fill="#000000"/>
   <circle class="halo" cx="64" cy="64" r="48" fill="url(#halo)"/>
   <path class="mark" d="M34 22H94V42L78 51V77L94 86V106H34V86L50 77V51L34 42V22Z"/>
   <path class="inner" d="M42 30H86V37L68 47V81L86 91V98H42V91L60 81V47L42 37V30Z"/>

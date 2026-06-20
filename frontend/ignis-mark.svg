@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="IGNIS">
+  <defs>
+    <filter id="outerGlow" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="4.5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.04 0 0 0 0 1 0 0 0 0 0.22 0 0 0 0.95 0" result="greenGlow"/>
+      <feMerge>
+        <feMergeNode in="greenGlow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <radialGradient id="softAura" cx="50%" cy="50%" r="52%">
+      <stop offset="0%" stop-color="#00ff41" stop-opacity="0.24"/>
+      <stop offset="54%" stop-color="#00ff41" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#00ff41" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="neonStroke" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#d9ffe0"/>
+      <stop offset="38%" stop-color="#39ff75"/>
+      <stop offset="70%" stop-color="#00ff41"/>
+      <stop offset="100%" stop-color="#8cffaa"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .aura {
+      animation: auraBreathe 3.8s ease-in-out infinite;
+      transform-origin: 64px 64px;
+    }
+    .mark {
+      fill: rgba(0, 255, 65, 0.03);
+      stroke: url(#neonStroke);
+      stroke-width: 7;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      filter: url(#outerGlow);
+      stroke-dasharray: 330;
+      animation: markTrace 5.2s ease-in-out infinite, markPulse 2.9s ease-in-out infinite;
+    }
+    .inner {
+      fill: none;
+      stroke: rgba(213, 255, 224, 0.5);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-dasharray: 18 12;
+      animation: innerDrift 6s linear infinite;
+    }
+    @keyframes auraBreathe {
+      0%,100% { opacity: .55; transform: scale(.96); }
+      50% { opacity: 1; transform: scale(1.06); }
+    }
+    @keyframes markTrace {
+      0% { stroke-dashoffset: 330; }
+      32%,70% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -330; }
+    }
+    @keyframes markPulse {
+      0%,100% { opacity: .88; }
+      50% { opacity: 1; }
+    }
+    @keyframes innerDrift {
+      to { stroke-dashoffset: -60; }
+    }
+  </style>
+  <circle class="aura" cx="64" cy="64" r="54" fill="url(#softAura)"/>
+  <path class="mark" d="M34 22H94V42L78 51V77L94 86V106H34V86L50 77V51L34 42V22Z"/>
+  <path class="inner" d="M42 30H86V37L68 47V81L86 91V98H42V91L60 81V47L42 37V30Z"/>
+</svg>
