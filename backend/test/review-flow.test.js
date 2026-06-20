@@ -45,6 +45,8 @@ test('sanitizer removes identity-bearing diff metadata', () => {
   assert.equal(result.sanitized_diff.includes('C:\\Users\\jane'), false);
   assert.equal(result.sanitized_diff.includes('/home/jane'), false);
   assert.equal(result.sanitized_diff.includes('github.com/jane/private-repo'), false);
+  assert.match(result.sanitized_diff, /Author: \[redacted\]/);
+  assert.equal(result.sanitized_diff.includes('$1: [redacted]'), false);
   assert.equal(result.report.risk, 'high');
   assert.ok(result.report.findings.length >= 4);
 });

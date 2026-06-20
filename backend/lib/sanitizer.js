@@ -15,7 +15,7 @@ const RULES = [
     id: 'git_author_header',
     label: 'Git author header',
     pattern: /^(author|committer|signed-off-by|co-authored-by):\s+.+$/gim,
-    replacement: '$1: [redacted]',
+    replacement: match => `${match.split(':', 1)[0]}: [redacted]`,
     severity: 'high',
   },
   {
