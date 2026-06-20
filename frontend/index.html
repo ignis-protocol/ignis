@@ -54,15 +54,13 @@ button{font-family:inherit;cursor:pointer}
 }
 .brand{display:inline-flex;align-items:center;gap:.72rem;font-family:var(--display);font-weight:800;font-size:1.05rem}
 .brand-mark{
-  width:34px;height:34px;border-radius:50%;position:relative;display:grid;place-items:center;perspective:120px;
+  width:34px;height:34px;border-radius:8px;position:relative;display:grid;place-items:center;
   filter:drop-shadow(0 0 16px rgba(45,212,191,.25));
 }
 .brand-mark::before,.brand-mark::after{
-  content:"";position:absolute;border-radius:50%;border:1px dotted rgba(226,232,240,.78);inset:3px;
-  animation:spin 8s linear infinite;
+  display:none;
 }
-.brand-mark::after{inset:8px 4px;border-color:rgba(167,139,250,.58);animation-direction:reverse;animation-duration:6s}
-.brand-mark span{position:relative;z-index:1;font-family:var(--mono);font-weight:900;color:var(--text);text-shadow:0 0 12px rgba(226,232,240,.42)}
+.brand-mark img{width:100%;height:100%;display:block;border-radius:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .nav-links{display:flex;align-items:center;gap:1.45rem;list-style:none;color:var(--muted);font-size:.78rem;font-weight:700;text-transform:uppercase}
 .nav-links a:hover{color:var(--text)}
@@ -92,7 +90,7 @@ button{font-family:inherit;cursor:pointer}
 .orb{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(226,232,240,.18),transparent 12%),radial-gradient(circle at 50% 50%,rgba(167,139,250,.16),transparent 42%);border:1px dotted rgba(226,232,240,.34)}
 .orb::before,.orb::after{content:"";position:absolute;inset:14%;border-radius:50%;border:1px dashed rgba(45,212,191,.34);animation:spin 12s linear infinite}
 .orb::after{inset:28% 8%;border-color:rgba(167,139,250,.44);animation-direction:reverse;animation-duration:9s}
-.orb-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-weight:900;font-size:clamp(2rem,6vw,4.5rem);color:var(--text);text-shadow:0 0 32px rgba(226,232,240,.35)}
+.orb-logo{position:absolute;left:50%;top:50%;width:min(44%,180px);height:auto;transform:translate(-50%,-50%);filter:drop-shadow(0 0 28px rgba(0,255,65,.28))}
 @keyframes objectFloat{0%,100%{transform:translateZ(0) rotate(-1deg)}50%{transform:translate3d(-10px,14px,0) rotate(1.5deg)}}
 
 .hero-status{
@@ -141,7 +139,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
 
 <nav class="site-nav">
   <a class="brand" href="/">
-    <span class="brand-mark" aria-hidden="true"><span>I</span></span>
+    <span class="brand-mark" aria-hidden="true"><img src="/favicon.svg" alt=""></span>
     <span>IGNIS</span>
   </a>
   <ul class="nav-links">
@@ -161,7 +159,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
     <div class="hero-backdrop" aria-hidden="true">
       <div class="hero-circuit a"></div><div class="hero-circuit b"></div><div class="scanline"></div><div class="data-rain a"></div><div class="data-rain b"></div>
     </div>
-    <div class="hero-object" aria-hidden="true"><div class="orb"><div class="orb-core">I</div></div></div>
+    <div class="hero-object" aria-hidden="true"><div class="orb"><img class="orb-logo" src="/favicon.svg" alt=""></div></div>
     <div class="hero-status"><span class="status-dot"></span>v0.1.0-alpha / Solana-native signal layer / relay testnet forming</div>
     <h1 class="hero-title">IGNIS</h1>
     <p class="hero-copy">Code without a face. Strip identity from submissions, route work through relays, review the diff blind, and let Solana preserve the signal that survives.</p>
