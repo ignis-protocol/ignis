@@ -103,12 +103,44 @@ button{font-family:inherit;cursor:pointer}
 @keyframes scan{0%,100%{transform:translateY(0);opacity:.18}50%{transform:translateY(46vh);opacity:.62}}
 @keyframes dataRain{0%{transform:translateY(-16vh)}100%{transform:translateY(74vh)}}
 
-.hero-object{position:absolute;right:max(-6rem,-7vw);top:5.5rem;width:min(46vw,620px);height:min(58vh,540px);min-height:360px;pointer-events:none;filter:drop-shadow(0 28px 80px rgba(45,212,191,.16));animation:objectFloat 7s ease-in-out infinite}
-.orb{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(226,232,240,.18),transparent 12%),radial-gradient(circle at 50% 50%,rgba(167,139,250,.16),transparent 42%);border:1px dotted rgba(226,232,240,.34)}
-.orb::before,.orb::after{content:"";position:absolute;inset:14%;border-radius:50%;border:1px dashed rgba(45,212,191,.34);animation:spin 12s linear infinite}
-.orb::after{inset:28% 8%;border-color:rgba(167,139,250,.44);animation-direction:reverse;animation-duration:9s}
-.orb-logo{position:absolute;left:50%;top:50%;width:min(44%,180px);height:auto;transform:translate(-50%,-50%);filter:drop-shadow(0 0 28px rgba(0,255,65,.28))}
-@keyframes objectFloat{0%,100%{transform:translateZ(0) rotate(-1deg)}50%{transform:translate3d(-10px,14px,0) rotate(1.5deg)}}
+.hero-object{
+  position:absolute;right:max(-6rem,-7vw);top:4.8rem;width:min(48vw,650px);height:min(62vh,560px);min-height:390px;
+  pointer-events:auto;perspective:1100px;touch-action:none;filter:drop-shadow(0 34px 90px rgba(45,212,191,.16));--rx:-12deg;--ry:-18deg;--tx:0px;--ty:0px;
+}
+.tri-stage{position:absolute;inset:0;display:grid;place-items:center;transform:translate3d(var(--tx),var(--ty),0);transition:transform .42s cubic-bezier(.2,.8,.2,1)}
+.tri-aura{position:absolute;width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(45,212,191,.2),transparent 52%),radial-gradient(circle at 70% 28%,rgba(167,139,250,.18),transparent 38%);filter:blur(18px);opacity:.76;animation:auraPulse 5.8s ease-in-out infinite}
+.tri-ring,.tri-ring::before,.tri-ring::after{position:absolute;content:"";border-radius:50%;transform-style:preserve-3d}
+.tri-ring{width:82%;aspect-ratio:1;border:1px solid rgba(45,212,191,.22);transform:rotateX(66deg) rotateZ(-18deg);animation:ringSpin 16s linear infinite}
+.tri-ring::before{inset:12%;border:1px dashed rgba(167,139,250,.38);animation:ringSpin 12s linear reverse infinite}
+.tri-ring::after{inset:28%;border:1px solid rgba(226,232,240,.15);box-shadow:0 0 32px rgba(45,212,191,.08)}
+.tri-core{
+  position:relative;width:min(42%,250px);aspect-ratio:1;transform-style:preserve-3d;
+  transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(-8deg);transition:transform .45s cubic-bezier(.2,.8,.2,1);animation:triangleIdle 7s ease-in-out infinite;
+}
+.tri-core::before,.tri-core::after{content:"";position:absolute;inset:-28%;clip-path:polygon(50% 2%,96% 88%,4% 88%);background:radial-gradient(circle at 50% 48%,rgba(0,255,65,.2),transparent 58%);filter:blur(20px);opacity:.62;transform:translateZ(-42px)}
+.tri-core::after{inset:-12%;filter:blur(7px);opacity:.42}
+.tri-face{
+  position:absolute;inset:0;clip-path:polygon(50% 3%,96% 88%,4% 88%);
+  background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(0,255,65,.2) 24%,rgba(8,11,16,.92) 48%,rgba(167,139,250,.18) 76%,rgba(45,212,191,.28));
+  border:1px solid rgba(0,255,65,.72);box-shadow:inset 0 0 34px rgba(0,255,65,.18),0 0 42px rgba(0,255,65,.26);transform-style:preserve-3d;
+}
+.tri-face.front{transform:translateZ(34px)}
+.tri-face.back{transform:translateZ(-34px) rotateY(180deg);opacity:.42}
+.tri-face::before{content:"";position:absolute;inset:7%;clip-path:polygon(50% 12%,86% 82%,14% 82%);background:rgba(8,11,16,.82);border:1px solid rgba(226,232,240,.18);box-shadow:inset 0 0 28px rgba(0,255,65,.12)}
+.tri-face::after{content:"";position:absolute;inset:0;clip-path:polygon(50% 3%,96% 88%,4% 88%);background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.56) 45%,transparent 62%);mix-blend-mode:screen;transform:translateX(-115%);animation:triangleGlint 4.8s cubic-bezier(.55,0,.25,1) infinite}
+.tri-edge{position:absolute;left:50%;top:50%;width:4px;height:76%;background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(0,255,65,.3),rgba(167,139,250,.14));box-shadow:0 0 22px rgba(0,255,65,.58);transform-origin:center center;border-radius:999px}
+.tri-edge.e1{transform:translate(-50%,-53%) rotate(0deg) translateZ(36px)}
+.tri-edge.e2{height:86%;transform:translate(-50%,-50%) rotate(60deg) translateY(38%) translateZ(35px)}
+.tri-edge.e3{height:86%;transform:translate(-50%,-50%) rotate(-60deg) translateY(38%) translateZ(35px)}
+.tri-nodes{position:absolute;inset:0;transform:translateZ(52px)}
+.tri-nodes span{position:absolute;width:8px;height:8px;border-radius:50%;background:#eaffef;box-shadow:0 0 18px #00ff41,0 0 42px rgba(0,255,65,.52)}
+.tri-nodes span:nth-child(1){left:50%;top:3%;transform:translate(-50%,-50%)}.tri-nodes span:nth-child(2){right:3%;bottom:12%;transform:translate(50%,50%)}.tri-nodes span:nth-child(3){left:3%;bottom:12%;transform:translate(-50%,50%)}
+.tri-shadow{position:absolute;bottom:12%;width:40%;height:9%;border-radius:50%;background:rgba(0,0,0,.56);filter:blur(16px);transform:rotateX(72deg);animation:shadowPulse 7s ease-in-out infinite}
+@keyframes auraPulse{0%,100%{opacity:.52;transform:scale(.96)}50%{opacity:.88;transform:scale(1.04)}}
+@keyframes ringSpin{to{rotate:360deg}}
+@keyframes triangleIdle{0%,100%{translate:0 0 0}50%{translate:-8px 12px 24px}}
+@keyframes triangleGlint{0%,58%{transform:translateX(-115%);opacity:0}70%{opacity:.52}88%{transform:translateX(115%);opacity:.28}100%{transform:translateX(115%);opacity:0}}
+@keyframes shadowPulse{0%,100%{opacity:.42;transform:rotateX(72deg) scale(.96)}50%{opacity:.24;transform:rotateX(72deg) scale(1.08)}}
 
 .hero-status{
   position:relative;z-index:2;display:inline-flex;align-items:center;gap:.6rem;border:1px solid var(--border);
@@ -147,8 +179,8 @@ section{position:relative;z-index:1}.manifesto{padding:5rem 2rem;border-top:1px 
 .features{padding:6rem 2rem}.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:4rem;border:1px solid var(--border);background:var(--border)}.feature{padding:2rem;background:var(--bg2)}.feature h3{font-family:var(--display);font-size:1rem;margin-bottom:.5rem}.feature p{color:var(--muted);font-size:.76rem;line-height:1.9}
 .install{padding:7rem 2rem;text-align:center;border-top:1px solid var(--border)}.install h2{font-family:var(--display);font-size:clamp(2.5rem,5vw,5rem);line-height:.95;margin-bottom:1rem}.install h2 span{color:var(--violet)}.install p{color:var(--muted);margin-bottom:2rem}.install-command{display:inline-flex;align-items:center;gap:1rem;max-width:min(100%,760px);padding:.95rem 1.25rem;border:1px solid var(--border);border-radius:12px;background:var(--bg2);font-family:var(--mono);color:var(--teal);overflow-wrap:anywhere}
 footer{position:relative;z-index:1;display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:2rem 3rem;border-top:1px solid var(--border);color:var(--muted);font-size:.78rem}.footer-links{display:flex;gap:1rem}.footer-links a:hover{color:var(--violet)}
-@media(max-width:900px){.nav-links{display:none}.hero-object{opacity:.65;right:-7rem}.steps,.feature-grid{grid-template-columns:1fr}.console-body{grid-template-columns:1fr}.relay-panel{border-left:none;border-top:1px solid var(--border)}}
-@media(max-width:600px){.site-nav{padding:.9rem 1.25rem}.brand span:last-child{display:none}.nav-secondary{display:none}.nav-cta{padding:.55rem .8rem}.hero{padding-top:6rem}.hero-title{font-size:clamp(3rem,18vw,4.6rem)}.hero-object{position:relative;inset:auto;width:min(92vw,380px);height:250px;min-height:250px;opacity:.95;margin:.5rem auto 1rem}.console-lines{font-size:.7rem;padding:1rem}.console-foot{flex-direction:column;align-items:flex-start}.m-line{font-size:clamp(1.5rem,8vw,2.2rem)}footer{flex-direction:column;align-items:flex-start;padding:1.5rem}}
+@media(max-width:900px){.nav-links{display:none}.hero-object{opacity:.78;right:-7rem}.steps,.feature-grid{grid-template-columns:1fr}.console-body{grid-template-columns:1fr}.relay-panel{border-left:none;border-top:1px solid var(--border)}}
+@media(max-width:600px){.site-nav{padding:.9rem 1.25rem}.brand span:last-child{display:none}.nav-secondary{display:none}.nav-cta{padding:.55rem .8rem}.hero{padding-top:6rem}.hero-title{font-size:clamp(3rem,18vw,4.6rem)}.hero-object{position:relative;inset:auto;width:min(92vw,390px);height:280px;min-height:280px;opacity:.98;margin:.4rem auto 1.1rem}.tri-core{width:min(48%,180px)}.console-lines{font-size:.7rem;padding:1rem}.console-foot{flex-direction:column;align-items:flex-start}.m-line{font-size:clamp(1.5rem,8vw,2.2rem)}footer{flex-direction:column;align-items:flex-start;padding:1.5rem}}
 </style>
 </head>
 <body>
@@ -176,7 +208,19 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
     <div class="hero-backdrop" aria-hidden="true">
       <div class="hero-circuit a"></div><div class="hero-circuit b"></div><div class="scanline"></div><div class="data-rain a"></div><div class="data-rain b"></div>
     </div>
-    <div class="hero-object" aria-hidden="true"><div class="orb"><img class="orb-logo" src="/ignis-mark.svg?v=2" alt=""></div></div>
+    <div class="hero-object" aria-hidden="true">
+      <div class="tri-stage">
+        <div class="tri-aura"></div>
+        <div class="tri-ring"></div>
+        <div class="tri-core">
+          <div class="tri-face back"></div>
+          <div class="tri-face front"></div>
+          <span class="tri-edge e1"></span><span class="tri-edge e2"></span><span class="tri-edge e3"></span>
+          <div class="tri-nodes"><span></span><span></span><span></span></div>
+        </div>
+        <div class="tri-shadow"></div>
+      </div>
+    </div>
     <div class="hero-status"><span class="status-dot"></span>v0.1.0-alpha / Solana-native signal layer / relay testnet forming</div>
     <h1 class="hero-title">IGNIS</h1>
     <p class="hero-copy">Code without a face. Strip identity from submissions, route work through relays, review the diff blind, and let Solana preserve the signal that survives.</p>
@@ -281,5 +325,47 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
   </span>
   <span style="opacity:.45">built in the dark</span>
 </footer>
+<script>
+const heroObject = document.querySelector('.hero-object');
+if (heroObject) {
+  let active = false;
+  let raf = 0;
+
+  const setObjectMotion = (event) => {
+    const rect = heroObject.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      heroObject.style.setProperty('--ry', `${x * 26}deg`);
+      heroObject.style.setProperty('--rx', `${-12 - y * 18}deg`);
+      heroObject.style.setProperty('--tx', `${x * 18}px`);
+      heroObject.style.setProperty('--ty', `${y * 14}px`);
+    });
+  };
+
+  const resetObjectMotion = () => {
+    active = false;
+    heroObject.style.setProperty('--rx', '-12deg');
+    heroObject.style.setProperty('--ry', '-18deg');
+    heroObject.style.setProperty('--tx', '0px');
+    heroObject.style.setProperty('--ty', '0px');
+  };
+
+  heroObject.addEventListener('pointerdown', (event) => {
+    active = true;
+    heroObject.setPointerCapture(event.pointerId);
+    setObjectMotion(event);
+  });
+  heroObject.addEventListener('pointermove', (event) => {
+    if (active || event.pointerType === 'mouse') setObjectMotion(event);
+  });
+  heroObject.addEventListener('pointerup', resetObjectMotion);
+  heroObject.addEventListener('pointercancel', resetObjectMotion);
+  heroObject.addEventListener('pointerleave', () => {
+    if (!active) resetObjectMotion();
+  });
+}
+</script>
 </body>
 </html>
