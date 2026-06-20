@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.0-alpha
+
+### Blind Review
+
+- Added reviewer authentication through server-side API keys.
+- Added public blind review bundles with contributor identity removed.
+- Added accept/reject voting, 1-10 scoring, optional feedback, and duplicate-vote protection.
+- Added automatic odd-numbered quorum settlement and submission status updates.
+- Kept partial decisions and scores hidden until settlement.
+- Replaced simulated signal scoring with accepted-review aggregates and confidence levels.
+
+### Product
+
+- Connected terminal review and signal commands to real Phase 3 state.
+- Added automated end-to-end coverage for authentication, privacy, duplicate votes, quorum, settlement, and signal.
+- Updated product version and API documentation.
+
 ## v0.1.0-alpha
 
 ### Rebrand

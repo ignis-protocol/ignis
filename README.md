@@ -107,7 +107,6 @@ Completed:
 Not done yet:
 
 - Real metadata stripping CLI.
-- Reviewer voting and quorum settlement.
 - Production database.
 - Solana wallet auth.
 - On-chain proof program.
@@ -141,6 +140,8 @@ POST /api/submissions
 GET  /api/submissions
 GET  /api/submissions/:id
 GET  /api/reviews
+GET  /api/reviews/:id
+POST /api/reviews/:id/votes
 GET  /api/signal
 GET  /api/solana
 ```
@@ -167,6 +168,20 @@ Create a sealed submission:
   }
 }
 ```
+
+Cast a reviewer vote:
+
+```bash
+curl -X POST https://ignis-production-1c71.up.railway.app/api/reviews/REVIEW_ID/votes \
+  -H "Content-Type: application/json" \
+  -H "X-Reviewer-Key: YOUR_REVIEWER_KEY" \
+  -d '{"decision":"accept","score":9,"note":"Tests pass and the change is scoped."}'
+```
+
+Reviewer keys are configured only on the backend through `REVIEWER_API_KEYS`.
+The API stores reviewer fingerprints, blocks duplicate votes, and settles a review
+after the configured odd-numbered quorum is reached. Partial decisions and scores
+stay hidden until settlement; settled feedback is exposed without reviewer identity.
 
 ---
 
@@ -214,7 +229,7 @@ http://localhost:5173/terminal.html
 - [x] Premium website and terminal.
 - [x] Backend Phase 1: foundation, storage, validation, health.
 - [x] Backend Phase 2: anonymous sessions and sealed submissions.
-- [ ] Phase 3: blind review voting, quorum, and scoring.
+- [x] Phase 3: blind review voting, quorum, and scoring.
 - [ ] Phase 4: Solana wallet auth and proof receipts.
 - [ ] Phase 5: production hardening, monitoring, and incentive design.
 

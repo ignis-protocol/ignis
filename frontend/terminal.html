@@ -137,15 +137,14 @@ function clock(){
 }
 setInterval(clock, 1000); clock();
 
-const ticks = [
-  ['ash_7f3a opened sealed review #482','hl'],
-  ['relay-r4 removed 18 metadata fields','info'],
-  ['review quorum reached in 42s','up'],
-  ['signal proof queued for Solana','hl'],
-  ['ash_3c7e scored 9.4 blind','up'],
-  ['identity ttl refreshed locally','info']
-];
-ticker.innerHTML = [...ticks,...ticks,...ticks].map(([a,c]) => `<span class="tick ${c}">${a}</span><span class="sep">/</span>`).join('');
+function renderTicker(ticks){
+  ticker.innerHTML = [...ticks,...ticks,...ticks].map(([a,c]) => `<span class="tick ${c}">${a}</span><span class="sep">/</span>`).join('');
+}
+renderTicker([
+  ['connecting to IGNIS protocol','info'],
+  ['blind review quorum: 3','hl'],
+  ['Solana proof layer planned','up']
+]);
 
 function ln(text='', cls='g0', html=false){
   const d = document.createElement('div');
@@ -188,7 +187,17 @@ async function boot(){
   ln('anonymous code contribution protocol. strip identity, route through relays, review blind, preserve signal on Solana.', 'dim');
   blank();
   const health = await api('/health');
-  if (health) ln(`>> api online  ${health.version}  storage:${health.storage.driver}  submissions:${health.submissions}`, 'g1');
+  if (health) {
+    ln(`>> api online  ${health.version}  storage:${health.storage.driver}  submissions:${health.submissions}`, 'g1');
+    const [reviews, signal] = await Promise.all([api('/api/reviews'), api('/api/signal')]);
+    renderTicker([
+      [`${health.submissions} sealed submissions`, 'info'],
+      [`${reviews?.queue_depth ?? health.reviews} reviews awaiting quorum`, 'hl'],
+      [`${signal?.totals?.settled_reviews ?? 0} reviews settled`, 'up'],
+      [`signal confidence: ${signal?.confidence || 'unproven'}`, 'info'],
+      [`${health.relays_online}/${health.relays_total} relays online`, 'up']
+    ]);
+  }
   ln('>> initializing relay session...', 'dim');
   await sleep(180); ln('>> relay-jkt-01  online  14ms  sealed ingress', 'g1');
   await sleep(130); ln('>> relay-sgp-04  online  18ms  forwarding', 'g1');
@@ -305,18 +314,25 @@ async function cmdSubmit(args=[]){
 async function cmdReview(){
   blank(); ln('BLIND REVIEW QUEUE', 'hdr'); sep();
   if(!state.submitted){ ln('no sealed submission yet. run submit after strip.', 'amber'); blank(); return; }
-  const data = await api('/api/reviews');
-  const checks = data ? [
-    ['queue depth', String(data.queue_depth)],
-    ['quorum', `${data.quorum_required} reviewers`],
-    ['visible', data.visible_to_reviewers.join(', ')],
-    ['hidden', data.hidden_from_reviewers.join(', ')]
+  const [queueData, submissionData] = await Promise.all([
+    api('/api/reviews'),
+    state.submission?.id ? api(`/api/submissions/${encodeURIComponent(state.submission.id)}`) : null
+  ]);
+  const review = submissionData?.review;
+  const checks = review ? [
+    ['review', review.id],
+    ['status', review.status],
+    ['votes', `${review.reviewers_responded} / ${review.quorum_required}`],
+    ['remaining', String(review.votes_remaining)],
+    ['decision', review.decision || 'pending'],
+    ['score', review.score === null ? 'pending' : `${review.score} / 10`],
+    ['queue depth', String(queueData?.queue_depth ?? 0)],
+    ['identity fields', 'hidden']
   ] : [
-    ['tests', 'pass'],
-    ['lint', 'pass'],
-    ['reviewers', '3 requested / 2 responded'],
+    ['queue depth', String(queueData?.queue_depth ?? 0)],
+    ['quorum', `${queueData?.quorum_required || 3} reviewers`],
     ['identity fields', 'hidden'],
-    ['quorum', 'pending one more review']
+    ['status', 'waiting for API']
   ];
   checks.forEach(([k,v]) => ln(`  ${k.padEnd(16)} ${v}`, v === 'pass' ? 'g1':'dim'));
   blank();
@@ -324,13 +340,16 @@ async function cmdReview(){
 
 async function cmdSignal(){
   blank(); ln('SIGNAL SCORE', 'hdr'); sep();
-  if(!state.submitted){ ln('signal requires an accepted submission. demo score shown.', 'amber'); }
+  if(!state.submitted){ ln('signal requires accepted contributions. current protocol totals shown.', 'amber'); }
   const data = await api('/api/signal');
-  state.score = data?.portable_score || state.score || (8.7 + Math.random() * 1.1).toFixed(1);
+  state.score = data?.portable_score ?? state.score ?? 0;
   panel([
     ['identity', state.identity || 'ash_demo'],
     ['score', `<span class="g1">${state.score} / 10</span>`],
     ['basis', data ? data.signal_inputs.join(', ') : 'tests, review quality, merge acceptance'],
+    ['confidence', data?.confidence || 'unproven'],
+    ['accepted', String(data?.totals?.accepted ?? 0)],
+    ['settled reviews', String(data?.totals?.settled_reviews ?? 0)],
     ['portable proof', data ? data.proof_target : 'Solana anchor planned'],
     ['token incentives', data ? data.incentive_layer : 'future IGNIS SPL reward layer']
   ]);
