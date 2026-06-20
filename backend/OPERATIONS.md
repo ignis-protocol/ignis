@@ -6,7 +6,12 @@
 AUTH_SECRET=<32+ random bytes>
 REVIEWER_API_KEYS=reviewer-1:<secret>,reviewer-2:<secret>,reviewer-3:<secret>
 CORS_ORIGIN=https://ignis-lac-nine.vercel.app
+TRUST_PROXY_HOPS=1
 ```
+
+Railway forwards the original client address through one trusted proxy hop.
+Do not set `TRUST_PROXY_HOPS=true`; trusting arbitrary hops allows clients to
+spoof their address and bypass IP-based rate limits.
 
 ## PostgreSQL
 

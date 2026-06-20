@@ -37,8 +37,10 @@ const relays = [
   { id: 'relay-ams-09', region: 'Amsterdam', role: 'exit', latency_ms: 23, status: 'warming' },
 ];
 const allowedOrigins = String(process.env.CORS_ORIGIN || '*').split(',').map(v => v.trim()).filter(Boolean);
+const TRUST_PROXY_HOPS = Number(process.env.TRUST_PROXY_HOPS || 1);
 
 app.disable('x-powered-by');
+app.set('trust proxy', TRUST_PROXY_HOPS);
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
