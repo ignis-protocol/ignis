@@ -3,6 +3,21 @@
 This runbook covers the most likely production incidents during alpha public
 preview.
 
+## Ownership
+
+Primary owner: IGNIS operator with access to GitHub, Vercel, Railway, Hostinger,
+reviewer keys, and Solana signer configuration.
+
+Escalation path:
+
+1. Railway deployment, database, or relay outage: Railway project support and
+   latest successful deployment rollback.
+2. Vercel frontend or domain routing outage: Vercel project support and latest
+   successful deployment rollback.
+3. Domain or DNS issue: Hostinger DNS panel and Vercel/Railway domain status.
+4. Reviewer or key compromise: revoke affected key, rotate by label, and notify
+   trusted reviewers through the private reviewer channel.
+
 ## First Checks
 
 ```bash
@@ -74,10 +89,10 @@ Backup:
 pg_dump "$DATABASE_URL" --format=custom --file=ignis-backup.dump
 ```
 
-Restore:
+Restore only into a temporary database first:
 
 ```bash
-pg_restore --clean --if-exists --dbname="$DATABASE_URL" ignis-backup.dump
+pg_restore --clean --if-exists --dbname="$RESTORE_DATABASE_URL" ignis-backup.dump
 ```
 
 After restore, run:
@@ -85,3 +100,6 @@ After restore, run:
 ```bash
 npm run smoke:production
 ```
+
+Promote a restored database only after the temporary environment passes smoke
+and the incident owner records the recovery decision.

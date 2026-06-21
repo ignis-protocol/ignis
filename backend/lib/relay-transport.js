@@ -4,6 +4,11 @@ class RelayTransport {
   constructor(options = {}) {
     this.authSecret = options.authSecret || process.env.AUTH_SECRET || crypto.randomBytes(32).toString('hex');
     this.nodes = parseRelayNodes(options.nodes || process.env.RELAY_NODES || '', this.authSecret);
+    this.previousNodes = parseRelayNodes(
+      options.previousNodes || process.env.RELAY_NODES_PREVIOUS || '',
+      this.authSecret,
+      { useDefaults: false },
+    );
     this.timeoutMs = Number(options.timeoutMs || process.env.RELAY_TIMEOUT_MS || 5000);
   }
 
@@ -76,23 +81,39 @@ class RelayTransport {
 
   verifyInbound(headers, rawBody, replayStore) {
     const nodeId = String(headers['x-relay-node'] || '');
-    const node = this.nodes.find(item => item.id === nodeId);
-    if (!node) throw new Error('Unknown relay node.');
+    const candidates = this.matchingNodes(nodeId);
+    if (!candidates.length) throw new Error('Unknown relay node.');
     const timestamp = String(headers['x-relay-timestamp'] || '');
     const nonce = String(headers['x-relay-nonce'] || '');
     const signature = String(headers['x-relay-signature'] || '');
     if (!timestamp || Math.abs(Date.now() - Number(timestamp)) > 60_000) throw new Error('Relay timestamp expired.');
     if (!nonce || replayStore.some(item => item.nonce === nonce)) throw new Error('Relay nonce replayed.');
-    const expected = hmac(node.secret, `${timestamp}.${nonce}.${rawBody}`);
-    if (!safeEqual(signature, expected)) throw new Error('Relay signature invalid.');
+    const signedPayload = `${timestamp}.${nonce}.${rawBody}`;
+    const authenticated = candidates.find(candidate => safeEqual(signature, hmac(candidate.secret, signedPayload)));
+    if (!authenticated) throw new Error('Relay signature invalid.');
     replayStore.unshift({ nonce, node_id: nodeId, expires_at: new Date(Date.now() + 120_000).toISOString() });
     if (replayStore.length > 2000) replayStore.length = 2000;
-    return node;
+    return authenticated;
   }
 
-  accept(node, hop) {
+  accept(node, hop, secretOverride) {
     if (hop.node_id !== node.id) throw new Error('Relay hop node mismatch.');
-    return createReceipt(hop, node.secret);
+    return createReceipt(hop, secretOverride || node.secret);
+  }
+
+  matchingNodes(nodeId) {
+    return [
+      ...this.nodes
+        .filter(item => item.id === nodeId)
+        .map(node => ({ node, secret: node.secret, key_status: 'current' })),
+      ...this.previousNodes
+        .filter(item => item.id === nodeId)
+        .map(previous => ({
+          node: this.nodes.find(item => item.id === nodeId) || previous,
+          secret: previous.secret,
+          key_status: 'previous',
+        })),
+    ];
   }
 
   productionReady() {
@@ -106,6 +127,7 @@ class RelayTransport {
     return {
       nodes: this.nodes.map(({ secret, ...node }) => ({ ...node, mode: node.url ? 'network' : 'embedded' })),
       production_ready: this.productionReady(),
+      rotation_grace_configured: this.previousNodes.length > 0,
       guarantee: this.productionReady()
         ? 'network relay transport configured; audited alpha scope recorded'
         : 'cryptographic relay pipeline active; independent network origins are not configured',
@@ -113,7 +135,8 @@ class RelayTransport {
   }
 }
 
-function parseRelayNodes(value, authSecret) {
+function parseRelayNodes(value, authSecret, options = {}) {
+  const { useDefaults = true } = options;
   let input = [];
   try {
     input = value ? JSON.parse(value) : [];
@@ -121,10 +144,11 @@ function parseRelayNodes(value, authSecret) {
     throw new Error('RELAY_NODES must be valid JSON.');
   }
   const defaults = [
-    { id: 'relay-tyo-01', region: 'Southeast Asia', role: 'ingress' },
+    { id: 'relay-sea-01', region: 'Southeast Asia', role: 'ingress' },
     { id: 'relay-sgp-04', region: 'Singapore', role: 'mixer' },
     { id: 'relay-ams-09', region: 'Amsterdam', role: 'exit' },
   ];
+  if (!input.length && !useDefaults) return [];
   return (input.length ? input : defaults).map((node, index) => ({
     id: String(node.id || defaults[index]?.id || `relay-${index + 1}`),
     region: String(node.region || 'undisclosed'),

@@ -8,6 +8,9 @@ or launch submission.
 IGNIS is ready to present as an audited alpha public preview of a
 privacy-preserving code contribution protocol.
 
+Phase 8D evidence is recorded in `docs/PHASE_8D_EVIDENCE.md`. The broader
+public launch decision is clear for audited alpha preview wording.
+
 Allowed wording:
 
 - code without a face
@@ -32,6 +35,7 @@ Run from the repo root:
 
 ```bash
 npm test --prefix backend
+npm run drill:phase8d --prefix backend
 npm run monitor:production --prefix backend
 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production --prefix backend
 ```

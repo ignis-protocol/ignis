@@ -3,6 +3,28 @@
 Run these drills before public launch. Record the date, operator, commands,
 result, and any follow-up actions.
 
+## Automated Phase 8D Drill
+
+Goal: prove the core recovery and rotation paths without touching production.
+
+Run from the repository root:
+
+```bash
+npm run drill:phase8d --prefix backend
+```
+
+This validates:
+
+- JSON-state backup and restore with checksum evidence.
+- Reviewer key rotation keeps the reviewer identity stable.
+- Sealed bundle key rotation can read retained bundles and write with the new
+  active key.
+- Relay secret rotation accepts previous secrets during a grace window and keeps
+  replay protection active.
+- `AUTH_SECRET` rotation invalidates existing short-lived sessions.
+
+Record the JSON output in `docs/PHASE_8D_EVIDENCE.md`.
+
 ## Backup Drill
 
 Goal: prove that the production PostgreSQL state can be exported.
@@ -66,16 +88,20 @@ Goal: rotate sealed bundle encryption without losing retained bundles.
 Goal: rotate relay HMAC secrets without breaking the three-hop path.
 
 1. Prepare new secrets for all relay nodes.
-2. Update the shared `RELAY_NODES` JSON on the main API and each relay service.
-3. Redeploy relays first, then the main API.
-4. Check each relay `/health`.
-5. Run:
+2. Copy the current `RELAY_NODES` value into `RELAY_NODES_PREVIOUS`.
+3. Update `RELAY_NODES` with the new secrets on the main API and each relay
+   service.
+4. Redeploy relays and the main API.
+5. Check each relay `/health`.
+6. Run:
 
 ```bash
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
 ```
 
 Use this write-path smoke only when a test submission is acceptable.
+
+7. Remove `RELAY_NODES_PREVIOUS` after the grace window closes and redeploy.
 
 ## AUTH_SECRET Rotation Strategy
 

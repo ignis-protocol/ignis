@@ -331,7 +331,7 @@ Launch and audit prep:
 - [x] Phase 8A: audit prep package, launch checklist, incident response, and stricter smoke tooling.
 - [x] Phase 8B: free-first public preview hardening, monitoring, launch runbook, reviewer operations, feedback intake, and security hardening.
 - [x] Phase 8C: public user flow, reviewer onboarding, sample diff, CTA polish, and aggregate metrics.
-- [ ] Phase 8D: recovery drill evidence, optional formal third-party audit, and broader public launch decision.
+- [x] Phase 8D: recovery drill evidence, optional formal third-party audit, and broader public launch decision.
 
 ---
 

@@ -89,7 +89,7 @@ test('relay transport produces a three-hop signed hash chain', async () => {
     sealed_envelope: sealedEnvelope,
   });
   assert.equal(route.receipts.length, 3);
-  assert.equal(route.path.join(','), 'relay-tyo-01,relay-sgp-04,relay-ams-09');
+  assert.equal(route.path.join(','), 'relay-sea-01,relay-sgp-04,relay-ams-09');
   assert.equal(route.receipts[1].previous_hash, route.receipts[0].receipt_hash);
   assert.equal(route.receipts[2].previous_hash, route.receipts[1].receipt_hash);
   assert.match(route.receipts[2].signature, /^[A-Za-z0-9_-]+$/);
@@ -99,7 +99,7 @@ test('relay transport produces a three-hop signed hash chain', async () => {
 test('standalone relay services transport an encrypted envelope across network hops', async t => {
   const ports = await Promise.all([getFreePort(), getFreePort(), getFreePort()]);
   const nodes = [
-    { id: 'relay-tyo-test', region: 'Southeast Asia', role: 'ingress', url: `http://127.0.0.1:${ports[0]}`, secret: 'tyo-network-secret' },
+    { id: 'relay-sea-test', region: 'Southeast Asia', role: 'ingress', url: `http://127.0.0.1:${ports[0]}`, secret: 'sea-network-secret' },
     { id: 'relay-sgp-test', region: 'Singapore', role: 'mixer', url: `http://127.0.0.1:${ports[1]}`, secret: 'sgp-network-secret' },
     { id: 'relay-ams-test', region: 'Amsterdam', role: 'exit', url: `http://127.0.0.1:${ports[2]}`, secret: 'ams-network-secret' },
   ];

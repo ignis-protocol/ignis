@@ -59,9 +59,9 @@ must stay manual because they create production records.
 | Singapore relay | `https://ignis-relay-sgp-production.up.railway.app/health` | HTTP 200, `ok: true` |
 | Amsterdam relay | `https://ignis-relay-ams-production.up.railway.app/health` | HTTP 200, `ok: true` |
 
-The first relay is physically configured in Railway's Southeast Asia region.
-The service name still contains `tyo` for historical continuity; public labels
-must use `Southeast Asia`.
+The first relay is labeled `Southeast Asia` in public surfaces. The current
+Railway hostname is a legacy service name; rename the Railway service before
+changing this monitor URL.
 
 ## Alert Conditions
 

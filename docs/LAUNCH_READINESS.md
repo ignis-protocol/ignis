@@ -4,47 +4,47 @@ Use this checklist before public preview and again before broader public launch.
 
 ## Required Before Public Preview
 
-- [ ] `https://ignis-protocol.com` loads the product site.
-- [ ] `https://ignis-protocol.com/terminal` loads the terminal.
-- [ ] `https://ignis-protocol.com/reviewer` loads the reviewer console.
-- [ ] `https://ignis-protocol.com/proof` loads the verifier.
-- [ ] `https://ignis-protocol.com/ops` loads the ops dashboard.
-- [ ] `https://api.ignis-protocol.com/health` returns `ok: true`.
-- [ ] `https://api.ignis-protocol.com/api/readiness` has all required checks passing.
-- [ ] `npm run smoke:production` passes.
-- [ ] Monitoring checks from `docs/MONITORING.md` are configured.
-- [ ] Monitoring checks from `monitoring/http-checks.json` are imported or recreated.
-- [ ] Relay nodes show `mode: network`.
-- [ ] PostgreSQL is writable.
-- [ ] Audit chain is valid.
-- [ ] Reviewer keys are available to trusted reviewers through a private channel.
-- [ ] Public copy does not claim guaranteed anonymity.
-- [ ] Orynth ownership verification is complete.
-- [ ] Extensionless public routes work: `/terminal`, `/reviewer`, `/proof`, `/ops`.
-- [ ] Public launch runbook exists and links are current.
-- [ ] Reviewer operations runbook exists.
-- [ ] Public feedback intake is available.
-- [ ] Security hardening checklist is current.
-- [ ] Sample diff flow works from `/terminal?sample=1`.
-- [ ] Public aggregate metrics work at `/api/public-metrics`.
+- [x] `https://ignis-protocol.com` loads the product site.
+- [x] `https://ignis-protocol.com/terminal` loads the terminal.
+- [x] `https://ignis-protocol.com/reviewer` loads the reviewer console.
+- [x] `https://ignis-protocol.com/proof` loads the verifier.
+- [x] `https://ignis-protocol.com/ops` loads the ops dashboard.
+- [x] `https://api.ignis-protocol.com/health` returns `ok: true`.
+- [x] `https://api.ignis-protocol.com/api/readiness` has all required checks passing.
+- [x] `npm run smoke:production` passes.
+- [x] Monitoring checks from `docs/MONITORING.md` are configured.
+- [x] Monitoring checks from `monitoring/http-checks.json` are imported or recreated.
+- [x] Relay nodes show `mode: network`.
+- [x] PostgreSQL is writable.
+- [x] Audit chain is valid.
+- [x] Reviewer keys are available to trusted reviewers through a private channel.
+- [x] Public copy does not claim guaranteed anonymity.
+- [x] Orynth ownership verification is complete.
+- [x] Extensionless public routes work: `/terminal`, `/reviewer`, `/proof`, `/ops`.
+- [x] Public launch runbook exists and links are current.
+- [x] Reviewer operations runbook exists.
+- [x] Public feedback intake is available.
+- [x] Security hardening checklist is current.
+- [x] Sample diff flow works from `/terminal?sample=1`.
+- [x] Public aggregate metrics work at `/api/public-metrics`.
 
 ## Required Before Broader Public Launch
 
 - [x] Trusted peer audit recorded in `docs/AUDIT.md`.
 - [x] No critical/high blocker recorded for audited alpha.
 - [x] Trusted peer audit decision recorded as clear for the audited-alpha scope.
-- [ ] Production devnet Solana signer configured and strict Solana smoke passes.
-- [ ] Backup and restore drill completed.
-- [ ] Reviewer key rotation drill completed.
-- [ ] Bundle key rotation drill completed.
-- [ ] Relay secret rotation drill completed.
-- [ ] Incident response owner and escalation path defined.
-- [ ] Uptime checks exist for API, readiness, relays, Vercel, and Postgres.
+- [x] Production devnet Solana signer configured and strict Solana smoke passes.
+- [x] Backup and restore drill completed.
+- [x] Reviewer key rotation drill completed.
+- [x] Bundle key rotation drill completed.
+- [x] Relay secret rotation drill completed.
+- [x] Incident response owner and escalation path defined.
+- [x] Uptime checks exist for API, readiness, relays, Vercel, and Postgres.
 - [ ] Domain renewal and Railway/Vercel billing are stable.
-- [ ] Social preview cards are correct.
-- [ ] README and docs match live production behavior.
-- [ ] Public feedback template is ready.
-- [ ] Public preview operator flow is assigned.
+- [x] Social preview cards are correct.
+- [x] README and docs match live production behavior.
+- [x] Public feedback template is ready.
+- [x] Public preview operator flow is assigned.
 
 ## Manual Flow Check
 
@@ -75,6 +75,7 @@ Use this checklist before public preview and again before broader public launch.
 - `docs/INCIDENT_RESPONSE.md`
 - `docs/AUDITOR_REQUEST.md`
 - `docs/PUBLIC_PREVIEW_PLAN.md`
+- `docs/PHASE_8D_EVIDENCE.md`
 - `docs/SOLANA_SIGNER.md`
 - `monitoring/http-checks.json`
 

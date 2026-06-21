@@ -41,7 +41,7 @@ records remain.
 
 ```json
 [
-  {"id":"relay-tyo-01","region":"Southeast Asia","role":"ingress","url":"https://relay-tyo.example.com","secret":"..."},
+  {"id":"relay-sea-01","region":"Southeast Asia","role":"ingress","url":"https://relay-sea.example.com","secret":"..."},
   {"id":"relay-sgp-04","region":"Singapore","role":"mixer","url":"https://relay-sgp.example.com","secret":"..."},
   {"id":"relay-ams-09","region":"Amsterdam","role":"exit","url":"https://relay-ams.example.com","secret":"..."}
 ]
@@ -57,13 +57,18 @@ Deploy each relay as a separate service using:
 ```text
 Start command: npm run start:relay
 Root directory: /backend
-RELAY_NODE_ID=relay-tyo-01
+RELAY_NODE_ID=relay-sea-01
 RELAY_NODES=<the shared ordered node JSON>
+RELAY_NODES_PREVIOUS=<previous shared node JSON during rotation only>
 ```
 
 Use the matching node ID for each service. A relay receives only the encrypted
 envelope, validates its hash, and returns a signed receipt without returning or
 persisting the ciphertext.
+
+For relay secret rotation, copy the current node JSON into
+`RELAY_NODES_PREVIOUS`, deploy the new `RELAY_NODES` secrets, verify the route,
+then remove `RELAY_NODES_PREVIOUS` after the grace window closes.
 
 `GET /api/security` reports whether three independent HTTPS origins are active.
 `GET /api/readiness` reports the required production checks used by the public

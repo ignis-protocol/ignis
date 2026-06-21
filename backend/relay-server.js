@@ -45,11 +45,11 @@ app.get('/health', (_req, res) => res.json({
 
 app.post('/relay/v1/forward', (req, res) => {
   try {
-    const authenticatedNode = transport.verifyInbound(req.headers, req.rawBody, replayStore);
-    if (authenticatedNode.id !== node.id || req.body.node_id !== node.id) {
+    const authenticated = transport.verifyInbound(req.headers, req.rawBody, replayStore);
+    if (authenticated.node.id !== node.id || req.body.node_id !== node.id) {
       return res.status(403).json({ ok: false, error: 'relay_node_mismatch' });
     }
-    const receipt = transport.accept(node, req.body);
+    const receipt = transport.accept(node, req.body, authenticated.secret);
     pruneReplays();
     return res.json(receipt);
   } catch (error) {

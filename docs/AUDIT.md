@@ -72,7 +72,7 @@ Do not claim:
 
 ## Follow-Up Items
 
-- Record backup and restore drill evidence.
-- Record reviewer key and relay secret rotation drill evidence.
+- Backup, restore, reviewer key, bundle key, relay secret, and auth rotation
+  drill evidence is recorded in `docs/PHASE_8D_EVIDENCE.md`.
 - Keep production smoke checks running before and after public announcements.
 - Consider a formal third-party audit before stronger privacy or anonymity claims.
