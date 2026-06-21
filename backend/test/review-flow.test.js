@@ -45,6 +45,8 @@ const dirtyDiff = [
   '-const remote = "git@github.com:jane/private-repo.git";',
   '+const remote = "https://github.com/jane/private-repo.git";',
   '+const host = "/home/jane/.ssh/id_ed25519";',
+  '+const ipv4 = "203.0.113.42";',
+  '+const ipv6 = "2001:db8:85a3::8a2e:370:7334";',
 ].join('\n');
 
 test('sanitizer removes identity-bearing diff metadata', () => {
@@ -53,6 +55,8 @@ test('sanitizer removes identity-bearing diff metadata', () => {
   assert.equal(result.sanitized_diff.includes('C:\\Users\\jane'), false);
   assert.equal(result.sanitized_diff.includes('/home/jane'), false);
   assert.equal(result.sanitized_diff.includes('github.com/jane/private-repo'), false);
+  assert.equal(result.sanitized_diff.includes('203.0.113.42'), false);
+  assert.equal(result.sanitized_diff.includes('2001:db8:85a3::8a2e:370:7334'), false);
   assert.match(result.sanitized_diff, /Author: \[redacted\]/);
   assert.equal(result.sanitized_diff.includes('$1: [redacted]'), false);
   assert.equal(result.report.risk, 'high');
@@ -129,7 +133,12 @@ test('readiness endpoint reports required production checks', async t => {
   t.after(() => server.close());
 
   const base = `http://127.0.0.1:${server.address().port}`;
-  const response = await fetch(`${base}/api/readiness`);
+  const response = await fetch(`${base}/api/readiness`, {
+    headers: {
+      'X-Forwarded-For': '203.0.113.77',
+      'X-Real-IP': '203.0.113.78',
+    },
+  });
   const body = await response.json();
   assert.equal(response.status, 503);
   assert.equal(body.ok, true);
@@ -138,6 +147,23 @@ test('readiness endpoint reports required production checks', async t => {
   assert.ok(body.checks.some(check => check.id === 'relay_transport' && check.status === 'fail'));
   assert.ok(body.checks.some(check => check.id === 'storage'));
   assert.ok(body.checks.some(check => check.id === 'trusted_peer_audit' && check.status === 'pass'));
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  assert.equal(JSON.stringify(body).includes('203.0.113.'), false);
+});
+
+test('frontend has no passive third-party requests and enforces a CSP', () => {
+  const frontendPath = path.join(__dirname, '..', '..', 'frontend');
+  const htmlFiles = fs.readdirSync(frontendPath).filter(file => file.endsWith('.html'));
+  for (const file of htmlFiles) {
+    const html = fs.readFileSync(path.join(frontendPath, file), 'utf8');
+    assert.equal(html.includes('fonts.googleapis.com'), false, `${file} must not load Google Fonts`);
+    assert.equal(html.includes('fonts.gstatic.com'), false, `${file} must not load Google font assets`);
+  }
+  const vercel = JSON.parse(fs.readFileSync(path.join(frontendPath, 'vercel.json'), 'utf8'));
+  const headers = Object.fromEntries(vercel.headers[0].headers.map(item => [item.key, item.value]));
+  assert.match(headers['Content-Security-Policy'], /connect-src 'self' https:\/\/api\.ignis-protocol\.com/);
+  assert.equal(headers['X-Frame-Options'], 'DENY');
 });
 
 test('abuse controls reject credential and command-execution payloads', async t => {
@@ -190,6 +216,12 @@ test('blind review reaches quorum and settles a submission', async t => {
   });
   assert.equal(sessionResult.response.status, 201);
   const sessionId = sessionResult.body.session.id;
+  assert.match(sessionId, /^ash_[a-f0-9]{32}$/);
+
+  const publicSession = await request(`/api/sessions/${sessionId}`);
+  assert.equal(publicSession.response.status, 200);
+  assert.equal(publicSession.body.session.public_key, undefined);
+  assert.equal(publicSession.body.session.label, undefined);
 
   const walletKeypair = nacl.sign.keyPair();
   const wallet = bs58.encode(walletKeypair.publicKey);
@@ -234,14 +266,17 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.equal(submissionResult.response.status, 201);
   const { id: reviewId } = submissionResult.body.review;
   const submissionId = submissionResult.body.submission.id;
+  assert.match(submissionId, /^sealed_[a-f0-9]{32}$/);
 
   const publicSubmission = await request(`/api/submissions/${submissionId}`);
   assert.equal(publicSubmission.body.submission.session, undefined);
   assert.equal(publicSubmission.body.submission.sanitized_diff, undefined);
+  assert.equal(publicSubmission.body.submission.original_hash, undefined);
+  assert.equal(publicSubmission.body.submission.bundle_key_id, undefined);
+  assert.equal(publicSubmission.body.submission.relay, undefined);
+  assert.equal(publicSubmission.body.submission.abuse_report, undefined);
   assert.equal(publicSubmission.body.submission.metadata_report.risk, 'high');
   assert.equal(publicSubmission.body.submission.bundle_encrypted, true);
-  assert.equal(publicSubmission.body.submission.relay.receipts.length, 3);
-  assert.match(publicSubmission.body.submission.relay.route_hash, /^sha256:/);
 
   const statusResult = await request(`/api/submissions/${submissionId}/status`);
   assert.equal(statusResult.response.status, 200);

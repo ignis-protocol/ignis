@@ -298,6 +298,7 @@ Launch and audit prep:
 
 - [Audit record](docs/AUDIT.md)
 - [Audit prep package](docs/AUDIT_PREP.md)
+- [Privacy exposure audit](docs/PRIVACY_EXPOSURE_AUDIT.md)
 - [Launch copy pack](docs/LAUNCH_COPY.md)
 - [User flow](docs/USER_FLOW.md)
 - [Reviewer quickstart](docs/REVIEWER_QUICKSTART.md)

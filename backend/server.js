@@ -54,8 +54,10 @@ app.disable('x-powered-by');
 app.set('trust proxy', TRUST_PROXY_HOPS);
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Ignis-Build', BUILD);
   next();
 });
@@ -314,7 +316,15 @@ app.get('/api/sessions/:id', (req, res, next) => {
   try {
     const session = findSession(req.params.id);
     if (!session) throw new ApiError(404, 'session_not_found', 'Session does not exist.');
-    return ok(res, req, { session: { ...session, expired: isExpired(session.expires_at) } });
+    return ok(res, req, {
+      session: {
+        id: session.id,
+        status: session.status,
+        created_at: session.created_at,
+        expires_at: session.expires_at,
+        expired: isExpired(session.expires_at),
+      },
+    });
   } catch (error) {
     return next(error);
   }
@@ -774,6 +784,10 @@ function serializeSubmission(submission, options = {}) {
   delete result.encrypted_bundle;
   delete result.sanitized_diff;
   delete result.metadata_report;
+  delete result.original_hash;
+  delete result.bundle_key_id;
+  delete result.relay;
+  delete result.abuse_report;
   result.metadata_report = submission.metadata_report_summary || null;
   result.bundle_encrypted = Boolean(submission.encrypted_bundle);
   if (options.includeSession) result.session = submission.session;
@@ -1184,7 +1198,7 @@ function trim(list, max) {
   if (list.length > max) list.length = max;
 }
 function newId(prefix) {
-  return `${prefix}_${crypto.randomBytes(6).toString('hex')}`;
+  return `${prefix}_${crypto.randomBytes(16).toString('hex')}`;
 }
 function parseReviewerKeys(value, previousValue = '') {
   const reviewers = new Map();

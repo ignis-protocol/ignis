@@ -1,3 +1,4 @@
+const net = require('node:net');
 const { sha256 } = require('./security');
 
 const MAX_DIFF_BYTES = Number(process.env.MAX_DIFF_BYTES || 256 * 1024);
@@ -69,9 +70,17 @@ const RULES = [
   },
   {
     id: 'ip_address',
-    label: 'IP address',
+    label: 'IPv4 address',
     pattern: /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/g,
     replacement: '[redacted-ip]',
+    severity: 'medium',
+  },
+  {
+    id: 'ipv6_address',
+    label: 'IPv6 address',
+    pattern: /(?<![A-F0-9:])(?:[A-F0-9]{0,4}:){2,7}[A-F0-9]{0,4}(?![A-F0-9:])/gi,
+    replacement: '[redacted-ip]',
+    validate: match => net.isIP(match) === 6,
     severity: 'medium',
   },
 ];
@@ -100,8 +109,9 @@ function sanitizeDiff(input, options = {}) {
     const before = sanitized;
     let count = 0;
     sanitized = sanitized.replace(rule.pattern, (...args) => {
-      count += 1;
       const match = args[0];
+      if (rule.validate && !rule.validate(match)) return match;
+      count += 1;
       if (typeof rule.replacement === 'function') return rule.replacement(match);
       return rule.replacement;
     });

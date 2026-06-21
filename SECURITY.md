@@ -74,4 +74,6 @@ third-party certification remains optional for the current audited-alpha scope.
 The audit brief is maintained in `docs/AUDIT_PREP.md`. Public launch readiness
 is tracked in `docs/LAUNCH_READINESS.md`, operational incident response is
 tracked in `docs/INCIDENT_RESPONSE.md`, monitoring setup is tracked in
-`docs/MONITORING.md`, and operational drills are tracked in `docs/DRILLS.md`.
+`docs/MONITORING.md`, operational drills are tracked in `docs/DRILLS.md`, and
+the public IP and personal-data exposure review is recorded in
+`docs/PRIVACY_EXPOSURE_AUDIT.md`.
