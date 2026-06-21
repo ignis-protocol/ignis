@@ -270,11 +270,14 @@ Production smoke checks:
 
 ```bash
 cd backend
+npm run monitor:production
 npm run smoke:production
 ```
 
-The smoke script checks health, readiness, relay status, signal, and Solana state
-without creating a submission. To run the full submit path intentionally:
+The monitor script checks public HTTP endpoints from `monitoring/http-checks.json`.
+The smoke script checks frontend routes, health, readiness, relay status, signal,
+and Solana state without creating a submission. To run the full submit path
+intentionally:
 
 ```bash
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production

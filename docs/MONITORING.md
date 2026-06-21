@@ -6,6 +6,47 @@ recreate in an uptime provider when budget allows.
 The same checks are also represented in `monitoring/http-checks.json` as a
 provider-neutral source of truth.
 
+## Free-First Monitoring
+
+No paid monitoring provider is required for the first public preview pass.
+
+Run the lightweight HTTP monitor from any machine:
+
+```bash
+cd backend
+npm run monitor:production
+```
+
+The command reads `monitoring/http-checks.json`, checks every public endpoint,
+verifies expected HTTP statuses, validates configured JSON fields, and exits
+non-zero if any check fails. It does not create submissions or mutate
+production state.
+
+For stricter release checks, run:
+
+```bash
+IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
+```
+
+Use the lightweight monitor for daily checks. Use strict smoke before releases,
+after Railway/Vercel deploys, and after environment-variable changes.
+
+## Optional Free Provider Setup
+
+If a free uptime provider is used later, recreate the checks from
+`monitoring/http-checks.json` exactly:
+
+- Use `GET` for every URL.
+- Match the expected HTTP status.
+- For JSON endpoints, assert the configured fields such as `ok: true`,
+  `ready: true`, `audit_chain_valid: true`, and `relay_production_ready: true`.
+- Use 5-minute intervals for website pages and 1-minute intervals for API and
+  relay health when the free tier allows it.
+- Send alerts to an email or Telegram channel controlled by the operator.
+
+Do not add write-path checks to a public uptime provider. Submission smoke tests
+must stay manual because they create production records.
+
 ## Public HTTP Checks
 
 | Check | URL | Expected |
@@ -49,6 +90,7 @@ Alert immediately when:
 
 ```bash
 cd backend
+npm run monitor:production
 npm run smoke:production
 ```
 
