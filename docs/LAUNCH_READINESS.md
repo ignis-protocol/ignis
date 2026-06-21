@@ -13,6 +13,7 @@ Use this checklist before closed beta and again before public launch.
 - [ ] `https://api.ignis-protocol.com/api/readiness` has all required checks passing.
 - [ ] `npm run smoke:production` passes.
 - [ ] Monitoring checks from `docs/MONITORING.md` are configured.
+- [ ] Monitoring checks from `monitoring/http-checks.json` are imported or recreated.
 - [ ] Relay nodes show `mode: network`.
 - [ ] PostgreSQL is writable.
 - [ ] Audit chain is valid.
@@ -36,6 +37,7 @@ Use this checklist before closed beta and again before public launch.
 - [ ] Social preview cards are correct.
 - [ ] README and docs match live production behavior.
 - [ ] Closed beta feedback template is ready for every participant.
+- [ ] Closed beta plan is assigned to an operator.
 
 ## Manual Flow Check
 
@@ -57,6 +59,10 @@ Use this checklist before closed beta and again before public launch.
 - `docs/BETA_FEEDBACK.md`
 - `docs/AUDIT_PREP.md`
 - `docs/INCIDENT_RESPONSE.md`
+- `docs/AUDITOR_REQUEST.md`
+- `docs/CLOSED_BETA_PLAN.md`
+- `docs/SOLANA_SIGNER.md`
+- `monitoring/http-checks.json`
 
 ## Go / No-Go Rules
 

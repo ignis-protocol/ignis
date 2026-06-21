@@ -294,6 +294,10 @@ Phase 8A launch and audit prep:
 - [Monitoring plan](docs/MONITORING.md)
 - [Operational drills](docs/DRILLS.md)
 - [Closed beta feedback template](docs/BETA_FEEDBACK.md)
+- [Solana signer handoff](docs/SOLANA_SIGNER.md)
+- [Auditor request](docs/AUDITOR_REQUEST.md)
+- [Closed beta plan](docs/CLOSED_BETA_PLAN.md)
+- [Monitoring check config](monitoring/http-checks.json)
 
 ---
 

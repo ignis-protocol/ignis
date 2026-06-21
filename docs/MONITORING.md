@@ -3,6 +3,9 @@
 This plan defines the checks to configure in an uptime or observability provider
 before closed beta.
 
+The same checks are also represented in `monitoring/http-checks.json` as a
+provider-neutral source of truth.
+
 ## Public HTTP Checks
 
 | Check | URL | Expected |

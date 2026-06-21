@@ -1,0 +1,72 @@
+{
+  "project": "ignis",
+  "checks": [
+    {
+      "name": "IGNIS website",
+      "url": "https://ignis-protocol.com",
+      "method": "GET",
+      "interval_seconds": 300,
+      "expected_status": 200
+    },
+    {
+      "name": "IGNIS ops dashboard",
+      "url": "https://ignis-protocol.com/ops",
+      "method": "GET",
+      "interval_seconds": 300,
+      "expected_status": 200
+    },
+    {
+      "name": "IGNIS API health",
+      "url": "https://api.ignis-protocol.com/health",
+      "method": "GET",
+      "interval_seconds": 60,
+      "expected_status": 200,
+      "json_assertions": {
+        "ok": true,
+        "audit_chain_valid": true,
+        "relay_production_ready": true
+      }
+    },
+    {
+      "name": "IGNIS API readiness",
+      "url": "https://api.ignis-protocol.com/api/readiness",
+      "method": "GET",
+      "interval_seconds": 60,
+      "expected_status": 200,
+      "json_assertions": {
+        "ok": true,
+        "ready": true
+      }
+    },
+    {
+      "name": "IGNIS relay Southeast Asia",
+      "url": "https://ignis-relay-tyo-production.up.railway.app/health",
+      "method": "GET",
+      "interval_seconds": 60,
+      "expected_status": 200,
+      "json_assertions": {
+        "ok": true
+      }
+    },
+    {
+      "name": "IGNIS relay Singapore",
+      "url": "https://ignis-relay-sgp-production.up.railway.app/health",
+      "method": "GET",
+      "interval_seconds": 60,
+      "expected_status": 200,
+      "json_assertions": {
+        "ok": true
+      }
+    },
+    {
+      "name": "IGNIS relay Amsterdam",
+      "url": "https://ignis-relay-ams-production.up.railway.app/health",
+      "method": "GET",
+      "interval_seconds": 60,
+      "expected_status": 200,
+      "json_assertions": {
+        "ok": true
+      }
+    }
+  ]
+}
