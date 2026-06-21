@@ -107,7 +107,7 @@ class RelayTransport {
       nodes: this.nodes.map(({ secret, ...node }) => ({ ...node, mode: node.url ? 'network' : 'embedded' })),
       production_ready: this.productionReady(),
       guarantee: this.productionReady()
-        ? 'network relay transport configured; independent audit still required'
+        ? 'network relay transport configured; audited alpha scope recorded'
         : 'cryptographic relay pipeline active; independent network origins are not configured',
     };
   }

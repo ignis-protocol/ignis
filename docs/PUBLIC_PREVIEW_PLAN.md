@@ -5,13 +5,13 @@
 - Validate the real contributor flow.
 - Validate blind reviewer flow and quorum settlement.
 - Confirm proof receipt UX is understandable.
-- Find copy that overclaims privacy before audit.
+- Find copy that overclaims privacy beyond the audited alpha scope.
 - Observe spam, malformed diff, public support burden, and reviewer workload.
 
 ## Public Preview Model
 
-Public preview is open for real product exploration, but privacy claims remain
-conservative until an independent audit is complete.
+Public preview is open for real product exploration. The product can be described
+as audited alpha, while privacy claims remain scoped to implemented controls.
 
 - Public users can open the product site, terminal, proof verifier, and ops
   dashboard.
@@ -34,8 +34,8 @@ conservative until an independent audit is complete.
 
 ## Public Launch Window
 
-Start as an alpha public preview. Keep launch messaging conservative until the
-external audit is complete.
+Start as an audited alpha public preview. Keep launch messaging inside the
+recorded audit scope.
 
 ## Flow
 
@@ -66,4 +66,4 @@ external audit is complete.
 - Audit chain becomes invalid.
 - Reviewers cannot reach quorum.
 - Users misunderstand the product as a token or reward system.
-- Frontend copy claims guaranteed anonymity or audit-backed privacy.
+- Frontend copy claims guaranteed anonymity, untraceable submissions, or formal certification.

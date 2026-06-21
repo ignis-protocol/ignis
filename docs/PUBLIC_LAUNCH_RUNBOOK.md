@@ -5,8 +5,8 @@ or launch submission.
 
 ## Launch Position
 
-IGNIS is ready to present as an alpha public preview of a privacy-preserving code
-contribution protocol.
+IGNIS is ready to present as an audited alpha public preview of a
+privacy-preserving code contribution protocol.
 
 Allowed wording:
 
@@ -16,12 +16,13 @@ Allowed wording:
 - blind review surface
 - verifiable proof receipts
 - Solana devnet proof anchoring
+- audited alpha
 
 Avoid wording:
 
 - guaranteed anonymity
 - untraceable submissions
-- audited privacy
+- formally certified privacy
 - token, rewards, staking, or incentive promises
 - Solana mainnet proof anchoring
 

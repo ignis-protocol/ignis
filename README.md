@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-alpha-00ff41?style=for-the-badge&labelColor=080b10">
+  <img alt="Status" src="https://img.shields.io/badge/status-audited%20alpha-00ff41?style=for-the-badge&labelColor=080b10">
   <img alt="Protocol" src="https://img.shields.io/badge/protocol-privacy%20preserving%20code-a78bfa?style=for-the-badge&labelColor=080b10">
   <img alt="Layer" src="https://img.shields.io/badge/layer-Solana%20devnet-2dd4bf?style=for-the-badge&labelColor=080b10">
 </p>
@@ -83,7 +83,7 @@ Solana proof layer
 
 ---
 
-## Live Alpha
+## Live Audited Alpha
 
 | Surface | URL |
 |---|---|
@@ -97,7 +97,7 @@ Solana proof layer
 
 ---
 
-## Current Alpha Status
+## Current Audited Alpha Status
 
 Completed:
 
@@ -129,8 +129,8 @@ Completed:
 
 Not done yet:
 
-- External privacy/security audit.
-- Independent audit and broader launch decision.
+- Trusted peer audit recorded.
+- Recovery drill evidence and broader launch decision.
 
 ---
 
@@ -291,7 +291,9 @@ IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
 
 Launch and audit prep:
 
+- [Audit record](docs/AUDIT.md)
 - [Audit prep package](docs/AUDIT_PREP.md)
+- [Launch copy pack](docs/LAUNCH_COPY.md)
 - [Launch readiness checklist](docs/LAUNCH_READINESS.md)
 - [Incident response runbook](docs/INCIDENT_RESPONSE.md)
 - [Monitoring plan](docs/MONITORING.md)
@@ -320,7 +322,7 @@ Launch and audit prep:
 - [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and public polish.
 - [x] Phase 8A: audit prep package, launch checklist, incident response, and stricter smoke tooling.
 - [x] Phase 8B: free-first public preview hardening, monitoring, launch runbook, reviewer operations, feedback intake, and security hardening.
-- [ ] Phase 8C: independent audit, recovery drill evidence, and broader public launch decision.
+- [ ] Phase 8C: recovery drill evidence, optional formal third-party audit, and broader public launch decision.
 
 ---
 

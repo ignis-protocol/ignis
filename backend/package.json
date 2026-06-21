@@ -1,7 +1,7 @@
 {
   "name": "ignis-backend",
   "version": "0.6.0-alpha",
-  "description": "IGNIS API server - anonymous code contribution protocol.",
+  "description": "IGNIS API server - privacy-preserving code contribution protocol.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

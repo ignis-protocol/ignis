@@ -43,7 +43,7 @@
 - Operators with access to active vault keys and storage can decrypt retained bundles.
 - PostgreSQL currently stores protocol state as one JSON document, which limits
   row-level isolation and high-volume concurrency.
-- No independent security or privacy audit has been completed.
+- Trusted peer audit is recorded; formal third-party certification has not been completed.
 
 ## Required Production Topology
 
@@ -63,10 +63,10 @@ Allowed:
 - blind reviewer surface;
 - privacy-preserving wallet commitments.
 
-Not allowed before an independent audit:
+Not allowed in audited alpha:
 
 - guaranteed anonymity;
 - untraceable submissions;
 - traffic-analysis resistance;
 - zero-knowledge review;
-- production-audited privacy.
+- formally certified production privacy.

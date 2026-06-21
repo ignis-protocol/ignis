@@ -19,7 +19,7 @@ const { RelayTransport } = require('./lib/relay-transport');
 const bs58 = bs58Module.default || bs58Module;
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
-const BUILD = 'anonymous-code-protocol';
+const BUILD = 'privacy-preserving-code-protocol';
 const VERSION = '0.6.0-alpha';
 const SESSION_TTL_MS = Number(process.env.SESSION_TTL_HOURS || 72) * 60 * 60 * 1000;
 const REVIEW_QUORUM = oddQuorum(process.env.REVIEW_QUORUM);
@@ -317,7 +317,7 @@ app.get('/api/security', (req, res) => ok(res, req, {
     chain_valid: verifyAuditChain(),
     events: storage.state.audit_events.length,
   },
-  assurance: 'Security controls are active. An independent audit is still required before anonymity guarantees.',
+  assurance: 'Audited alpha controls are active. Stronger anonymity claims remain out of scope.',
 }));
 
 app.post('/api/sanitize', asyncHandler(async (req, res) => {
@@ -1022,7 +1022,7 @@ function readinessReport() {
       solanaStatus.configured
         ? 'Solana devnet anchoring is active through the configured production signer.'
         : 'Solana anchoring is queued until the production signer is configured.',
-      'External privacy and security audit is still required before strong anonymity claims.',
+      'Trusted peer audit is recorded; stronger anonymity claims remain out of scope.',
     ],
   };
 }

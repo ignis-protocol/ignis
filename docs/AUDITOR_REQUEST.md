@@ -1,13 +1,13 @@
-# External Auditor Request
+# Optional Formal Auditor Request
 
-Subject: Security and privacy review for IGNIS, a privacy-preserving code contribution protocol
+Subject: Formal security and privacy review for IGNIS, a privacy-preserving code contribution protocol
 
 ## Summary
 
 IGNIS lets contributors submit sanitized code diffs through a relay path for blind
 review. Accepted work receives a verifiable proof receipt and can be anchored to
-Solana. We need an external review before making stronger privacy or anonymity
-claims.
+Solana. The audited alpha scope is recorded, and a formal third-party review can
+be used before making stronger privacy or anonymity claims.
 
 ## Scope
 

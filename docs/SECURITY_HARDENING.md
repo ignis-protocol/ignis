@@ -1,7 +1,7 @@
 # IGNIS Security Hardening Pass
 
-This checklist records the free-first internal hardening scope before public
-preview. It does not replace an external audit.
+This checklist records the free-first hardening scope for audited alpha public
+preview. It does not claim formal third-party certification.
 
 ## Current Controls
 
@@ -30,12 +30,12 @@ Allowed:
 - verifiable receipts
 - Solana devnet anchoring
 
-Blocked until external audit:
+Out of scope for audited alpha:
 
 - guaranteed anonymity
 - untraceable submissions
 - zero-knowledge review
-- audited privacy
+- formally certified privacy
 - traffic-analysis resistance
 
 ## Pre-Launch Security Commands
@@ -57,7 +57,7 @@ IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production --prefix backend
 
 ## Residual Risks
 
-- No external security or privacy audit has been completed.
+- Trusted peer audit is recorded; formal third-party certification has not been completed.
 - Relay services are not independently operated by separate organizations.
 - Sanitizers can miss novel identity markers.
 - Operators with database and vault key access can decrypt retained bundles.

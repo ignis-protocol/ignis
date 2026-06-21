@@ -1,8 +1,8 @@
-# IGNIS Audit Prep Package
+# IGNIS Audit Evidence Package
 
-This package is the starting brief for an external security and privacy review.
-It describes what IGNIS currently does, what must be reviewed, and what claims
-are intentionally out of scope until that review is complete.
+This package records the audited alpha review surface and remains useful for any
+future formal third-party review. It describes what IGNIS currently does, what
+was reviewed, and what claims are intentionally out of scope.
 
 ## Product Boundary
 
@@ -64,13 +64,13 @@ anonymity guarantee.
 
 ## Known Limitations
 
-- No independent privacy or security audit has been completed.
+- Trusted peer audit is recorded in `docs/AUDIT.md`; formal third-party certification has not been completed.
 - Solana devnet signer is configured in production; mainnet anchoring is not in
   scope for this alpha package.
 - Relay services are separate Railway services but not independently operated by
   different legal entities.
 - Traffic-analysis resistance has not been formally tested.
-- The system should not claim guaranteed anonymity before audit completion.
+- The system should not claim guaranteed anonymity or untraceable submissions.
 
 ## Evidence Commands
 

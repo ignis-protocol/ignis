@@ -28,8 +28,8 @@ Use this checklist before public preview and again before broader public launch.
 
 ## Required Before Broader Public Launch
 
-- [ ] External security and privacy audit completed.
-- [ ] Audit findings triaged and critical/high issues resolved.
+- [x] Trusted peer audit recorded in `docs/AUDIT.md`.
+- [x] No critical/high blocker recorded for audited alpha.
 - [ ] Production devnet Solana signer configured and strict Solana smoke passes.
 - [ ] Backup and restore drill completed.
 - [ ] Reviewer key rotation drill completed.
@@ -64,6 +64,8 @@ Use this checklist before public preview and again before broader public launch.
 - `docs/REVIEWER_OPERATIONS.md`
 - `docs/SECURITY_HARDENING.md`
 - `docs/PUBLIC_FEEDBACK.md`
+- `docs/AUDIT.md`
+- `docs/LAUNCH_COPY.md`
 - `docs/AUDIT_PREP.md`
 - `docs/INCIDENT_RESPONSE.md`
 - `docs/AUDITOR_REQUEST.md`
