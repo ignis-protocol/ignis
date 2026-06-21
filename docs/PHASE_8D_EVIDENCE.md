@@ -105,8 +105,8 @@ IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production --prefix backend
 ```
 
 Result: pass. Site routes, API readiness, PostgreSQL storage, relay transport,
-reviewer quorum, audit chain, trusted peer audit, and Solana devnet signer were
-all reported healthy.
+reviewer quorum, audit chain, trusted peer audit, and Solana signer state were
+all reported healthy for the recorded environment.
 
 ## Operational Notes
 

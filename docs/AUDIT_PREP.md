@@ -14,7 +14,7 @@ IGNIS is a privacy-preserving code contribution protocol:
 4. A signed relay path produces three hop receipts.
 5. Reviewers score the diff blind.
 6. Accepted work receives a verifiable proof receipt.
-7. Solana anchoring is queued through the configured devnet signer.
+7. Solana anchoring is queued through the configured mainnet signer.
 
 IGNIS now publishes an official Solana token contract, but the audited alpha
 scope is not a staking system, reward protocol, or production anonymity
@@ -68,8 +68,8 @@ guarantee.
 - Trusted peer audit is complete and clear in `docs/AUDIT.md`; formal
   third-party certification remains optional for the recorded audited-alpha
   scope.
-- Solana devnet signer is configured in production; mainnet anchoring is not in
-  scope for this alpha package.
+- Solana mainnet anchoring requires Railway env to point at a funded dedicated
+  signer and pass strict Solana smoke before live anchoring is claimed.
 - Relay services are separate Railway services but not independently operated by
   different legal entities.
 - Traffic-analysis resistance has not been formally tested.

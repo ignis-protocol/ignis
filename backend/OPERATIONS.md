@@ -105,7 +105,7 @@ full submission path, run:
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
 ```
 
-With the Solana devnet signer active, strict smoke should require anchor signer
+With the Solana mainnet signer active, strict smoke should require anchor signer
 config:
 
 ```bash
@@ -146,16 +146,17 @@ Restore:
 pg_restore --clean --if-exists --dbname="$DATABASE_URL" ignis-backup.dump
 ```
 
-## Solana Devnet Anchor
+## Solana Mainnet Anchor
 
 ```text
-SOLANA_CLUSTER=devnet
-SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_CLUSTER=mainnet-beta
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 SOLANA_ANCHOR_SECRET_KEY=<base58 secret key or JSON byte array>
 ```
 
-The signer must hold devnet SOL. Receipt creation does not depend on the signer:
-unanchored receipts remain valid and wait in the retry queue.
+The signer must hold mainnet SOL for memo transaction fees. Receipt creation
+does not depend on the signer: unanchored receipts remain valid and wait in the
+retry queue.
 
 Never expose the signer key, auth secret, database URL, or reviewer keys to
 Vercel or frontend JavaScript.

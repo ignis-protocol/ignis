@@ -43,8 +43,8 @@ be used before making stronger privacy or anonymity claims.
 ## Known Limitations
 
 - Relay services are not yet operated by independent third parties.
-- Solana devnet signer is funded and configured in production; mainnet anchoring
-  is not in scope.
+- Solana mainnet anchoring requires a funded dedicated signer and strict Solana
+  smoke before live anchoring is claimed.
 - Public preview abuse data is still early.
 - Token contract publication is in scope only as a public reference; staking,
   rewards, and incentive mechanics are out of scope.

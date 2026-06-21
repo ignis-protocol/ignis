@@ -13,7 +13,7 @@ const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfc
 
 class SolanaAnchor {
   constructor(options = {}) {
-    this.cluster = options.cluster || 'devnet';
+    this.cluster = options.cluster || 'mainnet-beta';
     this.rpcUrl = options.rpcUrl || clusterApiUrl(this.cluster);
     this.signer = parseSigner(options.secretKey);
     this.connection = new Connection(this.rpcUrl, 'confirmed');
@@ -47,9 +47,12 @@ class SolanaAnchor {
       maxRetries: 3,
     });
     await this.connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+    const clusterParam = this.cluster === 'mainnet-beta'
+      ? ''
+      : `?cluster=${encodeURIComponent(this.cluster)}`;
     return {
       signature,
-      explorer_url: `https://explorer.solana.com/tx/${signature}?cluster=${encodeURIComponent(this.cluster)}`,
+      explorer_url: `https://explorer.solana.com/tx/${signature}${clusterParam}`,
       anchored_at: new Date().toISOString(),
     };
   }

@@ -33,7 +33,7 @@ Use this checklist before public preview and again before broader public launch.
 - [x] Trusted peer audit recorded in `docs/AUDIT.md`.
 - [x] No critical/high blocker recorded for audited alpha.
 - [x] Trusted peer audit decision recorded as clear for the audited-alpha scope.
-- [x] Production devnet Solana signer configured and strict Solana smoke passes.
+- [ ] Production mainnet Solana signer configured and strict Solana smoke passes.
 - [x] Backup and restore drill completed.
 - [x] Reviewer key rotation drill completed.
 - [x] Bundle key rotation drill completed.

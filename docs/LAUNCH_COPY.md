@@ -17,7 +17,7 @@ relay secret rotation, and auth rotation evidence recorded.
 
 Code without a face. IGNIS is trusted peer audited alpha infrastructure that
 strips identity from code submissions, routes sealed diffs through relays,
-enables blind review, and issues verifiable receipts with a Solana devnet proof
+enables blind review, and issues verifiable receipts with a Solana mainnet proof
 layer.
 
 ## X Bio
@@ -32,7 +32,7 @@ IGNIS is live as trusted peer audited alpha.
 Code without a face.
 
 Submit metadata-stripped diffs, route sealed work through relays, enter blind
-review, and receive verifiable receipts with Solana devnet proof anchoring.
+review, and receive verifiable receipts with Solana mainnet proof anchoring.
 
 Audit status: clear recorded scope. 0 critical/high blockers. Phase 8D recovery
 and rotation drills passed.
@@ -47,7 +47,7 @@ https://ignis-protocol.com
 ## GitHub About
 
 Trusted peer audited alpha protocol for privacy-preserving code contribution:
-sealed diffs, blind review, verifiable receipts, and Solana devnet proof
+sealed diffs, blind review, verifiable receipts, and Solana mainnet proof
 anchoring.
 
 ## Directory Listing
@@ -56,7 +56,7 @@ IGNIS is a privacy-preserving code contribution protocol for builders who want
 work judged before identity. Contributors create ephemeral sessions, strip
 metadata from diffs, submit sealed bundles through relay paths, and enter blind
 review. Accepted work receives a verifiable receipt that can be anchored on
-Solana devnet.
+Solana mainnet.
 
 IGNIS is currently trusted peer audited alpha with Phase 8D recovery and
 rotation evidence recorded. The official token contract is published, but IGNIS
@@ -73,14 +73,14 @@ is not a staking system, reward protocol, or guarantee of anonymity.
 - sealed submissions
 - blind review
 - verifiable receipts
-- Solana devnet proof anchoring
+- Solana mainnet proof anchoring
 
 ## Do Not Say
 
 - guaranteed anonymity
 - untraceable submissions
 - zero-knowledge review
-- mainnet proof system
+- guaranteed on-chain settlement
 - token launch
 - staking promises
 - reward guarantees

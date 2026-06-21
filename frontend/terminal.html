@@ -239,7 +239,7 @@ async function boot(){
   await sleep(180); ln('>> relay-sea-01  online  14ms  sealed ingress  southeast-asia', 'g1');
   await sleep(130); ln('>> relay-sgp-04  online  18ms  forwarding', 'g1');
   await sleep(130); ln('>> relay-ams-09  syncing  23ms  exit route warm', 'amber');
-  await sleep(130); ln('>> Solana signal layer  devnet signer live', 'g2');
+  await sleep(130); ln('>> Solana signal layer  mainnet signer live', 'g2');
   blank();
   ln('type help to see commands  /  start with init  /  first time: sample -> strip -> submit', 'dim');
   if (new URLSearchParams(location.search).get('sample') === '1') {
@@ -492,7 +492,7 @@ async function cmdSignal(){
     ['confidence', data?.confidence || 'unproven'],
     ['accepted', String(data?.totals?.accepted ?? 0)],
     ['settled reviews', String(data?.totals?.settled_reviews ?? 0)],
-    ['portable proof', data ? data.proof_target : 'Solana devnet anchor'],
+    ['portable proof', data ? data.proof_target : 'Solana mainnet anchor'],
     ['token layer', data ? data.incentive_layer : 'IGNIS token live on Solana'],
     ['contract', data?.token_contract || '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory']
   ]);
@@ -517,15 +517,15 @@ async function cmdSolana(){
   blank(); ln('SOLANA SIGNAL LAYER', 'hdr'); sep();
   const data = await api('/api/solana');
   panel([
-    ['network', data?.cluster || 'devnet'],
+    ['network', data?.cluster || 'mainnet-beta'],
     ['wallet auth', data?.wallet_auth || 'signMessage'],
     ['proof receipts', data?.proof_receipts || 'live'],
-    ['anchor signer', data?.configured ? 'configured' : 'awaiting funded devnet signer'],
+    ['anchor signer', data?.configured ? 'configured' : 'awaiting funded mainnet signer'],
     ['anchors confirmed', String(data?.anchor_queue?.confirmed ?? 0)],
     ['token', data?.token_mint || '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory'],
     ['wallet', state.wallet ? state.wallet : 'not connected']
   ]);
-  ln(data?.configured ? 'Receipts can be anchored by the configured devnet signer.' : 'Receipts remain independently verifiable while an anchor waits for its devnet signer.', 'dim');
+  ln(data?.configured ? 'Receipts can be anchored by the configured mainnet signer.' : 'Receipts remain independently verifiable while an anchor waits for its mainnet signer.', 'dim');
   blank();
 }
 
@@ -631,7 +631,7 @@ function cmdAbout(){
   blank(); ln('ABOUT IGNIS', 'hdr'); sep();
   ln('IGNIS is a privacy-preserving code contribution protocol: code without a face.', 'g0');
   blank();
-  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana devnet signer'].forEach(x => ln('  - ' + x, 'dim'));
+  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana mainnet signer'].forEach(x => ln('  - ' + x, 'dim'));
   blank();
 }
 

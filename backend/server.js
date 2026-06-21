@@ -38,7 +38,7 @@ const vault = new BundleVault({ fallbackSecret: process.env.AUTH_SECRET });
 const relayTransport = new RelayTransport({ authSecret: process.env.AUTH_SECRET });
 const BUNDLE_RETENTION_DAYS = Number(process.env.BUNDLE_RETENTION_DAYS || 30);
 const solana = new SolanaAnchor({
-  cluster: process.env.SOLANA_CLUSTER || 'devnet',
+  cluster: process.env.SOLANA_CLUSTER || 'mainnet-beta',
   rpcUrl: process.env.SOLANA_RPC_URL,
   secretKey: process.env.SOLANA_ANCHOR_SECRET_KEY,
 });
@@ -116,9 +116,9 @@ app.get('/', (req, res) => ok(res, req, {
       'blind review + quorum settlement',
       'wallet signature authentication',
       'verifiable proof receipts',
-      'Solana devnet anchor signer',
+      'Solana mainnet anchor signer',
     ],
-    excluded: ['IGNIS coin', 'staking', 'rewards', 'mainnet'],
+    excluded: ['staking', 'reward distribution'],
   },
   endpoints: [
     'POST /api/reviewer/session',
@@ -563,7 +563,7 @@ app.get('/api/signal', (req, res) => {
     },
     portable_score: Number(portableScore.toFixed(1)),
     confidence: signalConfidence(accepted, settled.length),
-    proof_target: 'Solana devnet',
+    proof_target: 'Solana mainnet',
     incentive_layer: 'IGNIS token live on Solana',
     token_contract: IGNIS_TOKEN_ADDRESS,
     token_network: 'Solana',
@@ -1073,7 +1073,7 @@ function readinessReport() {
     relay_nodes: relayStatus.nodes.map(({ id, region, role, url, mode }) => ({ id, region, role, url, mode })),
     notes: [
       solanaStatus.configured
-        ? 'Solana devnet anchoring is active through the configured production signer.'
+        ? 'Solana mainnet anchoring is active through the configured production signer.'
         : 'Solana anchoring is queued until the production signer is configured.',
       'Trusted peer audit is clear for the audited-alpha scope; stronger anonymity claims remain out of scope.',
     ],

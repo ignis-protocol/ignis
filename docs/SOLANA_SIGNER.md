@@ -1,29 +1,29 @@
-# IGNIS Solana Signer Handoff
+# IGNIS Solana Mainnet Signer Handoff
 
-The devnet anchor signer was generated locally and stored in `backend/.env.local`.
-That file is intentionally ignored by git and must not be committed.
+The production anchor signer must be a dedicated Solana mainnet keypair used
+only by the backend. Do not reuse a personal wallet, deployer wallet, or token
+treasury wallet for receipt anchoring.
 
-## Current Devnet Signer
+## Mainnet Signer
 
 ```text
-AJtFAby1xGnTKgpoC3z5uB64aWeBTqDeZTeYmB6M9Gzr
+<dedicated signer public key>
 ```
 
 ## Current Status
 
-- Status: funded and active on Solana devnet.
-- Balance verified: 10 devnet SOL.
-- Production backend variables are configured on Railway.
-- Strict production smoke passes with Solana required.
+- Status: mainnet-ready in code.
+- Production requires a funded mainnet signer in Railway.
+- Strict production smoke must pass after the Railway env update.
 
 ## Production Anchor Signer
 
 The `ignis` backend service uses:
 
 ```text
-SOLANA_CLUSTER=devnet
-SOLANA_RPC_URL=https://api.devnet.solana.com
-SOLANA_ANCHOR_SECRET_KEY=<value from backend/.env.local>
+SOLANA_CLUSTER=mainnet-beta
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_ANCHOR_SECRET_KEY=<base58 secret key or JSON byte array>
 ```
 
 Run strict smoke after any signer, Solana, or Railway env change:
@@ -43,6 +43,8 @@ IGNIS_SMOKE_SUBMIT=1 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
 
 - Do not paste `SOLANA_ANCHOR_SECRET_KEY` into chat, tickets, docs, or frontend
   code.
+- Keep the signer funded with a small operational SOL balance for memo
+  transaction fees.
 - Keep a private backup of the signer secret if the signer must be recoverable.
-- Rotate the signer before public launch if the key has been exposed outside the
-  backend environment.
+- Rotate the signer immediately if the key has been exposed outside the backend
+  environment.

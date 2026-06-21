@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Trusted peer audited alpha for privacy-preserving code contribution. Blind review. Verifiable receipts. Solana devnet proof anchoring.
+  Trusted peer audited alpha for privacy-preserving code contribution. Blind review. Verifiable receipts. Solana mainnet proof anchoring.
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
 <p align="center">
   <img alt="Status" src="https://img.shields.io/badge/status-audited%20alpha-00ff41?style=for-the-badge&labelColor=080b10">
   <img alt="Protocol" src="https://img.shields.io/badge/protocol-privacy%20preserving%20code-a78bfa?style=for-the-badge&labelColor=080b10">
-  <img alt="Layer" src="https://img.shields.io/badge/layer-Solana%20devnet-2dd4bf?style=for-the-badge&labelColor=080b10">
+  <img alt="Layer" src="https://img.shields.io/badge/layer-Solana%20mainnet-2dd4bf?style=for-the-badge&labelColor=080b10">
 </p>
 
 ---
@@ -89,7 +89,7 @@ Solana proof layer
 | Signal Layer | Tracks contribution quality without exposing the builder's public identity |
 | Reviewer Console | Private short-lived reviewer sessions, blind queue, voting, and history |
 | Proof Verifier | Public receipt integrity and Solana anchor verification |
-| Solana Layer | Devnet receipt anchoring and official IGNIS token reference |
+| Solana Layer | Mainnet receipt anchoring and official IGNIS token reference |
 | IGNIS Token | Official Solana contract: `7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory` |
 
 ---
@@ -134,8 +134,8 @@ Completed:
 - Phantom sign-message authentication with nonce replay protection.
 - Privacy-preserving wallet commitments.
 - Verifiable proof receipts for accepted contributions.
-- Solana devnet memo anchoring with retry queue.
-- Funded production devnet anchor signer.
+- Solana mainnet memo anchoring with retry queue.
+- Production mainnet anchor signer support.
 - PostgreSQL storage support with JSON fallback.
 - Three-hop production relay transport across Southeast Asia, Singapore, and Amsterdam.
 - Public readiness dashboard and production-safe smoke test tooling.
@@ -163,7 +163,7 @@ Completed:
 | `review` | Inspect the blind review queue |
 | `signal` | Read contribution signal state |
 | `network` | Inspect relay route state |
-| `solana` | Read devnet proof anchor state |
+| `solana` | Read mainnet proof anchor state |
 | `wallet connect` | Attempt Phantom/Solana wallet connection |
 | `proof` | Inspect the accepted receipt for the current submission |
 | `verify [proof]` | Verify receipt integrity and anchor state |
@@ -254,7 +254,7 @@ private ownership commitment.
 | Backend | Node.js, Express |
 | Storage | PostgreSQL with atomic JSON fallback |
 | Deployment | Vercel frontend, Railway backend |
-| Proof Layer | Solana devnet memo anchoring |
+| Proof Layer | Solana mainnet memo anchoring |
 
 ---
 
@@ -299,7 +299,7 @@ intentionally:
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
 ```
 
-With the Solana devnet signer active, strict smoke can require anchor signer
+With the Solana mainnet signer active, strict smoke can require anchor signer
 config:
 
 ```bash
@@ -336,7 +336,7 @@ Launch and audit prep:
 - [x] Backend Phase 1: foundation, storage, validation, health.
 - [x] Backend Phase 2: anonymous sessions and sealed submissions.
 - [x] Phase 3: blind review voting, quorum, and scoring.
-- [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana devnet anchoring.
+- [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana mainnet anchoring.
 - [x] Phase 5: real diff intake, metadata sanitizer, sealed review bundles, and end-to-end review flow.
 - [x] Phase 6: encrypted retention, signed relay transport, abuse controls, key rotation, and audit chain.
 - [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and public polish.

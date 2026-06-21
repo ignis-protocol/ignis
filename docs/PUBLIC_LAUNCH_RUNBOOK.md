@@ -21,7 +21,7 @@ Allowed wording:
 - metadata-stripped submissions
 - blind review surface
 - verifiable proof receipts
-- Solana devnet proof anchoring
+- Solana mainnet proof anchoring
 - audited alpha
 
 Avoid wording:
@@ -30,7 +30,7 @@ Avoid wording:
 - untraceable submissions
 - formally certified privacy
 - staking, reward, or incentive promises
-- Solana mainnet proof anchoring
+- guaranteed on-chain settlement
 
 ## Pre-Launch Checks
 

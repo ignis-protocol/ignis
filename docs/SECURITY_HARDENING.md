@@ -18,7 +18,7 @@ preview. It does not claim formal third-party certification.
 - Sealed bundles use AES-256-GCM with key rotation support.
 - Relay hops use authenticated, signed receipt chains.
 - PostgreSQL is authoritative in production with JSON fallback.
-- Solana signer is backend-only and funded on devnet.
+- Solana signer is backend-only and funded with mainnet SOL.
 
 ## Public Claim Policy
 
@@ -28,7 +28,7 @@ Allowed:
 - metadata-stripped
 - blind review
 - verifiable receipts
-- Solana devnet anchoring
+- Solana mainnet anchoring
 
 Out of scope for audited alpha:
 

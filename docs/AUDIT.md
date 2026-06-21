@@ -26,7 +26,7 @@ may use stronger audited-alpha wording such as `trusted peer audited alpha` and
 - Sealed bundle encryption and retention controls.
 - Reviewer authentication, quorum voting, duplicate vote protection, and reviewer key rotation.
 - Proof receipt generation and verification.
-- Solana devnet anchor signer state.
+- Solana mainnet anchor signer state.
 - Relay transport, signed relay receipts, and readiness checks.
 - Production monitoring and smoke-test flow.
 
@@ -47,7 +47,8 @@ Operational evidence:
 - `/api/readiness` reports required controls.
 - Relay mode is network-backed.
 - PostgreSQL is configured for production state.
-- Solana devnet signer is configured.
+- Solana mainnet signer is verified through strict smoke before claiming live
+  anchoring.
 - Public copy avoids reward, guaranteed anonymity, and untraceable submission claims.
 
 ## Claim Boundary
@@ -63,7 +64,7 @@ Allowed public wording:
 - metadata-stripped submissions
 - blind review
 - verifiable receipts
-- Solana devnet proof anchoring
+- Solana mainnet proof anchoring
 
 Do not claim:
 
@@ -71,7 +72,7 @@ Do not claim:
 - untraceable submissions
 - zero-knowledge review
 - traffic-analysis resistance
-- Solana mainnet anchoring
+- guaranteed on-chain settlement
 - staking, reward, or incentive mechanics
 - formal third-party certification
 
