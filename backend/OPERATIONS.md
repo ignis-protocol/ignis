@@ -114,6 +114,9 @@ Phase 8A readiness documents:
 - `docs/INCIDENT_RESPONSE.md`
 - `docs/MONITORING.md`
 - `docs/DRILLS.md`
+- `docs/PUBLIC_LAUNCH_RUNBOOK.md`
+- `docs/REVIEWER_OPERATIONS.md`
+- `docs/SECURITY_HARDENING.md`
 - `docs/PUBLIC_FEEDBACK.md`
 - `docs/PUBLIC_PREVIEW_PLAN.md`
 

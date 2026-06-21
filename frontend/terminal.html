@@ -224,7 +224,7 @@ async function boot(){
   await sleep(180); ln('>> relay-tyo-01  online  14ms  sealed ingress  southeast-asia', 'g1');
   await sleep(130); ln('>> relay-sgp-04  online  18ms  forwarding', 'g1');
   await sleep(130); ln('>> relay-ams-09  syncing  23ms  exit route warm', 'amber');
-  await sleep(130); ln('>> Solana signal layer  proof queue ready', 'g2');
+  await sleep(130); ln('>> Solana signal layer  devnet signer live', 'g2');
   blank();
   ln('type help to see commands  /  start with init', 'dim');
   blank();
@@ -430,7 +430,7 @@ async function cmdSignal(){
     ['confidence', data?.confidence || 'unproven'],
     ['accepted', String(data?.totals?.accepted ?? 0)],
     ['settled reviews', String(data?.totals?.settled_reviews ?? 0)],
-    ['portable proof', data ? data.proof_target : 'Solana anchor queue'],
+    ['portable proof', data ? data.proof_target : 'Solana devnet anchor'],
     ['token layer', data ? data.incentive_layer : 'none in current scope']
   ]);
   blank();
@@ -462,7 +462,7 @@ async function cmdSolana(){
     ['token', data?.token_mint || 'none in current scope'],
     ['wallet', state.wallet ? state.wallet : 'not connected']
   ]);
-  ln('Receipts remain independently verifiable even while an anchor waits for its devnet signer.', 'dim');
+  ln(data?.configured ? 'Receipts can be anchored by the configured devnet signer.' : 'Receipts remain independently verifiable while an anchor waits for its devnet signer.', 'dim');
   blank();
 }
 

@@ -3,6 +3,8 @@
 Use this template for public preview feedback, reviewer feedback, or operator
 notes.
 
+GitHub issue intake is available through `.github/ISSUE_TEMPLATE/public-feedback.yml`.
+
 ## Participant
 
 - Handle:

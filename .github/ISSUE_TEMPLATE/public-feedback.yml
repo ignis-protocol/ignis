@@ -1,0 +1,54 @@
+name: Public feedback
+description: Report a bug, privacy concern, copy issue, or proof/reviewer problem.
+title: "[Feedback]: "
+labels: ["feedback"]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Bug
+        - Privacy or metadata concern
+        - Copy or claim issue
+        - Terminal flow
+        - Reviewer flow
+        - Proof verifier
+        - Ops or uptime
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P0 - security/privacy blocker
+        - P1 - major launch issue
+        - P2 - polish or confusing UX
+        - P3 - nice to have
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened and what did you expect?
+    validations:
+      required: true
+  - type: input
+    id: route
+    attributes:
+      label: Route or endpoint
+      placeholder: https://ignis-protocol.com/terminal
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, proof IDs, submission IDs, or logs. Do not paste secrets.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I did not include reviewer keys, wallet signatures, private keys, API keys, or secrets.
+          required: true

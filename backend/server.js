@@ -101,10 +101,10 @@ app.get('/', (req, res) => ok(res, req, {
   version: VERSION,
   build: BUILD,
   tagline: 'code without a face.',
-  protocol: 'anonymous code contribution',
+  protocol: 'privacy-preserving code contribution',
   phases: {
     active: [
-      'anonymous sessions + sealed submissions',
+      'ephemeral sessions + sealed submissions',
       'diff intake + metadata sanitizer',
       'encrypted sealed-bundle retention',
       'signed relay transport receipts',
@@ -113,7 +113,7 @@ app.get('/', (req, res) => ok(res, req, {
       'blind review + quorum settlement',
       'wallet signature authentication',
       'verifiable proof receipts',
-      'Solana devnet anchor queue',
+      'Solana devnet anchor signer',
     ],
     excluded: ['IGNIS coin', 'staking', 'rewards', 'mainnet'],
   },

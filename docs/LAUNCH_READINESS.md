@@ -21,6 +21,10 @@ Use this checklist before public preview and again before broader public launch.
 - [ ] Public copy does not claim guaranteed anonymity.
 - [ ] Orynth ownership verification is complete.
 - [ ] Extensionless public routes work: `/terminal`, `/reviewer`, `/proof`, `/ops`.
+- [ ] Public launch runbook exists and links are current.
+- [ ] Reviewer operations runbook exists.
+- [ ] Public feedback intake is available.
+- [ ] Security hardening checklist is current.
 
 ## Required Before Broader Public Launch
 
@@ -56,6 +60,9 @@ Use this checklist before public preview and again before broader public launch.
 
 - `docs/MONITORING.md`
 - `docs/DRILLS.md`
+- `docs/PUBLIC_LAUNCH_RUNBOOK.md`
+- `docs/REVIEWER_OPERATIONS.md`
+- `docs/SECURITY_HARDENING.md`
 - `docs/PUBLIC_FEEDBACK.md`
 - `docs/AUDIT_PREP.md`
 - `docs/INCIDENT_RESPONSE.md`

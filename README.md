@@ -9,16 +9,16 @@
 </p>
 
 <p align="center">
-  Anonymous code contribution. Blind review. Verifiable receipts. Solana devnet proof anchoring.
+  Privacy-preserving code contribution. Blind review. Verifiable receipts. Solana devnet proof anchoring.
 </p>
 
 <p align="center">
   <a href="https://ignis-protocol.com"><strong>Website</strong></a>
-  ·
+  &middot;
   <a href="https://ignis-protocol.com/terminal"><strong>Terminal</strong></a>
-  ·
+  &middot;
   <a href="https://api.ignis-protocol.com/health"><strong>API</strong></a>
-  ·
+  &middot;
   <a href="https://x.com/IgnisAgent_Ai"><strong>X</strong></a>
 </p>
 
@@ -129,9 +129,8 @@ Completed:
 
 Not done yet:
 
-- External anonymity/security audit.
-- Public preview operating cadence.
-- Broader public launch drills.
+- External privacy/security audit.
+- Independent audit and broader launch decision.
 
 ---
 
@@ -297,6 +296,9 @@ Launch and audit prep:
 - [Incident response runbook](docs/INCIDENT_RESPONSE.md)
 - [Monitoring plan](docs/MONITORING.md)
 - [Operational drills](docs/DRILLS.md)
+- [Public launch runbook](docs/PUBLIC_LAUNCH_RUNBOOK.md)
+- [Reviewer operations](docs/REVIEWER_OPERATIONS.md)
+- [Security hardening checklist](docs/SECURITY_HARDENING.md)
 - [Public feedback template](docs/PUBLIC_FEEDBACK.md)
 - [Solana signer handoff](docs/SOLANA_SIGNER.md)
 - [Auditor request](docs/AUDITOR_REQUEST.md)
@@ -312,12 +314,13 @@ Launch and audit prep:
 - [x] Backend Phase 1: foundation, storage, validation, health.
 - [x] Backend Phase 2: anonymous sessions and sealed submissions.
 - [x] Phase 3: blind review voting, quorum, and scoring.
-- [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana devnet anchor queue.
+- [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana devnet anchoring.
 - [x] Phase 5: real diff intake, metadata sanitizer, sealed review bundles, and end-to-end review flow.
 - [x] Phase 6: encrypted retention, signed relay transport, abuse controls, key rotation, and audit chain.
 - [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and public polish.
 - [x] Phase 8A: audit prep package, launch checklist, incident response, and stricter smoke tooling.
-- [ ] Phase 8B: public preview hardening, external audit, monitoring provider setup, recovery drills, and broader public launch.
+- [x] Phase 8B: free-first public preview hardening, monitoring, launch runbook, reviewer operations, feedback intake, and security hardening.
+- [ ] Phase 8C: independent audit, recovery drill evidence, and broader public launch decision.
 
 ---
 

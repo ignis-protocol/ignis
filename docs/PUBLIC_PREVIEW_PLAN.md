@@ -29,6 +29,8 @@ conservative until an independent audit is complete.
 - Public feedback intake is ready.
 - `/terminal`, `/reviewer`, `/proof`, and `/ops` load from clean extensionless
   routes.
+- `docs/PUBLIC_LAUNCH_RUNBOOK.md`, `docs/REVIEWER_OPERATIONS.md`, and
+  `docs/SECURITY_HARDENING.md` are current.
 
 ## Public Launch Window
 
