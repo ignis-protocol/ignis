@@ -445,7 +445,20 @@ async function cmdStatus(args=[]){
 
 async function cmdReview(){
   blank(); ln('BLIND REVIEW QUEUE', 'hdr'); sep();
-  if(!state.submitted){ ln('no sealed submission yet. run submit after strip.', 'amber'); blank(); return; }
+  if(!state.submitted){
+    const signal = await api('/api/signal');
+    const health = await api('/health');
+    panel([
+      ['queued reviews', String(signal?.totals?.queued_reviews ?? health?.reviews ?? 0)],
+      ['settled reviews', String(signal?.totals?.settled_reviews ?? 0)],
+      ['reviewer quorum', health ? `${health.reviewers_configured} configured / quorum ${health.review_quorum}` : '3 reviewers'],
+      ['identity fields', 'hidden'],
+      ['review console', `${location.origin}/reviewer`]
+    ]);
+    ln('review details are private to trusted reviewers. submit a fresh diff to track your own sealed submission here.', 'dim');
+    blank();
+    return;
+  }
   const submissionData = state.submission?.id
     ? await api(`/api/submissions/${encodeURIComponent(state.submission.id)}`)
     : null;
