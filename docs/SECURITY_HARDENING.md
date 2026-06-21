@@ -52,7 +52,8 @@ IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production --prefix backend
 - Confirm `.env.local` remains ignored.
 - Confirm Vercel has no backend secrets.
 - Confirm Railway variables do not include unused legacy integration values.
-- Confirm frontend copy does not advertise a token or incentive layer.
+- Confirm frontend copy does not advertise staking, reward, or incentive
+  mechanics.
 - Confirm `/ops` reports `ready` before public announcement.
 
 ## Residual Risks

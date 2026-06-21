@@ -46,4 +46,5 @@ be used before making stronger privacy or anonymity claims.
 - Solana devnet signer is funded and configured in production; mainnet anchoring
   is not in scope.
 - Public preview abuse data is still early.
-- No token or incentive layer is in scope.
+- Token contract publication is in scope only as a public reference; staking,
+  rewards, and incentive mechanics are out of scope.

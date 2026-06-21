@@ -21,6 +21,7 @@ const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const BUILD = 'privacy-preserving-code-protocol';
 const VERSION = '0.6.0-alpha';
+const IGNIS_TOKEN_ADDRESS = process.env.IGNIS_TOKEN_ADDRESS || '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory';
 const SESSION_TTL_MS = Number(process.env.SESSION_TTL_HOURS || 72) * 60 * 60 * 1000;
 const REVIEW_QUORUM = oddQuorum(process.env.REVIEW_QUORUM);
 const REVIEWER_KEYS = parseReviewerKeys(
@@ -563,7 +564,9 @@ app.get('/api/signal', (req, res) => {
     portable_score: Number(portableScore.toFixed(1)),
     confidence: signalConfidence(accepted, settled.length),
     proof_target: 'Solana devnet',
-    incentive_layer: 'none in current scope',
+    incentive_layer: 'IGNIS token live on Solana',
+    token_contract: IGNIS_TOKEN_ADDRESS,
+    token_network: 'Solana',
   });
 });
 
@@ -578,7 +581,8 @@ app.get('/api/solana', (req, res) => {
       failed: storage.state.anchor_jobs.filter(item => item.status === 'failed').length,
       confirmed: storage.state.proofs.filter(item => item.anchor.status === 'confirmed').length,
     },
-    token_mint: 'none in current scope',
+    token_mint: IGNIS_TOKEN_ADDRESS,
+    token_network: 'Solana',
   });
 });
 

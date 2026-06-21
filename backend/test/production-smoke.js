@@ -24,10 +24,12 @@ async function main() {
   assert.equal(readiness.ready, true, 'required readiness checks must pass');
 
   const signal = await get('/api/signal');
-  assert.equal(signal.incentive_layer, 'none in current scope', 'unexpected incentive layer');
+  assert.equal(signal.incentive_layer, 'IGNIS token live on Solana', 'unexpected incentive layer');
+  assert.equal(signal.token_contract, '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory', 'unexpected token contract');
 
   const solana = await get('/api/solana');
   assert.equal(solana.proof_receipts, 'live', 'proof receipts should be live');
+  assert.equal(solana.token_mint, '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory', 'unexpected token mint');
   if (requireSolana) assert.equal(solana.configured, true, 'Solana signer must be configured in strict mode');
 
   const relays = await get('/api/relays');

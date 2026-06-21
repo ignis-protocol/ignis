@@ -193,6 +193,7 @@ a:focus-visible,.console:focus-visible{outline:1px solid rgba(0,255,65,.72);outl
 .audit-cell{position:relative;overflow:hidden;min-height:118px;padding:1.35rem;background:linear-gradient(180deg,rgba(13,17,23,.96),rgba(7,10,15,.92))}
 .audit-cell::before{content:"";position:absolute;inset:0;background:linear-gradient(112deg,transparent,rgba(0,255,65,.08),transparent);transform:translateX(-130%);animation:panelScan 8s ease-in-out infinite;pointer-events:none}
 .audit-kicker{font:700 .62rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:.5rem}.audit-title{font-family:var(--display);font-size:clamp(1.5rem,2.5vw,2.4rem);line-height:1;margin:0}.audit-value{display:block;font-family:var(--mono);font-size:1.45rem;font-weight:800;color:var(--green);text-shadow:0 0 24px rgba(0,255,65,.18)}.audit-note{display:block;margin-top:.4rem;color:var(--muted);font-size:.72rem;line-height:1.6}
+.token-cell{grid-column:span 3}.token-address{font-size:1rem;overflow-wrap:anywhere;word-break:break-word;line-height:1.6}
 
 section{position:relative;z-index:1;scroll-margin-top:92px}.manifesto{padding:5rem 2rem;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);background:linear-gradient(180deg,rgba(13,17,23,.82),rgba(8,11,16,.94))}.wrap{max-width:1100px;margin:0 auto}.tag{font-size:.72rem;text-transform:uppercase;color:var(--violet);margin-bottom:1rem;font-weight:800;display:flex;align-items:center;gap:.75rem}.tag::before{content:"";width:24px;height:1px;background:var(--violet);box-shadow:0 0 18px rgba(167,139,250,.42)}.manifesto-lines{max-width:860px;margin:0 auto}.m-line{font-family:var(--display);font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:800;letter-spacing:0;line-height:1.1;padding:.5rem 0;border-bottom:1px solid var(--border2);transition:color .25s,transform .25s,text-shadow .25s}.m-line:hover{color:var(--text)!important;transform:translateX(6px);text-shadow:0 0 22px rgba(0,255,65,.12)}
 .protocol{padding:6rem 2rem}.section-title{font-family:var(--display);font-size:clamp(2.4rem,4.5vw,4.5rem);line-height:.98;font-weight:800;margin-bottom:1rem}.section-copy{max-width:560px;color:var(--muted);line-height:1.8}
@@ -201,7 +202,7 @@ section{position:relative;z-index:1;scroll-margin-top:92px}.manifesto{padding:5r
 .install{padding:7rem 2rem;text-align:center;border-top:1px solid var(--border);background:radial-gradient(circle at 50% 20%,rgba(0,255,65,.05),transparent 36%)}.install h2{font-family:var(--display);font-size:clamp(2.5rem,5vw,5rem);line-height:.95;margin-bottom:1rem}.install h2 span{color:var(--violet)}.install p{color:var(--muted);margin-bottom:2rem}.install-command{display:inline-flex;align-items:center;gap:1rem;max-width:min(100%,760px);padding:.95rem 1.25rem;border:1px solid var(--border);border-radius:12px;background:rgba(13,17,23,.92);font-family:var(--mono);color:var(--teal);overflow-wrap:anywhere}.install-command:hover{transform:translateY(-2px);border-color:rgba(0,255,65,.36);box-shadow:0 18px 58px rgba(0,255,65,.08)}
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}.reveal.in-view{opacity:1;transform:translateY(0)}
 footer{position:relative;z-index:1;display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:2rem 3rem;border-top:1px solid var(--border);color:var(--muted);font-size:.78rem}.footer-links{display:flex;gap:1rem}.footer-links a:hover{color:var(--violet);transform:translateY(-1px)}
-@media(max-width:900px){.nav-links{display:none}.hero-object{opacity:.78;right:-7rem}.steps,.feature-grid,.audit-grid{grid-template-columns:1fr}.console-body{grid-template-columns:1fr}.relay-panel{border-left:none;border-top:1px solid var(--border)}}
+@media(max-width:900px){.nav-links{display:none}.hero-object{opacity:.78;right:-7rem}.steps,.feature-grid,.audit-grid{grid-template-columns:1fr}.token-cell{grid-column:auto}.console-body{grid-template-columns:1fr}.relay-panel{border-left:none;border-top:1px solid var(--border)}}
 @media(max-width:600px){.site-nav{padding:.9rem 1.25rem}.brand span:last-child{display:none}.nav-secondary{display:none}.nav-cta{padding:.55rem .8rem}.hero{padding-top:6rem}.hero-title{font-size:clamp(3rem,18vw,4.6rem)}.hero-object{position:relative;inset:auto;width:min(94vw,420px);height:340px;min-height:340px;opacity:.98;margin:.2rem auto 1.1rem}.tri-core{width:min(56%,230px)}.console-lines{font-size:.7rem;padding:1rem}.console-foot{flex-direction:column;align-items:flex-start}.m-line{font-size:clamp(1.5rem,8vw,2.2rem)}footer{flex-direction:column;align-items:flex-start;padding:1.5rem}}
 </style>
 </head>
@@ -295,13 +296,13 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
       <span class="ticker-item">proof receipts independently verifiable <span class="diamond">/</span></span>
       <span class="ticker-item">Solana signer live <span class="diamond">/</span></span>
       <span class="ticker-item">trusted peer audit clear <span class="diamond">/</span></span>
-      <span class="ticker-item">no token layer <span class="diamond">/</span></span>
+      <span class="ticker-item">IGNIS token live on Solana <span class="diamond">/</span></span>
       <span class="ticker-item">blind review quorum active <span class="diamond">/</span></span>
       <span class="ticker-item">wallet identity hidden by commitment <span class="diamond">/</span></span>
       <span class="ticker-item">proof receipts independently verifiable <span class="diamond">/</span></span>
       <span class="ticker-item">Solana signer live <span class="diamond">/</span></span>
       <span class="ticker-item">trusted peer audit clear <span class="diamond">/</span></span>
-      <span class="ticker-item">no token layer <span class="diamond">/</span></span>
+      <span class="ticker-item">IGNIS token live on Solana <span class="diamond">/</span></span>
     </div>
   </div>
 
@@ -311,6 +312,13 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;ga
       <div class="audit-cell"><span class="audit-value">0</span><span class="audit-note">critical or high blockers recorded for the audited alpha scope</span></div>
       <div class="audit-cell"><span class="audit-value">5</span><span class="audit-note">recovery and rotation drills passed: restore, reviewer, bundle, relay, auth</span></div>
       <div class="audit-cell"><span class="audit-value">7/7</span><span class="audit-note">production monitor checks passing across site, API, readiness, and relays</span></div>
+    </div>
+  </section>
+
+  <section class="audit-band reveal" aria-label="IGNIS token contract">
+    <div class="audit-grid">
+      <div class="audit-cell"><div class="audit-kicker">token contract</div><h2 class="audit-title">IGNIS token is live on Solana.</h2></div>
+      <div class="audit-cell token-cell"><span class="audit-value token-address">7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory</span><span class="audit-note">Official Solana contract address. Always verify this exact address before interacting.</span></div>
     </div>
   </section>
 

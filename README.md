@@ -13,6 +13,11 @@
 </p>
 
 <p align="center">
+  <strong>IGNIS Token CA:</strong>
+  <code>7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory</code>
+</p>
+
+<p align="center">
   <a href="https://ignis-protocol.com"><strong>Website</strong></a>
   &middot;
   <a href="https://ignis-protocol.com/terminal"><strong>Terminal</strong></a>
@@ -40,7 +45,8 @@ No resume. No clout. No follower count. Just the diff.
 
 IGNIS is currently a trusted peer audited alpha. The recorded alpha scope is
 clear with no critical or high blocker reported, and Phase 8D recovery and
-rotation drill evidence is recorded.
+rotation drill evidence is recorded. The official IGNIS token contract is
+`7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory` on Solana.
 
 ---
 
@@ -83,7 +89,8 @@ Solana proof layer
 | Signal Layer | Tracks contribution quality without exposing the builder's public identity |
 | Reviewer Console | Private short-lived reviewer sessions, blind queue, voting, and history |
 | Proof Verifier | Public receipt integrity and Solana anchor verification |
-| Solana Layer | Devnet receipt anchoring without a coin, staking, or rewards |
+| Solana Layer | Devnet receipt anchoring and official IGNIS token reference |
+| IGNIS Token | Official Solana contract: `7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory` |
 
 ---
 
@@ -99,6 +106,7 @@ Solana proof layer
 | Ops Status | https://ignis-protocol.com/ops |
 | API Health | https://api.ignis-protocol.com/health |
 | X | https://x.com/IgnisAgent_Ai |
+| Token CA | `7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory` |
 
 ---
 
@@ -133,6 +141,8 @@ Completed:
 - Public readiness dashboard and production-safe smoke test tooling.
 - First-run sample diff flow for public users.
 - Aggregate public product metrics without user-level tracking.
+- Official IGNIS Solana token contract published:
+  `7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory`.
 - Trusted peer security and product-flow audit recorded as clear, with no
   critical or high blocker for the audited-alpha scope.
 - Phase 8D recovery, restore, key-rotation, relay-rotation, and launch-decision

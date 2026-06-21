@@ -493,7 +493,8 @@ async function cmdSignal(){
     ['accepted', String(data?.totals?.accepted ?? 0)],
     ['settled reviews', String(data?.totals?.settled_reviews ?? 0)],
     ['portable proof', data ? data.proof_target : 'Solana devnet anchor'],
-    ['token layer', data ? data.incentive_layer : 'none in current scope']
+    ['token layer', data ? data.incentive_layer : 'IGNIS token live on Solana'],
+    ['contract', data?.token_contract || '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory']
   ]);
   blank();
 }
@@ -521,7 +522,7 @@ async function cmdSolana(){
     ['proof receipts', data?.proof_receipts || 'live'],
     ['anchor signer', data?.configured ? 'configured' : 'awaiting funded devnet signer'],
     ['anchors confirmed', String(data?.anchor_queue?.confirmed ?? 0)],
-    ['token', data?.token_mint || 'none in current scope'],
+    ['token', data?.token_mint || '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory'],
     ['wallet', state.wallet ? state.wallet : 'not connected']
   ]);
   ln(data?.configured ? 'Receipts can be anchored by the configured devnet signer.' : 'Receipts remain independently verifiable while an anchor waits for its devnet signer.', 'dim');

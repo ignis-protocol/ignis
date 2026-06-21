@@ -16,8 +16,9 @@ IGNIS is a privacy-preserving code contribution protocol:
 6. Accepted work receives a verifiable proof receipt.
 7. Solana anchoring is queued through the configured devnet signer.
 
-IGNIS is not currently a token, staking system, reward protocol, or production
-anonymity guarantee.
+IGNIS now publishes an official Solana token contract, but the audited alpha
+scope is not a staking system, reward protocol, or production anonymity
+guarantee.
 
 ## Live Surfaces
 

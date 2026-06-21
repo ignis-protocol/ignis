@@ -12,7 +12,7 @@ Phase 8D is complete for the audited alpha public preview scope.
 IGNIS is clear for broader public preview positioning when described as a
 trusted peer audited alpha privacy-preserving code contribution protocol with
 audit evidence recorded. Do not describe it as guaranteed anonymity, formally
-certified privacy, or token-based incentive infrastructure.
+certified privacy, staking infrastructure, or reward infrastructure.
 
 ## Automated Drill Evidence
 

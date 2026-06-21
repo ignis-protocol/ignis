@@ -37,7 +37,10 @@ review, and receive verifiable receipts with Solana devnet proof anchoring.
 Audit status: clear recorded scope. 0 critical/high blockers. Phase 8D recovery
 and rotation drills passed.
 
-No token. No rewards. Just the diff.
+Official IGNIS token CA:
+7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory
+
+No staking or reward guarantee. Just the diff.
 
 https://ignis-protocol.com
 
@@ -56,8 +59,8 @@ review. Accepted work receives a verifiable receipt that can be anchored on
 Solana devnet.
 
 IGNIS is currently trusted peer audited alpha with Phase 8D recovery and
-rotation evidence recorded. It is not a token, staking system, reward protocol,
-or guarantee of anonymity.
+rotation evidence recorded. The official token contract is published, but IGNIS
+is not a staking system, reward protocol, or guarantee of anonymity.
 
 ## Do Say
 
@@ -79,6 +82,6 @@ or guarantee of anonymity.
 - zero-knowledge review
 - mainnet proof system
 - token launch
-- staking
-- rewards
+- staking promises
+- reward guarantees
 - formal third-party certification

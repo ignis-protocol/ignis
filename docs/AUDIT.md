@@ -48,7 +48,7 @@ Operational evidence:
 - Relay mode is network-backed.
 - PostgreSQL is configured for production state.
 - Solana devnet signer is configured.
-- Public copy avoids token, reward, guaranteed anonymity, and untraceable submission claims.
+- Public copy avoids reward, guaranteed anonymity, and untraceable submission claims.
 
 ## Claim Boundary
 
@@ -72,7 +72,7 @@ Do not claim:
 - zero-knowledge review
 - traffic-analysis resistance
 - Solana mainnet anchoring
-- token, staking, reward, or incentive mechanics
+- staking, reward, or incentive mechanics
 - formal third-party certification
 
 ## Follow-Up Items

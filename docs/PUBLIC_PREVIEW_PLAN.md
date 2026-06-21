@@ -18,7 +18,8 @@ as audited alpha, while privacy claims remain scoped to implemented controls.
 - Reviewer access remains key-gated because reviewer actions affect proof
   receipts.
 - Operators watch `/ops`, Railway, Vercel, GitHub issues, and public feedback.
-- No token, staking, reward, or incentive layer is in scope.
+- The official token contract may be shown as a reference. Staking, rewards,
+  and incentive mechanics are out of scope.
 
 ## Entry Criteria
 

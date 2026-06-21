@@ -29,7 +29,7 @@ Avoid wording:
 - guaranteed anonymity
 - untraceable submissions
 - formally certified privacy
-- token, rewards, staking, or incentive promises
+- staking, reward, or incentive promises
 - Solana mainnet proof anchoring
 
 ## Pre-Launch Checks
