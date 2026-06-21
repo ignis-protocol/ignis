@@ -91,7 +91,7 @@ body:after{content:"";position:fixed;inset:0;z-index:-3;background-image:linear-
   </section>
   <section class="panel reveal" style="margin-top:14px"><div class="label">Readiness checks</div><div class="checks" id="checks"></div></section>
   <section class="panel reveal" style="margin-top:14px"><div class="label">Relay path</div><div class="relay" id="relays"></div></section>
-  <footer class="footer reveal"><span id="checked">not checked yet</span><span>Audited alpha controls active. Stronger anonymity claims remain out of scope.</span></footer>
+  <footer class="footer reveal"><span id="checked">not checked yet</span><span>Trusted peer audit clear. Stronger anonymity claims remain out of scope.</span></footer>
 </div>
 <script>
 const API=['localhost','127.0.0.1'].includes(location.hostname)?'http://localhost:3001':'https://api.ignis-protocol.com';
@@ -115,7 +115,7 @@ async function refresh(){
     const summary=$('summary');
     summary.classList.remove('ready','degraded','blocked');
     summary.classList.add(ready.status);
-    summary.querySelector('.headline').textContent=ready.status==='ready'?'Audited alpha ready':ready.status==='degraded'?'Ready with warnings':'Blocked';
+    summary.querySelector('.headline').textContent=ready.status==='ready'?'Audit clear / ready':ready.status==='degraded'?'Ready with warnings':'Blocked';
     summary.querySelector('p').textContent=`${health.version} / ${health.storage.driver} / ${health.relays_online} relays online / audit chain ${health.audit_chain_valid?'valid':'invalid'}.`;
     $('state-text').textContent=`${ready.status} / ${ready.checked_at}`;
     $('metrics').innerHTML=[metric('submissions',ready.metrics.submissions,0),metric('queued reviews',ready.metrics.queued_reviews,1),metric('proof receipts',ready.metrics.proofs,2),metric('pending anchors',ready.metrics.pending_anchors,3),metric('portable score',signal.portable_score,4),metric('solana',solana.configured?'signer ready':'awaiting signer',5)].join('');

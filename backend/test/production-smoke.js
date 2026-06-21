@@ -36,6 +36,8 @@ async function main() {
   const metrics = await get('/api/public-metrics');
   assert.equal(metrics.privacy, 'aggregate only; no IP, wallet, session, or user-level analytics', 'public metrics must be aggregate only');
   assert.equal(metrics.product_state.audited_alpha, true, 'public metrics should expose audited alpha state');
+  assert.equal(metrics.product_state.trusted_peer_audit, 'clear', 'trusted peer audit should be clear');
+  assert.equal(metrics.product_state.critical_high_blockers, 0, 'audit should report no critical/high blockers');
 
   const requiredChecks = readiness.checks.filter(check => check.required);
   const failedRequired = requiredChecks.filter(check => check.status !== 'pass');

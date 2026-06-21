@@ -43,7 +43,8 @@
 - Operators with access to active vault keys and storage can decrypt retained bundles.
 - PostgreSQL currently stores protocol state as one JSON document, which limits
   row-level isolation and high-volume concurrency.
-- Trusted peer audit is recorded; formal third-party certification has not been completed.
+- Trusted peer audit is complete and clear for the recorded audited-alpha scope;
+  formal third-party certification remains optional.
 
 ## Required Production Topology
 

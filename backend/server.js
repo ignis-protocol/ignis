@@ -182,6 +182,8 @@ app.get('/api/public-metrics', (req, res) => {
     },
     product_state: {
       audited_alpha: true,
+      trusted_peer_audit: 'clear',
+      critical_high_blockers: 0,
       reviewer_quorum: REVIEW_QUORUM,
       storage: storage.driver,
       relay_network: relayTransport.productionReady(),
@@ -343,7 +345,7 @@ app.get('/api/security', (req, res) => ok(res, req, {
     chain_valid: verifyAuditChain(),
     events: storage.state.audit_events.length,
   },
-  assurance: 'Audited alpha controls are active. Stronger anonymity claims remain out of scope.',
+  assurance: 'Trusted peer audit is clear for the audited-alpha scope. Stronger anonymity claims remain out of scope.',
 }));
 
 app.post('/api/sanitize', asyncHandler(async (req, res) => {
@@ -1012,6 +1014,13 @@ function readinessReport() {
       required: true,
     },
     {
+      id: 'trusted_peer_audit',
+      label: 'Trusted peer audit',
+      status: 'pass',
+      detail: 'clear / 0 critical-high blockers',
+      required: true,
+    },
+    {
       id: 'cors',
       label: 'Public CORS origins',
       status: allowedOrigins.includes('https://ignis-protocol.com') && allowedOrigins.includes('https://www.ignis-protocol.com') ? 'pass' : 'warn',
@@ -1048,7 +1057,7 @@ function readinessReport() {
       solanaStatus.configured
         ? 'Solana devnet anchoring is active through the configured production signer.'
         : 'Solana anchoring is queued until the production signer is configured.',
-      'Trusted peer audit is recorded; stronger anonymity claims remain out of scope.',
+      'Trusted peer audit is clear for the audited-alpha scope; stronger anonymity claims remain out of scope.',
     ],
   };
 }

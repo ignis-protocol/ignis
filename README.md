@@ -129,10 +129,11 @@ Completed:
 - Public readiness dashboard and production-safe smoke test tooling.
 - First-run sample diff flow for public users.
 - Aggregate public product metrics without user-level tracking.
+- Trusted peer security and product-flow audit recorded as clear, with no
+  critical or high blocker for the audited-alpha scope.
 
 Not done yet:
 
-- Trusted peer audit recorded.
 - Recovery drill evidence and broader launch decision.
 
 ---

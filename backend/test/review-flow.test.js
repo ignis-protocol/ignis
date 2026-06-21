@@ -137,6 +137,7 @@ test('readiness endpoint reports required production checks', async t => {
   assert.equal(body.status, 'blocked');
   assert.ok(body.checks.some(check => check.id === 'relay_transport' && check.status === 'fail'));
   assert.ok(body.checks.some(check => check.id === 'storage'));
+  assert.ok(body.checks.some(check => check.id === 'trusted_peer_audit' && check.status === 'pass'));
 });
 
 test('abuse controls reject credential and command-execution payloads', async t => {

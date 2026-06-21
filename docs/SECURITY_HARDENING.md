@@ -57,7 +57,8 @@ IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production --prefix backend
 
 ## Residual Risks
 
-- Trusted peer audit is recorded; formal third-party certification has not been completed.
+- Trusted peer audit is complete and clear for the recorded audited-alpha scope;
+  formal third-party certification remains optional.
 - Relay services are not independently operated by separate organizations.
 - Sanitizers can miss novel identity markers.
 - Operators with database and vault key access can decrypt retained bundles.

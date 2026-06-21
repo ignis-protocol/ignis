@@ -6,16 +6,19 @@ IGNIS is privacy-sensitive software. Treat metadata leaks, relay bypasses, ident
 
 IGNIS is alpha software with production relay transport, encrypted sealed-bundle
 retention, PostgreSQL storage, reviewer quorum, proof receipts, and an ops
-readiness dashboard. It is still not a production anonymity system until an
-independent security and privacy audit is complete.
+readiness dashboard. A trusted peer security and product-flow audit is complete
+and clear for the recorded audited-alpha scope, with no critical or high blocker
+reported.
 
-Do not assume production-grade privacy until the following exist:
+This audit clearance does not turn IGNIS into a guaranteed anonymity system.
+The following remain optional hardening or prerequisites for stronger privacy
+claims:
 
-- Independent security and privacy audit.
+- Formal third-party security and privacy certification.
 - Traffic-analysis review of the relay topology.
 - Independent reviewer deanonymization audit.
 - Solana anchor architecture and signer key-management audit.
-- Closed beta abuse and spam validation.
+- Broader public traffic abuse and spam validation.
 
 ## Report Issues
 
@@ -62,8 +65,9 @@ Include:
 `SOLANA_ANCHOR_SECRET_KEY` must only exist in backend environment variables.
 
 These controls do not establish a formal anonymity guarantee. Independently
-operated relay origins, traffic-analysis resistance, infrastructure hardening,
-and an external audit remain required.
+operated relay origins, traffic-analysis resistance, and further infrastructure
+hardening remain required before stronger anonymity claims are made. A formal
+third-party certification remains optional for the current audited-alpha scope.
 
 ## Audit Prep
 

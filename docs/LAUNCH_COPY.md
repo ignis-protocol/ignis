@@ -6,6 +6,9 @@ Use this copy for public profiles, directory listings, X posts, and link preview
 
 IGNIS is an audited alpha protocol for privacy-preserving code contribution.
 
+Trusted peer audit status: clear for the recorded audited-alpha scope, with no
+critical or high blocker reported.
+
 ## Short Description
 
 Code without a face. IGNIS strips identity from code submissions, routes sealed

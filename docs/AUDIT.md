@@ -2,13 +2,18 @@
 
 ## Status
 
-IGNIS is in audited alpha.
+IGNIS is in audited alpha. The trusted peer audit is complete and clear for
+the recorded alpha scope.
 
 Review type: trusted peer security and product-flow audit.
 
 Recorded date: 2026-06-21.
 
-Scope status: no blocker reported for audited alpha public preview.
+Scope status: clear. No critical or high blocker was reported for the audited
+alpha public preview scope.
+
+Decision: trusted peer audit accepted and recorded as launch-clear for audited
+alpha.
 
 ## Reviewed Scope
 

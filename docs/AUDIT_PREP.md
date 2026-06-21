@@ -64,7 +64,9 @@ anonymity guarantee.
 
 ## Known Limitations
 
-- Trusted peer audit is recorded in `docs/AUDIT.md`; formal third-party certification has not been completed.
+- Trusted peer audit is complete and clear in `docs/AUDIT.md`; formal
+  third-party certification remains optional for the recorded audited-alpha
+  scope.
 - Solana devnet signer is configured in production; mainnet anchoring is not in
   scope for this alpha package.
 - Relay services are separate Railway services but not independently operated by
