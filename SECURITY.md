@@ -4,16 +4,18 @@ IGNIS is privacy-sensitive software. Treat metadata leaks, relay bypasses, ident
 
 ## Current Status
 
-IGNIS is alpha software. The current app demonstrates the protocol surface and API shape, but it is not yet a production anonymity system.
+IGNIS is alpha software with production relay transport, encrypted sealed-bundle
+retention, PostgreSQL storage, reviewer quorum, proof receipts, and an ops
+readiness dashboard. It is still not a production anonymity system until an
+independent security and privacy audit is complete.
 
 Do not assume production-grade privacy until the following exist:
 
-- Real metadata stripping tests.
-- Sealed bundle validation.
-- Relay transport hardening.
+- Independent security and privacy audit.
+- Traffic-analysis review of the relay topology.
 - Independent reviewer deanonymization audit.
 - Solana anchor architecture and signer key-management audit.
-- Abuse and spam controls.
+- Closed beta abuse and spam validation.
 
 ## Report Issues
 
@@ -36,7 +38,7 @@ Include:
 - Solana proof links anonymous submissions to a public wallet without consent.
 - API allows spam or stored payload abuse.
 
-## Phase 6 Controls
+## Active Controls
 
 - Wallet authentication uses one-time challenges with five-minute expiry.
 - Used challenges cannot be replayed.
@@ -62,3 +64,9 @@ Include:
 These controls do not establish a formal anonymity guarantee. Independently
 operated relay origins, traffic-analysis resistance, infrastructure hardening,
 and an external audit remain required.
+
+## Audit Prep
+
+The audit brief is maintained in `docs/AUDIT_PREP.md`. Public launch readiness
+is tracked in `docs/LAUNCH_READINESS.md`, and operational incident response is
+tracked in `docs/INCIDENT_RESPONSE.md`.

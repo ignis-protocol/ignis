@@ -100,6 +100,18 @@ full submission path, run:
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
 ```
 
+After Solana signer provisioning, strict smoke can require anchor signer config:
+
+```bash
+IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
+```
+
+Phase 8A readiness documents:
+
+- `docs/AUDIT_PREP.md`
+- `docs/LAUNCH_READINESS.md`
+- `docs/INCIDENT_RESPONSE.md`
+
 ## PostgreSQL
 
 Provision Railway PostgreSQL and expose `DATABASE_URL` to the IGNIS service. On

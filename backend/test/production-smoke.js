@@ -2,6 +2,7 @@ const assert = require('assert');
 
 const baseUrl = process.env.IGNIS_API_URL || 'https://api.ignis-protocol.com';
 const shouldSubmit = process.env.IGNIS_SMOKE_SUBMIT === '1';
+const requireSolana = process.env.IGNIS_SMOKE_REQUIRE_SOLANA === '1';
 const reviewerKey = process.env.IGNIS_REVIEWER_KEY || '';
 
 async function main() {
@@ -24,18 +25,28 @@ async function main() {
 
   const solana = await get('/api/solana');
   assert.equal(solana.proof_receipts, 'live', 'proof receipts should be live');
+  if (requireSolana) assert.equal(solana.configured, true, 'Solana signer must be configured in strict mode');
 
   const relays = await get('/api/relays');
   assert.equal(relays.production_ready, true, 'relay endpoint not production ready');
 
+  const requiredChecks = readiness.checks.filter(check => check.required);
+  const failedRequired = requiredChecks.filter(check => check.status !== 'pass');
+  assert.equal(failedRequired.length, 0, `required readiness checks failed: ${failedRequired.map(check => check.id).join(', ')}`);
+
   const result = {
     api: baseUrl,
     version: health.version,
-    status: readiness.status,
+    ready: readiness.ready,
+    readiness_status: readiness.status,
+    degraded: readiness.status === 'degraded',
+    warnings: readiness.checks.filter(check => check.status === 'warn').map(check => check.id),
+    required_checks: Object.fromEntries(requiredChecks.map(check => [check.id, check.status])),
     relays: security.relay.nodes.map(node => `${node.id}:${node.region}:${node.mode}`),
     storage: health.storage.driver,
     audit_chain_valid: health.audit_chain_valid,
     solana_configured: solana.configured,
+    strict_solana: requireSolana,
     submitted: false,
   };
 
