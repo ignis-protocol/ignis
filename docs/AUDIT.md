@@ -2,8 +2,8 @@
 
 ## Status
 
-IGNIS is in audited alpha. The trusted peer audit is complete and clear for
-the recorded alpha scope.
+IGNIS is in trusted peer audited alpha. The trusted peer audit is complete and
+clear for the recorded alpha scope.
 
 Review type: trusted peer security and product-flow audit.
 
@@ -13,7 +13,9 @@ Scope status: clear. No critical or high blocker was reported for the audited
 alpha public preview scope.
 
 Decision: trusted peer audit accepted and recorded as launch-clear for audited
-alpha.
+alpha. Phase 8D recovery and rotation drill evidence is also recorded, so IGNIS
+may use stronger audited-alpha wording such as `trusted peer audited alpha` and
+`audit evidence recorded`.
 
 ## Reviewed Scope
 
@@ -53,6 +55,9 @@ Operational evidence:
 Allowed public wording:
 
 - audited alpha
+- trusted peer audited alpha
+- audit evidence recorded
+- Phase 8D verified
 - code without a face
 - privacy-preserving code contribution
 - metadata-stripped submissions
@@ -75,4 +80,5 @@ Do not claim:
 - Backup, restore, reviewer key, bundle key, relay secret, and auth rotation
   drill evidence is recorded in `docs/PHASE_8D_EVIDENCE.md`.
 - Keep production smoke checks running before and after public announcements.
-- Consider a formal third-party audit before stronger privacy or anonymity claims.
+- Consider a formal third-party audit before stronger privacy or anonymity
+  claims beyond the recorded audited-alpha scope.

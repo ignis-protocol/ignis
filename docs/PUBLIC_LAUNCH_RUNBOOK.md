@@ -5,7 +5,7 @@ or launch submission.
 
 ## Launch Position
 
-IGNIS is ready to present as an audited alpha public preview of a
+IGNIS is ready to present as a trusted peer audited alpha public preview of a
 privacy-preserving code contribution protocol.
 
 Phase 8D evidence is recorded in `docs/PHASE_8D_EVIDENCE.md`. The broader
@@ -14,6 +14,9 @@ public launch decision is clear for audited alpha preview wording.
 Allowed wording:
 
 - code without a face
+- trusted peer audited alpha
+- audit evidence recorded
+- Phase 8D verified
 - privacy-preserving code contribution
 - metadata-stripped submissions
 - blind review surface

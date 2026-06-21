@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Privacy-preserving code contribution. Blind review. Verifiable receipts. Solana devnet proof anchoring.
+  Trusted peer audited alpha for privacy-preserving code contribution. Blind review. Verifiable receipts. Solana devnet proof anchoring.
 </p>
 
 <p align="center">
@@ -37,6 +37,10 @@ IGNIS is a protocol for builders who want their code judged before their identit
 It lets a contributor submit work through an ephemeral identity, strip identifying metadata, route the sealed contribution through relays, and enter blind review. Accepted work builds portable signal that can later be anchored to Solana.
 
 No resume. No clout. No follower count. Just the diff.
+
+IGNIS is currently a trusted peer audited alpha. The recorded alpha scope is
+clear with no critical or high blocker reported, and Phase 8D recovery and
+rotation drill evidence is recorded.
 
 ---
 
@@ -131,10 +135,8 @@ Completed:
 - Aggregate public product metrics without user-level tracking.
 - Trusted peer security and product-flow audit recorded as clear, with no
   critical or high blocker for the audited-alpha scope.
-
-Not done yet:
-
-- Recovery drill evidence and broader launch decision.
+- Phase 8D recovery, restore, key-rotation, relay-rotation, and launch-decision
+  evidence recorded.
 
 ---
 
