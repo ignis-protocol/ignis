@@ -472,11 +472,13 @@ async function cmdWallet(args=[]){
   if(sub !== 'connect'){
     ln(`wallet      ${state.wallet || 'not connected'}`, state.wallet ? 'g1':'dim');
     ln('usage       wallet connect', 'dim');
+    ln('requires    Phantom extension or Phantom in-app browser', 'dim');
     blank(); return;
   }
   try {
-    if(!window.solana || !window.solana.isPhantom) throw new Error('Phantom not found');
-    const resp = await window.solana.connect();
+    const provider = phantomProvider();
+    if(!provider) throw new Error('phantom_unavailable');
+    const resp = await provider.connect();
     state.wallet = resp.publicKey.toString();
     ln(`connected   ${state.wallet}`, 'g1');
     ln('requesting one-time authentication challenge...', 'dim');
@@ -486,7 +488,8 @@ async function cmdWallet(args=[]){
     });
     if(!challengeData) return;
     const encoded = new TextEncoder().encode(challengeData.challenge.message);
-    const signed = await window.solana.signMessage(encoded, 'utf8');
+    if(typeof provider.signMessage !== 'function') throw new Error('sign_message_unavailable');
+    const signed = await provider.signMessage(encoded, 'utf8');
     const signature = bytesToBase64(signed.signature);
     const verified = await api('/api/wallet/verify', {
       method: 'POST',
@@ -499,10 +502,23 @@ async function cmdWallet(args=[]){
       ln('wallet address remains hidden from reviewers and public receipts.', 'dim');
     }
   } catch(e) {
-    ln(`wallet authentication failed: ${e.message}`, 'amber');
-    ln('Anonymous submission and review remain available without a wallet.', 'dim');
+    if(e.message === 'phantom_unavailable'){
+      ln('wallet authentication skipped: Phantom provider not detected in this browser.', 'amber');
+      ln('open this page in Phantom browser or install/unlock the Phantom extension, then refresh.', 'dim');
+    } else if(e.message === 'sign_message_unavailable'){
+      ln('wallet authentication failed: this wallet cannot sign messages in the current browser.', 'amber');
+      ln('use Phantom extension or Phantom in-app browser for wallet commitment auth.', 'dim');
+    } else {
+      ln(`wallet authentication failed: ${e.message}`, 'amber');
+    }
+    ln('privacy-preserving submission and blind review remain available without a wallet.', 'dim');
   }
   blank();
+}
+
+function phantomProvider(){
+  const provider = window.phantom?.solana || window.solana;
+  return provider?.isPhantom ? provider : null;
 }
 
 async function cmdProof(){
