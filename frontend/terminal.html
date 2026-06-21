@@ -184,19 +184,34 @@ function promptEcho(cmd){ ln(`ash@ignis(relay)$ ${cmd}`, 'cmd-echo'); }
 function id(){ return 'ash_' + Math.random().toString(16).slice(2,10); }
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 async function api(path, options = {}){
+  const { returnErrors = false, ...fetchOptions } = options;
   try {
     const res = await fetch(API_BASE + path, {
-      ...options,
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+      ...fetchOptions,
+      headers: { 'Content-Type': 'application/json', ...(fetchOptions.headers || {}) }
     });
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+    if (!res.ok || !data.ok) {
+      const error = {
+        ok: false,
+        status: res.status,
+        code: data.error?.code || 'api_error',
+        message: data.error?.message || `HTTP ${res.status}`,
+      };
+      if (returnErrors) return error;
+      printApiRejection(error);
+      return null;
+    }
     return data;
   } catch (err) {
     ln(`api offline: ${err.message}`, 'amber');
     ln('continuing in local protocol preview mode.', 'dim');
     return null;
   }
+}
+function printApiRejection(error){
+  if(!error) return;
+  ln(`api rejected: ${error.message}`, 'amber');
 }
 function setActiveCommand(name){
   const key = name === 'wallet' ? 'wallet' : name;
@@ -369,6 +384,7 @@ async function cmdSubmit(args=[]){
   const summary = 'Sealed privacy-preserving code submission from IGNIS terminal.';
   ln(`>> target       ${repo}`, 'dim');
   const data = await api('/api/submissions', {
+    returnErrors: true,
     method: 'POST',
     body: JSON.stringify({
       session: state.identity,
@@ -377,7 +393,14 @@ async function cmdSubmit(args=[]){
       diff: state.rawDiff
     })
   });
-  if(!data) return;
+  if(!data || !data.ok){
+    printApiRejection(data);
+    if(data?.code === 'duplicate_submission'){
+      ln('sample diff already exists in the live queue. run review to inspect the queue, or paste/upload a fresh diff and submit again.', 'g1');
+    }
+    blank();
+    return;
+  }
   const path = data?.submission?.relay_path || state.relays.map(r => r.id);
   for(const relayId of path){
     const r = state.relays.find(item => item.id === relayId) || { id: relayId, city: relayId, ms: 18, status: 'forwarded' };
