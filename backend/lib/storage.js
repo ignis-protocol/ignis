@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const createDefaultState = () => ({
-  meta: { version: 2, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  meta: { version: 3, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   sessions: [],
   submissions: [],
   reviews: [],

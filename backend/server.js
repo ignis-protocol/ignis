@@ -12,31 +12,35 @@ const { IgnisStorage } = require('./lib/storage');
 const { canonicalHash, createTokenService, sha256 } = require('./lib/security');
 const { SolanaAnchor } = require('./lib/solana-anchor');
 const { sanitizeDiff } = require('./lib/sanitizer');
+const { BundleVault } = require('./lib/bundle-vault');
+const { enforceSubmissionQuota, inspectDiff } = require('./lib/abuse-controls');
+const { RelayTransport } = require('./lib/relay-transport');
 
 const bs58 = bs58Module.default || bs58Module;
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const BUILD = 'anonymous-code-protocol';
-const VERSION = '0.4.0-alpha';
+const VERSION = '0.6.0-alpha';
 const SESSION_TTL_MS = Number(process.env.SESSION_TTL_HOURS || 72) * 60 * 60 * 1000;
 const REVIEW_QUORUM = oddQuorum(process.env.REVIEW_QUORUM);
-const REVIEWER_KEYS = parseReviewerKeys(process.env.REVIEWER_API_KEYS || '');
+const REVIEWER_KEYS = parseReviewerKeys(
+  process.env.REVIEWER_API_KEYS || '',
+  process.env.REVIEWER_API_KEYS_PREVIOUS || '',
+);
 const WALLET_CHALLENGE_TTL_MS = Number(process.env.WALLET_CHALLENGE_TTL_MINUTES || 5) * 60 * 1000;
 const AUTH_TOKEN_TTL_SECONDS = Number(process.env.AUTH_TOKEN_TTL_MINUTES || 30) * 60;
 const REVIEWER_TOKEN_TTL_SECONDS = Number(process.env.REVIEWER_TOKEN_TTL_MINUTES || 30) * 60;
 const STORE_PATH = process.env.STORE_PATH || path.join(__dirname, 'data', 'ignis-store.json');
 const storage = new IgnisStorage({ filePath: STORE_PATH, databaseUrl: process.env.DATABASE_URL });
 const tokens = createTokenService(process.env.AUTH_SECRET);
+const vault = new BundleVault({ fallbackSecret: process.env.AUTH_SECRET });
+const relayTransport = new RelayTransport({ authSecret: process.env.AUTH_SECRET });
+const BUNDLE_RETENTION_DAYS = Number(process.env.BUNDLE_RETENTION_DAYS || 30);
 const solana = new SolanaAnchor({
   cluster: process.env.SOLANA_CLUSTER || 'devnet',
   rpcUrl: process.env.SOLANA_RPC_URL,
   secretKey: process.env.SOLANA_ANCHOR_SECRET_KEY,
 });
-const relays = [
-  { id: 'relay-tyo-01', region: 'Tokyo', role: 'ingress', latency_ms: 14, status: 'online' },
-  { id: 'relay-sgp-04', region: 'Singapore', role: 'mixer', latency_ms: 18, status: 'online' },
-  { id: 'relay-ams-09', region: 'Amsterdam', role: 'exit', latency_ms: 23, status: 'warming' },
-];
 const defaultCorsOrigins = [
   'https://ignis-protocol.com',
   'https://www.ignis-protocol.com',
@@ -63,7 +67,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Reviewer-Key'],
 }));
-app.use(express.json({ limit: '256kb' }));
+app.use(express.json({ limit: process.env.REQUEST_BODY_LIMIT || '384kb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(rateLimit({
   windowMs: 60 * 1000,
@@ -82,6 +86,8 @@ const authLimiter = rateLimit({
 app.use(async (req, _res, next) => {
   try {
     await storage.ready;
+    await migrateSensitiveState();
+    if (pruneRetention()) await storage.persist();
     req.requestId = crypto.randomUUID();
     console.log(`[${new Date().toISOString()}] ${req.requestId} ${req.method} ${req.path}`);
     next();
@@ -100,6 +106,10 @@ app.get('/', (req, res) => ok(res, req, {
     active: [
       'anonymous sessions + sealed submissions',
       'diff intake + metadata sanitizer',
+      'encrypted sealed-bundle retention',
+      'signed relay transport receipts',
+      'abuse scanning + submission quotas',
+      'tamper-evident audit trail',
       'blind review + quorum settlement',
       'wallet signature authentication',
       'verifiable proof receipts',
@@ -123,6 +133,7 @@ app.get('/', (req, res) => ok(res, req, {
     'POST /api/proofs/:id/anchor',
     'GET  /api/signal',
     'GET  /api/solana',
+    'GET  /api/security',
   ],
 }));
 
@@ -133,8 +144,10 @@ app.get('/health', (req, res) => {
     version: VERSION,
     build: BUILD,
     storage: { driver: storage.driver, writable: storage.isWritable() },
-    relays_online: relays.filter(item => item.status === 'online').length,
-    relays_total: relays.length,
+    relays_online: relayTransport.status().nodes.length,
+    relays_total: relayTransport.status().nodes.length,
+    relay_production_ready: relayTransport.productionReady(),
+    sealed_bundle_encryption: vault.status().algorithm,
     sessions: state.sessions.length,
     submissions: state.submissions.length,
     reviews: state.reviews.length,
@@ -142,7 +155,9 @@ app.get('/health', (req, res) => {
     anchors_pending: state.anchor_jobs.filter(item => item.status === 'pending').length,
     review_quorum: REVIEW_QUORUM,
     reviewers_configured: REVIEWER_KEYS.size,
+    reviewer_keys_in_grace: [...REVIEWER_KEYS.values()].filter(item => item.status === 'grace').length,
     solana_anchor_configured: solana.status().configured,
+    audit_chain_valid: verifyAuditChain(),
     uptime: Math.floor(process.uptime()),
     ts: new Date().toISOString(),
   });
@@ -150,18 +165,28 @@ app.get('/health', (req, res) => {
 
 app.post('/api/reviewer/session', authLimiter, asyncHandler(async (req, res) => {
   const reviewer = authenticateReviewerKey(req.body.key || req.get('X-Reviewer-Key'));
-  const token = tokens.issue({ type: 'reviewer', sub: reviewer.id, label: reviewer.label }, REVIEWER_TOKEN_TTL_SECONDS);
-  audit('reviewer_session_created', { reviewer_id: reviewer.id });
+  const token = tokens.issue({
+    type: 'reviewer',
+    sub: reviewer.id,
+    label: reviewer.label,
+    key_id: reviewer.key_id,
+  }, REVIEWER_TOKEN_TTL_SECONDS);
+  audit('reviewer_session_created', { reviewer_id: reviewer.id, key_id: reviewer.key_id, key_status: reviewer.status });
   await storage.persist();
   return ok(res.status(201), req, {
     token,
-    reviewer: { id: reviewer.id, label: reviewer.label },
+    reviewer: { id: reviewer.id, label: reviewer.label, key_id: reviewer.key_id, key_status: reviewer.status },
     expires_in: REVIEWER_TOKEN_TTL_SECONDS,
   });
 }));
 
 app.get('/api/reviewer/me', requireReviewer, (req, res) => ok(res, req, {
-  reviewer: { id: req.reviewer.id, label: req.reviewer.label },
+  reviewer: {
+    id: req.reviewer.id,
+    label: req.reviewer.label,
+    key_id: req.reviewer.key_id || null,
+    key_status: req.reviewer.status || 'session',
+  },
   queue_depth: storage.state.reviews.filter(item => item.status === 'queued').length,
 }));
 
@@ -263,9 +288,30 @@ app.get('/api/sessions/:id', (req, res, next) => {
 
 app.get('/api/relays', (req, res) => ok(res, req, {
   source: 'ignis-protocol',
-  relays,
+  relays: relayTransport.status().nodes,
   policy: 'ingress -> mixer -> exit',
-  guarantee: 'protocol preview; hardened anonymity guarantees require independent review',
+  production_ready: relayTransport.productionReady(),
+  guarantee: relayTransport.status().guarantee,
+}));
+
+app.get('/api/security', (req, res) => ok(res, req, {
+  sealed_bundles: {
+    encryption: vault.status().algorithm,
+    active_key_id: vault.status().active_key_id,
+    retention_days: BUNDLE_RETENTION_DAYS,
+  },
+  relay: relayTransport.status(),
+  abuse_controls: {
+    secret_scanning: true,
+    malware_heuristics: true,
+    submission_quotas: true,
+  },
+  audit: {
+    tamper_evident: true,
+    chain_valid: verifyAuditChain(),
+    events: storage.state.audit_events.length,
+  },
+  assurance: 'Security controls are active. An independent audit is still required before anonymity guarantees.',
 }));
 
 app.post('/api/sanitize', asyncHandler(async (req, res) => {
@@ -282,13 +328,18 @@ app.post('/api/sanitize', asyncHandler(async (req, res) => {
 }));
 
 app.post('/api/submissions', asyncHandler(async (req, res) => {
-  const submission = createSubmission(req.body || {});
+  const submission = await createSubmission(req.body || {});
   storage.state.submissions.unshift(submission);
   const review = createReview(submission);
   storage.state.reviews.unshift(review);
   trim(storage.state.submissions, 1000);
   trim(storage.state.reviews, 1000);
-  audit('submission_created', { submission_id: submission.id, review_id: review.id });
+  audit('submission_created', {
+    submission_id: submission.id,
+    review_id: review.id,
+    route_hash: submission.relay.route_hash,
+    bundle_hash: submission.sanitized_hash,
+  });
   await storage.persist();
   return ok(res.status(201), req, {
     submission: serializeSubmission(submission, { includeSession: true }),
@@ -385,6 +436,13 @@ app.post('/api/reviews/:id/votes', requireReviewer, asyncHandler(async (req, res
     vote: { decision: vote.decision, score: vote.score, note: vote.note, created_at: vote.created_at },
     review: serializeReview(review, { includeBundle: true }),
   });
+}));
+
+app.get('/api/audit', requireReviewer, (req, res) => ok(res, req, {
+  valid: verifyAuditChain(),
+  events: storage.state.audit_events
+    .slice(0, clampInt(req.query.limit, 1, 250, 50))
+    .map(({ data, ...event }) => ({ ...event, data: sanitizeAuditData(data) })),
 }));
 
 app.get('/api/proofs', (req, res) => ok(res, req, {
@@ -493,28 +551,58 @@ if (require.main === module) {
   });
 }
 
-function createSubmission(body) {
+async function createSubmission(body) {
   const sessionId = requiredText(body.session || body.session_id, 'session', 80);
   const session = findSession(sessionId);
   if (!session) throw new ApiError(404, 'session_not_found', 'Create an anonymous session before submitting.');
   if (isExpired(session.expires_at)) throw new ApiError(410, 'session_expired', 'Session has expired.');
+  const quota = enforceSubmissionQuota(storage.state.submissions, session.id);
+  if (!quota.allowed) {
+    audit('submission_quota_blocked', { session_hash: sha256(session.id), quota });
+    throw new ApiError(429, 'submission_quota_exceeded', 'Submission quota exceeded for this ephemeral session.');
+  }
   const repo = requiredText(body.repo, 'repo', 140);
   const summary = requiredText(body.summary, 'summary', 700);
   const sanitized = sanitizeDiff(body.diff || body.diff_text || body.patch || '');
+  const abuse = inspectDiff(sanitized.sanitized_diff);
+  if (abuse.blocked) {
+    audit('submission_abuse_blocked', {
+      session_hash: sha256(session.id),
+      sanitized_hash: sanitized.sanitized_hash,
+      findings: abuse.findings.map(({ type, severity }) => ({ type, severity })),
+    });
+    throw new ApiError(422, 'unsafe_diff_rejected', 'The diff was rejected by protocol abuse controls.');
+  }
+  if (storage.state.submissions.some(item => item.sanitized_hash === sanitized.sanitized_hash)) {
+    throw new ApiError(409, 'duplicate_submission', 'This sanitized diff has already been submitted.');
+  }
+  const id = newId('sealed');
+  const encryptedBundle = vault.encrypt({
+    sanitized_diff: sanitized.sanitized_diff,
+    metadata_report: sanitized.report,
+  }, bundleContext(id, sanitized.sanitized_hash));
+  const relay = await relayTransport.route({
+    submission_id: id,
+    bundle_hash: sanitized.sanitized_hash,
+    sealed_envelope: encryptedBundle,
+  });
   return {
-    id: newId('sealed'),
+    id,
     session: session.id,
     repo,
     summary,
     diff_hash: sanitized.sanitized_hash,
     original_hash: sanitized.original_hash,
     sanitized_hash: sanitized.sanitized_hash,
-    sanitized_diff: sanitized.sanitized_diff,
+    encrypted_bundle: encryptedBundle,
+    bundle_key_id: encryptedBundle.key_id,
     metadata_removed: true,
-    metadata_report: sanitized.report,
+    metadata_report_summary: summarizeMetadataReport(sanitized.report),
+    abuse_report: abuse,
     review_mode: 'blind',
     status: 'queued',
-    relay_path: relays.map(item => item.id),
+    relay,
+    relay_path: relay.path,
     proof_status: 'awaiting_acceptance',
     created_at: new Date().toISOString(),
   };
@@ -558,6 +646,7 @@ function settleReview(review) {
   } else {
     submission.proof_status = 'not_eligible';
   }
+  submission.retention_expires_at = new Date(Date.now() + BUNDLE_RETENTION_DAYS * 86400000).toISOString();
 }
 
 function createProof(submission, review) {
@@ -648,7 +737,11 @@ async function processAnchorQueue() {
 function serializeSubmission(submission, options = {}) {
   const result = { ...submission };
   delete result.session;
-  if (!options.includeBundle) delete result.sanitized_diff;
+  delete result.encrypted_bundle;
+  delete result.sanitized_diff;
+  delete result.metadata_report;
+  result.metadata_report = submission.metadata_report_summary || null;
+  result.bundle_encrypted = Boolean(submission.encrypted_bundle);
   if (options.includeSession) result.session = submission.session;
   return result;
 }
@@ -675,15 +768,20 @@ function serializeReview(review, options = {}) {
   };
   if (settled) result.feedback = review.votes.map(({ decision, score, note, created_at }) => ({ decision, score, note, created_at }));
   if (options.includeBundle && submission) {
+    const bundle = openSubmissionBundle(submission);
     result.bundle = {
       repo: submission.repo,
       summary: submission.summary,
       diff_hash: submission.diff_hash,
       sanitized_hash: submission.sanitized_hash,
-      sanitized_diff: submission.sanitized_diff,
-      metadata_report: submission.metadata_report,
+      sanitized_diff: bundle.sanitized_diff,
+      metadata_report: bundle.metadata_report,
       metadata_removed: submission.metadata_removed,
       relay_path: submission.relay_path,
+      relay_receipts: submission.relay?.receipts || [],
+      route_hash: submission.relay?.route_hash || null,
+      abuse_report: submission.abuse_report,
+      retention_expires_at: submission.retention_expires_at || null,
     };
   }
   return result;
@@ -713,7 +811,7 @@ function requireReviewer(req, _res, next) {
     const bearer = bearerToken(req);
     const payload = bearer ? tokens.verify(bearer, 'reviewer') : null;
     if (payload) {
-      req.reviewer = { id: payload.sub, label: payload.label };
+      req.reviewer = { id: payload.sub, label: payload.label, key_id: payload.key_id, status: 'session' };
       return next();
     }
     req.reviewer = authenticateReviewerKey(req.get('X-Reviewer-Key'));
@@ -787,19 +885,128 @@ function linkWallet(sessionId, walletCommitment) {
 
 function pruneTransient() {
   const state = storage.state;
+  const challengeCount = state.wallet_challenges.length;
   state.wallet_challenges = state.wallet_challenges
-    .filter(item => !item.used_at && !isExpired(item.expires_at))
+    .filter(item => !isExpired(item.expires_at))
     .slice(0, 500);
-  trim(state.audit_events, 1000);
+  let changed = challengeCount !== state.wallet_challenges.length;
+  if (state.audit_events.length > 1000) {
+    state.audit_events.length = 1000;
+    rebuildAuditChain();
+    changed = true;
+  }
+  return changed;
 }
 
 function audit(type, data = {}) {
-  storage.state.audit_events.unshift({
+  const previous = storage.state.audit_events[0]?.event_hash || null;
+  const event = {
     id: newId('audit'),
     type,
     data,
+    previous_hash: previous,
     created_at: new Date().toISOString(),
-  });
+  };
+  event.event_hash = canonicalHash(event);
+  storage.state.audit_events.unshift(event);
+}
+
+function verifyAuditChain() {
+  const events = storage.state.audit_events;
+  for (let index = 0; index < events.length; index += 1) {
+    const event = events[index];
+    const expectedPrevious = events[index + 1]?.event_hash || null;
+    const { event_hash: storedHash, ...payload } = event;
+    if (event.previous_hash !== expectedPrevious || canonicalHash(payload) !== storedHash) return false;
+  }
+  return true;
+}
+
+function rebuildAuditChain() {
+  for (let index = storage.state.audit_events.length - 1; index >= 0; index -= 1) {
+    const event = storage.state.audit_events[index];
+    event.previous_hash = storage.state.audit_events[index + 1]?.event_hash || null;
+    const { event_hash: _old, ...payload } = event;
+    event.event_hash = canonicalHash(payload);
+  }
+}
+
+function sanitizeAuditData(data = {}) {
+  return Object.fromEntries(Object.entries(data).filter(([key]) =>
+    !['session', 'wallet', 'key', 'token', 'signature', 'nonce'].some(term => key.toLowerCase().includes(term))));
+}
+
+function bundleContext(submissionId, sanitizedHash) {
+  return { protocol: 'IGNIS', submission_id: submissionId, sanitized_hash: sanitizedHash };
+}
+
+function openSubmissionBundle(submission) {
+  if (submission.encrypted_bundle) {
+    return vault.decrypt(submission.encrypted_bundle, bundleContext(submission.id, submission.sanitized_hash));
+  }
+  if (submission.sanitized_diff) {
+    return {
+      sanitized_diff: submission.sanitized_diff,
+      metadata_report: submission.metadata_report || submission.metadata_report_summary || {},
+    };
+  }
+  throw new ApiError(410, 'bundle_expired', 'The sealed review bundle has reached its retention limit.');
+}
+
+function summarizeMetadataReport(report = {}) {
+  return {
+    status: report.status,
+    risk: report.risk,
+    removed_fields: report.removed_fields,
+    original_bytes: report.original_bytes,
+    sanitized_bytes: report.sanitized_bytes,
+    original_lines: report.original_lines,
+    sanitized_lines: report.sanitized_lines,
+    finding_count: Array.isArray(report.findings) ? report.findings.length : 0,
+  };
+}
+
+let sensitiveStateMigrated = false;
+async function migrateSensitiveState() {
+  if (sensitiveStateMigrated) return;
+  let changed = false;
+  for (const submission of storage.state.submissions) {
+    if (!submission.encrypted_bundle && submission.sanitized_diff) {
+      const report = submission.metadata_report || {};
+      submission.encrypted_bundle = vault.encrypt({
+        sanitized_diff: submission.sanitized_diff,
+        metadata_report: report,
+      }, bundleContext(submission.id, submission.sanitized_hash));
+      submission.bundle_key_id = submission.encrypted_bundle.key_id;
+      submission.metadata_report_summary = summarizeMetadataReport(report);
+      delete submission.sanitized_diff;
+      delete submission.metadata_report;
+      changed = true;
+    }
+  }
+  if (storage.state.audit_events.length && !verifyAuditChain()) {
+    rebuildAuditChain();
+    changed = true;
+  }
+  sensitiveStateMigrated = true;
+  if (changed) await storage.persist();
+}
+
+function pruneRetention() {
+  const now = Date.now();
+  let changed = false;
+  for (const submission of storage.state.submissions) {
+    if (submission.encrypted_bundle && submission.retention_expires_at
+      && new Date(submission.retention_expires_at).getTime() <= now) {
+      delete submission.encrypted_bundle;
+      submission.bundle_purged_at = new Date().toISOString();
+      submission.bundle_key_id = null;
+      audit('sealed_bundle_purged', { submission_id: submission.id });
+      changed = true;
+    }
+  }
+  if (pruneTransient()) changed = true;
+  return changed;
 }
 
 function findSession(id) {
@@ -853,14 +1060,24 @@ function trim(list, max) {
 function newId(prefix) {
   return `${prefix}_${crypto.randomBytes(6).toString('hex')}`;
 }
-function parseReviewerKeys(value) {
+function parseReviewerKeys(value, previousValue = '') {
   const reviewers = new Map();
-  String(value).split(',').map(item => item.trim()).filter(Boolean).forEach((entry, index) => {
+  const parse = (raw, status) => String(raw).split(',').map(item => item.trim()).filter(Boolean).forEach((entry, index) => {
     const separator = entry.indexOf(':');
     const label = separator > 0 ? entry.slice(0, separator).trim() : `reviewer-${index + 1}`;
     const key = separator > 0 ? entry.slice(separator + 1).trim() : entry;
-    if (key.length >= 16) reviewers.set(sha256(key), { id: sha256(`reviewer:${label}:${key}`), label });
+    if (key.length >= 16) {
+      const keyId = sha256(key).slice(7, 19);
+      reviewers.set(sha256(key), {
+        id: sha256(`reviewer:${label}`),
+        label,
+        key_id: keyId,
+        status,
+      });
+    }
   });
+  parse(value, 'active');
+  parse(previousValue, 'grace');
   return reviewers;
 }
 function signalConfidence(accepted, settled) {

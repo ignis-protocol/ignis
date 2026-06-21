@@ -108,7 +108,11 @@ Completed:
 - Relay, review, signal, and Solana status endpoints.
 - Real diff intake for pasted or uploaded `.diff` / `.patch` files.
 - Backend metadata sanitizer with size, line, and binary payload validation.
-- Sealed bundle storage with original hash, sanitized hash, sanitized diff, and metadata report.
+- Sealed bundle storage with public hashes and encrypted diff/report payloads.
+- AES-256-GCM encrypted bundle retention with key rotation support.
+- Signed relay-hop receipts, request authentication, and nonce replay protection.
+- Secret/malware heuristics and per-session submission quotas.
+- Tamper-evident audit trail and reviewer key rotation grace window.
 - Submission status endpoint for terminal follow-up checks.
 - Reviewer console shows sanitized bundles and metadata reports without exposing identity fields.
 - Terminal connected to backend API with local fallback.
@@ -121,7 +125,7 @@ Completed:
 
 Not done yet:
 
-- Production relay transport and anonymity audit.
+- Independent relay deployments and external anonymity/security audit.
 - Funded production devnet anchor signer.
 - IGNIS SPL incentive layer.
 
@@ -154,6 +158,7 @@ GET  /health
 POST /api/sessions
 GET  /api/sessions/:id
 GET  /api/relays
+GET  /api/security
 POST /api/sanitize
 POST /api/submissions
 GET  /api/submissions
@@ -164,6 +169,7 @@ GET  /api/reviews/:id
 POST /api/reviews/:id/votes
 POST /api/reviewer/session
 GET  /api/reviewer/me
+GET  /api/audit
 POST /api/wallet/challenge
 POST /api/wallet/verify
 GET  /api/wallet/me
@@ -265,7 +271,10 @@ http://localhost:5173/terminal
 - [x] Backend Phase 2: anonymous sessions and sealed submissions.
 - [x] Phase 3: blind review voting, quorum, and scoring.
 - [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana devnet anchor queue.
-- [ ] Phase 5: production hardening, monitoring, and incentive design.
+- [x] Phase 5: real diff intake, metadata sanitizer, sealed review bundles, and end-to-end review flow.
+- [x] Phase 6: encrypted retention, signed relay transport, abuse controls, key rotation, and audit chain.
+- [ ] Phase 7: production Solana proof program and signer operations.
+- [ ] Phase 8: external audit, closed beta, monitoring, recovery, and public launch.
 
 ---
 
