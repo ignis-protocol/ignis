@@ -47,7 +47,7 @@
 
 ## Required Production Topology
 
-- Three separately deployed HTTPS relay origins in Tokyo, Singapore, and Amsterdam.
+- Three separately deployed HTTPS relay origins in Southeast Asia, Singapore, and Amsterdam.
 - Distinct infrastructure accounts or operators where possible.
 - Independent relay secrets with a documented rotation schedule.
 - Railway backend connected only to PostgreSQL and the relay origins.

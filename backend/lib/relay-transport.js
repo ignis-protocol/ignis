@@ -121,7 +121,7 @@ function parseRelayNodes(value, authSecret) {
     throw new Error('RELAY_NODES must be valid JSON.');
   }
   const defaults = [
-    { id: 'relay-tyo-01', region: 'Tokyo', role: 'ingress' },
+    { id: 'relay-tyo-01', region: 'Southeast Asia', role: 'ingress' },
     { id: 'relay-sgp-04', region: 'Singapore', role: 'mixer' },
     { id: 'relay-ams-09', region: 'Amsterdam', role: 'exit' },
   ];

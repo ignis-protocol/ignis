@@ -146,7 +146,7 @@ const state = {
   walletToken: sessionStorage.getItem('ignis_wallet_token') || null,
   proof: null,
   relays: [
-    {id:'R1', city:'Tokyo', ms:14, status:'sealed'},
+    {id:'R1', city:'Southeast Asia', ms:14, status:'sealed'},
     {id:'R4', city:'Singapore', ms:18, status:'forwarded'},
     {id:'R9', city:'Amsterdam', ms:23, status:'exit'}
   ]
@@ -220,7 +220,7 @@ async function boot(){
     ]);
   }
   ln('>> initializing relay session...', 'dim');
-  await sleep(180); ln('>> relay-tyo-01  online  14ms  sealed ingress', 'g1');
+  await sleep(180); ln('>> relay-tyo-01  online  14ms  sealed ingress  southeast-asia', 'g1');
   await sleep(130); ln('>> relay-sgp-04  online  18ms  forwarding', 'g1');
   await sleep(130); ln('>> relay-ams-09  syncing  23ms  exit route warm', 'amber');
   await sleep(130); ln('>> Solana signal layer  proof queue ready', 'g2');

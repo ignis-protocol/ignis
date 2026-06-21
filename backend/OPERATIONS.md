@@ -41,7 +41,7 @@ records remain.
 
 ```json
 [
-  {"id":"relay-tyo-01","region":"Tokyo","role":"ingress","url":"https://relay-tyo.example.com","secret":"..."},
+  {"id":"relay-tyo-01","region":"Southeast Asia","role":"ingress","url":"https://relay-tyo.example.com","secret":"..."},
   {"id":"relay-sgp-04","region":"Singapore","role":"mixer","url":"https://relay-sgp.example.com","secret":"..."},
   {"id":"relay-ams-09","region":"Amsterdam","role":"exit","url":"https://relay-ams.example.com","secret":"..."}
 ]
