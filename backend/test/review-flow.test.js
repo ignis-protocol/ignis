@@ -123,6 +123,22 @@ test('standalone relay services transport an encrypted envelope across network h
   assert.equal(JSON.stringify(route).includes('network-opaque'), false);
 });
 
+test('readiness endpoint reports required production checks', async t => {
+  const server = app.listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+  t.after(() => server.close());
+
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const response = await fetch(`${base}/api/readiness`);
+  const body = await response.json();
+  assert.equal(response.status, 503);
+  assert.equal(body.ok, true);
+  assert.equal(body.ready, false);
+  assert.equal(body.status, 'blocked');
+  assert.ok(body.checks.some(check => check.id === 'relay_transport' && check.status === 'fail'));
+  assert.ok(body.checks.some(check => check.id === 'storage'));
+});
+
 test('abuse controls reject credential and command-execution payloads', async t => {
   const server = app.listen(0);
   await new Promise(resolve => server.once('listening', resolve));

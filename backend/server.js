@@ -134,6 +134,7 @@ app.get('/', (req, res) => ok(res, req, {
     'GET  /api/signal',
     'GET  /api/solana',
     'GET  /api/security',
+    'GET  /api/readiness',
   ],
 }));
 
@@ -161,6 +162,11 @@ app.get('/health', (req, res) => {
     uptime: Math.floor(process.uptime()),
     ts: new Date().toISOString(),
   });
+});
+
+app.get('/api/readiness', (req, res) => {
+  const report = readinessReport();
+  return ok(res.status(report.ready ? 200 : 503), req, report);
 });
 
 app.post('/api/reviewer/session', authLimiter, asyncHandler(async (req, res) => {
@@ -934,6 +940,89 @@ function rebuildAuditChain() {
 function sanitizeAuditData(data = {}) {
   return Object.fromEntries(Object.entries(data).filter(([key]) =>
     !['session', 'wallet', 'key', 'token', 'signature', 'nonce'].some(term => key.toLowerCase().includes(term))));
+}
+
+function readinessReport() {
+  const state = storage.state;
+  const relayStatus = relayTransport.status();
+  const solanaStatus = solana.status();
+  const queuedReviews = state.reviews.filter(item => item.status === 'queued').length;
+  const pendingAnchors = state.anchor_jobs.filter(item => item.status === 'pending').length;
+  const failedAnchors = state.anchor_jobs.filter(item => item.status === 'failed').length;
+  const checks = [
+    {
+      id: 'storage',
+      label: 'PostgreSQL storage',
+      status: storage.driver === 'postgresql' && storage.isWritable() ? 'pass' : 'fail',
+      detail: `${storage.driver} / ${storage.isWritable() ? 'writable' : 'read-only'}`,
+      required: true,
+    },
+    {
+      id: 'sealed_bundles',
+      label: 'Sealed bundle encryption',
+      status: vault.status().algorithm === 'aes-256-gcm' && Boolean(vault.status().active_key_id) ? 'pass' : 'fail',
+      detail: `${vault.status().algorithm} / key ${vault.status().active_key_id || 'fallback'}`,
+      required: true,
+    },
+    {
+      id: 'relay_transport',
+      label: 'Relay transport',
+      status: relayTransport.productionReady() && relayStatus.nodes.length >= 3 ? 'pass' : 'fail',
+      detail: `${relayStatus.nodes.length} network nodes`,
+      required: true,
+    },
+    {
+      id: 'reviewer_quorum',
+      label: 'Reviewer quorum',
+      status: REVIEWER_KEYS.size >= REVIEW_QUORUM ? 'pass' : 'fail',
+      detail: `${REVIEWER_KEYS.size} configured / quorum ${REVIEW_QUORUM}`,
+      required: true,
+    },
+    {
+      id: 'audit_chain',
+      label: 'Tamper-evident audit chain',
+      status: verifyAuditChain() ? 'pass' : 'fail',
+      detail: `${state.audit_events.length} events`,
+      required: true,
+    },
+    {
+      id: 'cors',
+      label: 'Public CORS origins',
+      status: allowedOrigins.includes('https://ignis-protocol.com') && allowedOrigins.includes('https://www.ignis-protocol.com') ? 'pass' : 'warn',
+      detail: allowedOrigins.join(', '),
+      required: false,
+    },
+    {
+      id: 'solana_anchor',
+      label: 'Solana anchor signer',
+      status: solanaStatus.configured ? 'pass' : 'warn',
+      detail: solanaStatus.configured ? `${solanaStatus.cluster} signer ready` : `${solanaStatus.cluster} signer not configured`,
+      required: false,
+    },
+  ];
+  const ready = checks.every(check => !check.required || check.status === 'pass');
+  return {
+    ready,
+    status: ready ? (checks.some(check => check.status === 'warn') ? 'degraded' : 'ready') : 'blocked',
+    version: VERSION,
+    build: BUILD,
+    checked_at: new Date().toISOString(),
+    checks,
+    metrics: {
+      sessions: state.sessions.length,
+      submissions: state.submissions.length,
+      queued_reviews: queuedReviews,
+      proofs: state.proofs.length,
+      pending_anchors: pendingAnchors,
+      failed_anchors: failedAnchors,
+      uptime_seconds: Math.floor(process.uptime()),
+    },
+    relay_nodes: relayStatus.nodes.map(({ id, region, role, url, mode }) => ({ id, region, role, url, mode })),
+    notes: [
+      'Solana anchoring is optional until the production signer is provisioned.',
+      'External privacy and security audit is still required before strong anonymity claims.',
+    ],
+  };
 }
 
 function bundleContext(submissionId, sanitizedHash) {

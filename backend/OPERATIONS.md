@@ -66,6 +66,8 @@ envelope, validates its hash, and returns a signed receipt without returning or
 persisting the ciphertext.
 
 `GET /api/security` reports whether three independent HTTPS origins are active.
+`GET /api/readiness` reports the required production checks used by the public
+ops dashboard at `https://ignis-protocol.com/ops`.
 
 ## Reviewer Key Rotation
 
@@ -81,6 +83,22 @@ create a new voting identity.
 - Secret and malware heuristics run after metadata sanitization and before relay routing.
 - `GET /api/audit` requires reviewer authentication and exposes a redacted hash chain.
 - `/health` returns `audit_chain_valid`; alert immediately if it becomes false.
+- `/api/readiness` returns HTTP 503 if a required check fails and can be used by
+  uptime monitors.
+
+Production-safe smoke test:
+
+```bash
+npm run smoke:production
+```
+
+The default smoke checks health, security, readiness, signal, Solana status,
+and relay topology without writing a submission. To intentionally exercise the
+full submission path, run:
+
+```bash
+IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
+```
 
 ## PostgreSQL
 

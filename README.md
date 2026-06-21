@@ -91,6 +91,7 @@ Solana proof layer
 | Terminal | https://ignis-protocol.com/terminal |
 | Reviewer Console | https://ignis-protocol.com/reviewer |
 | Proof Verifier | https://ignis-protocol.com/proof |
+| Ops Status | https://ignis-protocol.com/ops |
 | API Health | https://api.ignis-protocol.com/health |
 | X | https://x.com/IgnisAgent_Ai |
 
@@ -122,11 +123,13 @@ Completed:
 - Verifiable proof receipts for accepted contributions.
 - Solana devnet memo anchoring with retry queue.
 - PostgreSQL storage support with JSON fallback.
+- Three-hop production relay transport across Southeast Asia, Singapore, and Amsterdam.
+- Public readiness dashboard and production-safe smoke test tooling.
 
 Not done yet:
 
-- Independent relay deployments and external anonymity/security audit.
 - Funded production devnet anchor signer.
+- External anonymity/security audit.
 - IGNIS SPL incentive layer.
 
 ---
@@ -159,6 +162,7 @@ POST /api/sessions
 GET  /api/sessions/:id
 GET  /api/relays
 GET  /api/security
+GET  /api/readiness
 POST /api/sanitize
 POST /api/submissions
 GET  /api/submissions
@@ -261,6 +265,20 @@ http://localhost:5173
 http://localhost:5173/terminal
 ```
 
+Production smoke checks:
+
+```bash
+cd backend
+npm run smoke:production
+```
+
+The smoke script checks health, readiness, relay status, signal, and Solana state
+without creating a submission. To run the full submit path intentionally:
+
+```bash
+IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
+```
+
 ---
 
 ## Roadmap
@@ -273,8 +291,8 @@ http://localhost:5173/terminal
 - [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana devnet anchor queue.
 - [x] Phase 5: real diff intake, metadata sanitizer, sealed review bundles, and end-to-end review flow.
 - [x] Phase 6: encrypted retention, signed relay transport, abuse controls, key rotation, and audit chain.
-- [ ] Phase 7: production Solana proof program and signer operations.
-- [ ] Phase 8: external audit, closed beta, monitoring, recovery, and public launch.
+- [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and beta polish.
+- [ ] Phase 8: production Solana signer, external audit, closed beta, monitoring, recovery, and public launch.
 
 ---
 

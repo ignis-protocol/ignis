@@ -1,0 +1,106 @@
+const assert = require('assert');
+
+const baseUrl = process.env.IGNIS_API_URL || 'https://api.ignis-protocol.com';
+const shouldSubmit = process.env.IGNIS_SMOKE_SUBMIT === '1';
+const reviewerKey = process.env.IGNIS_REVIEWER_KEY || '';
+
+async function main() {
+  const health = await get('/health');
+  assert.equal(health.ok, true, 'health endpoint failed');
+  assert.equal(health.storage.writable, true, 'storage must be writable');
+  assert.equal(health.relay_production_ready, true, 'relay transport must be production ready');
+  assert.equal(health.audit_chain_valid, true, 'audit chain must be valid');
+
+  const security = await get('/api/security');
+  assert.equal(security.relay.production_ready, true, 'relay production readiness missing');
+  assert.equal(security.sealed_bundles.encryption, 'aes-256-gcm', 'sealed bundle encryption mismatch');
+  assert.equal(security.relay.nodes.length, 3, 'expected three relays');
+
+  const readiness = await get('/api/readiness');
+  assert.equal(readiness.ready, true, 'required readiness checks must pass');
+
+  const signal = await get('/api/signal');
+  assert.equal(signal.incentive_layer, 'none in current scope', 'unexpected incentive layer');
+
+  const solana = await get('/api/solana');
+  assert.equal(solana.proof_receipts, 'live', 'proof receipts should be live');
+
+  const relays = await get('/api/relays');
+  assert.equal(relays.production_ready, true, 'relay endpoint not production ready');
+
+  const result = {
+    api: baseUrl,
+    version: health.version,
+    status: readiness.status,
+    relays: security.relay.nodes.map(node => `${node.id}:${node.region}:${node.mode}`),
+    storage: health.storage.driver,
+    audit_chain_valid: health.audit_chain_valid,
+    solana_configured: solana.configured,
+    submitted: false,
+  };
+
+  if (reviewerKey) {
+    const reviewer = await post('/api/reviewer/session', { key: reviewerKey });
+    assert.ok(reviewer.token, 'reviewer session token missing');
+    result.reviewer_session = reviewer.reviewer.label;
+  }
+
+  if (shouldSubmit) {
+    const session = await post('/api/sessions', { label: 'production smoke identity' });
+    const diff = [
+      'diff --git a/README.md b/README.md',
+      '--- a/README.md',
+      '+++ b/README.md',
+      '@@ -1 +1,2 @@',
+      '# IGNIS',
+      '+Production smoke test.',
+    ].join('\n');
+    const sanitized = await post('/api/sanitize', { diff });
+    assert.equal(sanitized.sanitized.report.status, 'clean', 'smoke diff should be clean');
+    const submission = await post('/api/submissions', {
+      session: session.session.id,
+      repo: 'ignis-protocol/ignis',
+      summary: 'Production smoke test.',
+      diff,
+    });
+    assert.equal(submission.submission.bundle_encrypted, true, 'submission bundle must be encrypted');
+    assert.equal(submission.submission.relay.receipts.length, 3, 'submission must cross three relays');
+    result.submitted = true;
+    result.submission_id = submission.submission.id;
+    result.review_id = submission.review.id;
+  }
+
+  console.log(JSON.stringify(result, null, 2));
+}
+
+async function get(path) {
+  return request(path, { method: 'GET' });
+}
+
+async function post(path, body) {
+  return request(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+async function request(path, options) {
+  const response = await fetch(baseUrl + path, options);
+  const text = await response.text();
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    throw new Error(`${path} returned non-JSON response: ${text.slice(0, 120)}`);
+  }
+  if (!response.ok || !body.ok) {
+    throw new Error(`${path} failed: ${body.error?.message || response.status}`);
+  }
+  return body;
+}
+
+main().catch(error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

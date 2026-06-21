@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IGNIS Ops Status</title>
+<meta name="description" content="Production readiness and relay status for IGNIS.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#070a0f;color:#e5edf7;font:14px/1.55 Inter,sans-serif;overflow-x:hidden}body:before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 18% 10%,rgba(0,255,65,.12),transparent 34%),radial-gradient(circle at 82% 16%,rgba(167,139,250,.12),transparent 32%),linear-gradient(180deg,#0b1018,#05070b)}body:after{content:"";position:fixed;inset:0;z-index:-1;background-image:linear-gradient(rgba(148,163,184,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.055) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.8),rgba(0,0,0,.25))}.wrap{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:26px 0 44px}.top{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;font-weight:800;letter-spacing:.03em}.brand img{width:38px;height:38px;filter:drop-shadow(0 0 18px rgba(0,255,65,.5))}.nav{display:flex;gap:10px;flex-wrap:wrap}.nav a,.refresh{border:1px solid rgba(167,139,250,.24);border-radius:6px;color:#cbd5e1;text-decoration:none;background:rgba(13,17,23,.72);padding:10px 13px}.refresh{cursor:pointer}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch}.panel{border:1px solid rgba(167,139,250,.18);background:rgba(13,17,23,.76);box-shadow:0 24px 80px rgba(0,0,0,.32);border-radius:8px;padding:22px}.label{font:11px JetBrains Mono;color:#2dd4bf;text-transform:uppercase;letter-spacing:.12em}.headline{font-size:clamp(34px,6vw,78px);line-height:.92;margin:12px 0 14px;letter-spacing:0}.muted{color:#94a3b8}.state{display:flex;gap:10px;align-items:center;margin-top:20px;font:13px JetBrains Mono}.dot{width:9px;height:9px;border-radius:50%;background:#64748b;box-shadow:0 0 18px currentColor}.ready .dot,.pass{color:#4ade80}.degraded .dot,.warn{color:#fbbf24}.blocked .dot,.fail{color:#f87171}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.metric strong{display:block;font:26px JetBrains Mono;color:#fff}.metric span{color:#94a3b8}.checks{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px}.check{border:1px solid rgba(148,163,184,.14);background:rgba(5,7,11,.56);border-radius:7px;padding:14px}.check-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.pill{font:11px JetBrains Mono;text-transform:uppercase}.relay{display:grid;gap:10px}.relay-row{display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:center;border:1px solid rgba(45,212,191,.18);background:rgba(45,212,191,.045);border-radius:7px;padding:12px}.relay-row strong{font-family:JetBrains Mono;color:#fff}.relay-row span{color:#94a3b8}.mono{font-family:JetBrains Mono;overflow-wrap:anywhere}.footer{display:flex;justify-content:space-between;gap:18px;margin-top:18px;color:#64748b;font:12px JetBrains Mono}@media(max-width:880px){.hero,.checks,.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.relay-row{grid-template-columns:1fr}.wrap{width:min(100% - 22px,1180px);padding-top:18px}.panel{padding:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/"><img src="/ignis-mark.svg?v=2" alt=""><span>IGNIS OPS</span></a>
+    <nav class="nav"><a href="/">Product</a><a href="/terminal">Terminal</a><a href="/reviewer">Review</a><a href="/proof">Verify</a><button class="refresh" id="refresh">Refresh</button></nav>
+  </header>
+  <section class="hero">
+    <div class="panel" id="summary">
+      <div class="label">Production readiness</div>
+      <h1 class="headline">Loading status</h1>
+      <p class="muted">Checking API, encrypted bundle retention, relay network, reviewer quorum, audit chain, and Solana anchor state.</p>
+      <div class="state"><span class="dot"></span><span id="state-text">connecting</span></div>
+    </div>
+    <div class="panel"><div class="label">Core metrics</div><div class="grid" id="metrics"></div></div>
+  </section>
+  <section class="panel" style="margin-top:14px"><div class="label">Readiness checks</div><div class="checks" id="checks"></div></section>
+  <section class="panel" style="margin-top:14px"><div class="label">Relay path</div><div class="relay" id="relays"></div></section>
+  <footer class="footer"><span id="checked">not checked yet</span><span>External security audit still required before strong anonymity claims.</span></footer>
+</div>
+<script>
+const API=['localhost','127.0.0.1'].includes(location.hostname)?'http://localhost:3001':'https://api.ignis-protocol.com';
+const $=id=>document.getElementById(id);
+const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+async function get(path){const response=await fetch(API+path,{cache:'no-store'});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error?.message||`HTTP ${response.status}`);return data}
+function metric(label,value){return `<div class="metric"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`}
+async function refresh(){
+  $('state-text').textContent='checking';
+  try{
+    const [ready,health,signal,solana]=await Promise.all([get('/api/readiness'),get('/health'),get('/api/signal'),get('/api/solana')]);
+    const summary=$('summary');
+    summary.classList.remove('ready','degraded','blocked');
+    summary.classList.add(ready.status);
+    summary.querySelector('.headline').textContent=ready.status==='ready'?'Ready for beta':ready.status==='degraded'?'Ready with warnings':'Blocked';
+    summary.querySelector('p').textContent=`${health.version} / ${health.storage.driver} / ${health.relays_online} relays online / audit chain ${health.audit_chain_valid?'valid':'invalid'}.`;
+    $('state-text').textContent=`${ready.status} / ${ready.checked_at}`;
+    $('metrics').innerHTML=[metric('submissions',ready.metrics.submissions),metric('queued reviews',ready.metrics.queued_reviews),metric('proof receipts',ready.metrics.proofs),metric('pending anchors',ready.metrics.pending_anchors),metric('portable score',signal.portable_score),metric('solana',solana.configured?'signer ready':'awaiting signer')].join('');
+    $('checks').innerHTML=ready.checks.map(check=>`<article class="check"><div class="check-head"><strong>${esc(check.label)}</strong><span class="pill ${esc(check.status)}">${esc(check.status)}</span></div><div class="muted mono">${esc(check.detail)}</div></article>`).join('');
+    $('relays').innerHTML=ready.relay_nodes.map(node=>`<div class="relay-row"><strong>${esc(node.id)}</strong><span>${esc(node.region)} / ${esc(node.role)} / ${esc(node.mode)}</span><span class="mono">${esc(node.url)}</span></div>`).join('');
+    $('checked').textContent=`checked ${new Date().toLocaleString()}`;
+  }catch(error){
+    const summary=$('summary');
+    summary.classList.remove('ready','degraded');
+    summary.classList.add('blocked');
+    summary.querySelector('.headline').textContent='Status unavailable';
+    summary.querySelector('p').textContent=error.message;
+    $('state-text').textContent='failed';
+  }
+}
+$('refresh').addEventListener('click',refresh);
+refresh();
+</script>
+</body>
+</html>
