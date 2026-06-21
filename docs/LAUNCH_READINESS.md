@@ -12,6 +12,7 @@ Use this checklist before closed beta and again before public launch.
 - [ ] `https://api.ignis-protocol.com/health` returns `ok: true`.
 - [ ] `https://api.ignis-protocol.com/api/readiness` has all required checks passing.
 - [ ] `npm run smoke:production` passes.
+- [ ] Monitoring checks from `docs/MONITORING.md` are configured.
 - [ ] Relay nodes show `mode: network`.
 - [ ] PostgreSQL is writable.
 - [ ] Audit chain is valid.
@@ -28,11 +29,13 @@ Use this checklist before closed beta and again before public launch.
 - [ ] Backup and restore drill completed.
 - [ ] Reviewer key rotation drill completed.
 - [ ] Bundle key rotation drill completed.
+- [ ] Relay secret rotation drill completed.
 - [ ] Incident response owner and escalation path defined.
 - [ ] Uptime checks exist for API, readiness, relays, Vercel, and Postgres.
 - [ ] Domain renewal and Railway/Vercel billing are stable.
 - [ ] Social preview cards are correct.
 - [ ] README and docs match live production behavior.
+- [ ] Closed beta feedback template is ready for every participant.
 
 ## Manual Flow Check
 
@@ -46,6 +49,14 @@ Use this checklist before closed beta and again before public launch.
 8. Cast quorum votes.
 9. Confirm a proof receipt is issued.
 10. Open `/proof?id=<proof_id>`.
+
+## Supporting Phase 8B Documents
+
+- `docs/MONITORING.md`
+- `docs/DRILLS.md`
+- `docs/BETA_FEEDBACK.md`
+- `docs/AUDIT_PREP.md`
+- `docs/INCIDENT_RESPONSE.md`
 
 ## Go / No-Go Rules
 

@@ -1,0 +1,62 @@
+# IGNIS Monitoring Plan
+
+This plan defines the checks to configure in an uptime or observability provider
+before closed beta.
+
+## Public HTTP Checks
+
+| Check | URL | Expected |
+|---|---|---|
+| Website | `https://ignis-protocol.com` | HTTP 200 |
+| Ops dashboard | `https://ignis-protocol.com/ops` | HTTP 200 |
+| API health | `https://api.ignis-protocol.com/health` | HTTP 200, `ok: true` |
+| API readiness | `https://api.ignis-protocol.com/api/readiness` | HTTP 200, `ready: true` |
+| Tokyo-label replacement relay | `https://ignis-relay-tyo-production.up.railway.app/health` | HTTP 200, `ok: true` |
+| Singapore relay | `https://ignis-relay-sgp-production.up.railway.app/health` | HTTP 200, `ok: true` |
+| Amsterdam relay | `https://ignis-relay-ams-production.up.railway.app/health` | HTTP 200, `ok: true` |
+
+The first relay is physically configured in Railway's Southeast Asia region.
+The service name still contains `tyo` for historical continuity; public labels
+must use `Southeast Asia`.
+
+## Alert Conditions
+
+Alert immediately when:
+
+- `/health` is not HTTP 200.
+- `/api/readiness` has `ready: false`.
+- Any required readiness check is not `pass`.
+- Any relay `/health` check fails twice in a row.
+- `audit_chain_valid` is false.
+- `relay_production_ready` is false.
+- PostgreSQL storage is not writable.
+- `queued_reviews` grows unexpectedly for the beta cohort.
+- `failed_anchors` grows after Solana signer provisioning.
+
+## Suggested Cadence
+
+| Target | Interval |
+|---|---|
+| Website and ops dashboard | 5 minutes |
+| API health and readiness | 1 minute |
+| Relay health | 1 minute |
+| Production smoke script | manual before release, daily during beta |
+
+## Manual Verification
+
+```bash
+cd backend
+npm run smoke:production
+```
+
+After signer provisioning:
+
+```bash
+IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
+```
+
+Only run write-path smoke when a real production submission is acceptable:
+
+```bash
+IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
+```

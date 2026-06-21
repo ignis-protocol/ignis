@@ -1,6 +1,6 @@
 # Contributing to IGNIS
 
-IGNIS is an anonymous code contribution protocol. Contributions should move the project toward metadata stripping, relay routing, blind review, portable signal, and Solana-native proof infrastructure.
+IGNIS is a privacy-preserving code contribution protocol. Contributions should move the project toward metadata stripping, relay routing, blind review, portable signal, and Solana-native proof infrastructure.
 
 ## Areas That Need Work
 

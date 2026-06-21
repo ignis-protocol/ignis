@@ -68,5 +68,6 @@ and an external audit remain required.
 ## Audit Prep
 
 The audit brief is maintained in `docs/AUDIT_PREP.md`. Public launch readiness
-is tracked in `docs/LAUNCH_READINESS.md`, and operational incident response is
-tracked in `docs/INCIDENT_RESPONSE.md`.
+is tracked in `docs/LAUNCH_READINESS.md`, operational incident response is
+tracked in `docs/INCIDENT_RESPONSE.md`, monitoring setup is tracked in
+`docs/MONITORING.md`, and operational drills are tracked in `docs/DRILLS.md`.

@@ -4,19 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IGNIS Terminal - Code without a face.</title>
-<meta name="description" content="IGNIS relay terminal for anonymous code submission, metadata stripping, blind review, and Solana signal proofs.">
+<meta name="description" content="IGNIS relay terminal for privacy-preserving code submission, metadata stripping, blind review, and Solana signal proofs.">
 <link rel="canonical" href="https://ignis-protocol.com/terminal">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ignis-protocol.com/terminal">
 <meta property="og:site_name" content="IGNIS">
 <meta property="og:title" content="IGNIS Terminal - Code without a face.">
-<meta property="og:description" content="Interactive relay terminal for anonymous code contribution, blind review, and portable signal.">
+<meta property="og:description" content="Interactive relay terminal for privacy-preserving code contribution, blind review, and portable signal.">
 <meta property="og:image" content="https://ignis-protocol.com/ignis-logo.jpg">
 <meta property="og:image:alt" content="IGNIS neon mark">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@IgnisAgent_Ai">
 <meta name="twitter:title" content="IGNIS Terminal - Code without a face.">
-<meta name="twitter:description" content="Interactive relay terminal for anonymous code contribution, blind review, and portable signal.">
+<meta name="twitter:description" content="Interactive relay terminal for privacy-preserving code contribution, blind review, and portable signal.">
 <meta name="twitter:image" content="https://ignis-protocol.com/ignis-logo.jpg">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -206,7 +206,7 @@ function setActiveCommand(name){
 async function boot(){
   ln('IGNIS  /  code without a face.', 'hdr');
   sep();
-  ln('anonymous code contribution protocol. strip identity, route through relays, review blind, preserve signal on Solana.', 'dim');
+  ln('privacy-preserving code contribution protocol. strip identity metadata, route through relays, review blind, preserve signal on Solana.', 'dim');
   blank();
   const health = await api('/health');
   if (health) {
@@ -340,7 +340,7 @@ async function cmdSubmit(args=[]){
   if(!state.stripped){ ln('bundle is not stripped. run strip first.', 'amber'); blank(); return; }
   if(!state.rawDiff){ ln('no diff staged. run paste or upload first.', 'amber'); blank(); return; }
   const repo = args.join(' ') || 'owner/repo';
-  const summary = 'Sealed anonymous code submission from IGNIS terminal.';
+  const summary = 'Sealed privacy-preserving code submission from IGNIS terminal.';
   ln(`>> target       ${repo}`, 'dim');
   const data = await api('/api/submissions', {
     method: 'POST',
@@ -550,7 +550,7 @@ function bytesToBase64(bytes){
 
 function cmdAbout(){
   blank(); ln('ABOUT IGNIS', 'hdr'); sep();
-  ln('IGNIS is an anonymous code contribution protocol: code without a face.', 'g0');
+  ln('IGNIS is a privacy-preserving code contribution protocol: code without a face.', 'g0');
   blank();
   ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana anchor queue'].forEach(x => ln('  - ' + x, 'dim'));
   blank();

@@ -24,7 +24,7 @@
 
 <p align="center">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-00ff41?style=for-the-badge&labelColor=080b10">
-  <img alt="Protocol" src="https://img.shields.io/badge/protocol-anonymous%20code-a78bfa?style=for-the-badge&labelColor=080b10">
+  <img alt="Protocol" src="https://img.shields.io/badge/protocol-privacy%20preserving%20code-a78bfa?style=for-the-badge&labelColor=080b10">
   <img alt="Layer" src="https://img.shields.io/badge/layer-Solana%20devnet-2dd4bf?style=for-the-badge&labelColor=080b10">
 </p>
 
@@ -73,9 +73,9 @@ Solana proof layer
 
 | Product Surface | What it does |
 |---|---|
-| Website | Presents IGNIS as an anonymous contribution protocol |
+| Website | Presents IGNIS as a privacy-preserving contribution protocol |
 | Terminal | Interactive protocol interface for sessions, submissions, reviews, signal, and Solana status |
-| API | Creates anonymous sessions, stores sealed submissions, exposes review queue and signal state |
+| API | Creates ephemeral sessions, stores sealed submissions, exposes review queue and signal state |
 | Signal Layer | Tracks contribution quality without exposing the builder's public identity |
 | Reviewer Console | Private short-lived reviewer sessions, blind queue, voting, and history |
 | Proof Verifier | Public receipt integrity and Solana anchor verification |
@@ -101,7 +101,7 @@ Solana proof layer
 
 Completed:
 
-- Product rebrand to anonymous code contribution.
+- Product rebrand to privacy-preserving code contribution.
 - Premium frontend and terminal UI.
 - Anonymous session API.
 - Persistent alpha backend storage.
@@ -139,11 +139,11 @@ Not done yet:
 
 | Command | Description |
 |---|---|
-| `init` | Create an ephemeral anonymous identity |
+| `init` | Create an ephemeral local identity |
 | `paste` | Open the diff intake panel |
 | `upload` | Load a local `.diff` or `.patch` file into the terminal |
 | `strip` | Sanitize the staged diff through the backend |
-| `submit [repo]` | Create a sealed anonymous submission |
+| `submit [repo]` | Create a sealed privacy-preserving submission |
 | `status [submission]` | Check review/proof status for a sealed submission |
 | `review` | Inspect the blind review queue |
 | `signal` | Read contribution signal state |
@@ -186,7 +186,7 @@ GET  /api/signal
 GET  /api/solana
 ```
 
-Create an anonymous session:
+Create an ephemeral session:
 
 ```json
 {
@@ -291,6 +291,9 @@ Phase 8A launch and audit prep:
 - [Audit prep package](docs/AUDIT_PREP.md)
 - [Launch readiness checklist](docs/LAUNCH_READINESS.md)
 - [Incident response runbook](docs/INCIDENT_RESPONSE.md)
+- [Monitoring plan](docs/MONITORING.md)
+- [Operational drills](docs/DRILLS.md)
+- [Closed beta feedback template](docs/BETA_FEEDBACK.md)
 
 ---
 

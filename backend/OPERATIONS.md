@@ -111,6 +111,9 @@ Phase 8A readiness documents:
 - `docs/AUDIT_PREP.md`
 - `docs/LAUNCH_READINESS.md`
 - `docs/INCIDENT_RESPONSE.md`
+- `docs/MONITORING.md`
+- `docs/DRILLS.md`
+- `docs/BETA_FEEDBACK.md`
 
 ## PostgreSQL
 
