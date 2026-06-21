@@ -82,6 +82,7 @@ a{color:inherit;text-decoration:none}a:focus-visible,#cmd-input:focus-visible{ou
       <div class="sb-section"><div class="sb-label">commands</div>
         <div class="sb-item active" data-cmd="help" onclick="runCmd('help')"><span class="ic">?</span>help</div>
         <div class="sb-item" data-cmd="init" onclick="runCmd('init')"><span class="ic">*</span>init</div>
+        <div class="sb-item" data-cmd="sample" onclick="runCmd('sample')"><span class="ic">E</span>sample</div>
         <div class="sb-item" data-cmd="strip" onclick="runCmd('strip')"><span class="ic">S</span>strip</div>
         <div class="sb-item" data-cmd="submit" onclick="runCmd('submit')"><span class="ic">&gt;</span>submit</div>
         <div class="sb-item" data-cmd="review" onclick="runCmd('review')"><span class="ic">R</span>review</div>
@@ -226,13 +227,18 @@ async function boot(){
   await sleep(130); ln('>> relay-ams-09  syncing  23ms  exit route warm', 'amber');
   await sleep(130); ln('>> Solana signal layer  devnet signer live', 'g2');
   blank();
-  ln('type help to see commands  /  start with init', 'dim');
+  ln('type help to see commands  /  start with init  /  first time: sample -> strip -> submit', 'dim');
+  if (new URLSearchParams(location.search).get('sample') === '1') {
+    await cmdSample(['quiet']);
+    ln('sample staged from URL. run init, strip, then submit ignis-protocol/ignis.', 'g1');
+  }
   blank();
 }
 
 const commands = {
   help: cmdHelp,
   init: cmdInit,
+  sample: cmdSample,
   paste: cmdPaste,
   upload: cmdUpload,
   strip: cmdStrip,
@@ -254,6 +260,7 @@ function cmdHelp(){
   blank(); ln('COMMANDS', 'hdr'); sep();
   [
     ['init', 'create local ephemeral identity'],
+    ['sample', 'stage a safe sample diff for first-time testing'],
     ['paste', 'open diff intake panel'],
     ['upload', 'load a .diff or .patch file'],
     ['strip', 'sanitize staged diff via backend'],
@@ -305,6 +312,26 @@ function cmdUpload(){
   blank(); ln('DIFF UPLOAD', 'hdr'); sep();
   ln('select a .diff or .patch file. the content stays local until strip/submit.', 'dim');
   blank();
+}
+
+async function cmdSample(args=[]){
+  if(args[0] !== 'quiet') {
+    blank(); ln('SAMPLE DIFF', 'hdr'); sep();
+  }
+  try {
+    const response = await fetch('/examples/sample.diff', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    state.rawDiff = await response.text();
+  } catch (_error) {
+    state.rawDiff = sampleDiff();
+  }
+  state.stripped = false;
+  state.sanitized = null;
+  if(args[0] !== 'quiet') {
+    ln(`sample staged: ${state.rawDiff.length} chars.`, 'g1');
+    ln('next: init, strip, submit ignis-protocol/ignis', 'dim');
+    blank();
+  }
 }
 
 async function cmdStrip(){
@@ -614,7 +641,7 @@ document.getElementById('diff-save').addEventListener('click', () => {
   input.focus();
 });
 document.getElementById('diff-load-sample').addEventListener('click', () => {
-  diffInput.value = `From 4bd3a1f Mon Sep 17 00:00:00 2001\nAuthor: Builder <builder@example.com>\nDate: 2026-06-20T10:11:12+07:00\ndiff --git a/C:\\Users\\builder\\project\\agent.js b/src/agent.js\n--- a/C:\\Users\\builder\\project\\agent.js\n+++ b/src/agent.js\n@@ -1,2 +1,2 @@\n-const remote = "git@github.com:builder/private-repo.git";\n+const status = "code without a face";\n`;
+  diffInput.value = sampleDiff();
 });
 diffFile.addEventListener('change', async () => {
   const file = diffFile.files?.[0];
@@ -628,6 +655,27 @@ diffFile.addEventListener('change', async () => {
 });
 
 boot();
+
+function sampleDiff(){
+  return `From 4bd3a1f Mon Sep 17 00:00:00 2001
+Author: Builder <builder@example.com>
+Date: 2026-06-20T10:11:12+07:00
+Subject: [PATCH] Add faceless status message
+
+diff --git a/C:\\Users\\builder\\project\\agent.js b/src/agent.js
+index 1d2c3f4..7a8b9c0 100644
+--- a/C:\\Users\\builder\\project\\agent.js
++++ b/src/agent.js
+@@ -1,5 +1,6 @@
+-const remote = "git@github.com:builder/private-repo.git";
++const status = "code without a face";
+
+ export function describeAgent() {
+-  return remote;
++  return status;
+ }
+`;
+}
 </script>
 </body>
 </html>

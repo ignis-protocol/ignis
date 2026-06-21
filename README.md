@@ -89,6 +89,7 @@ Solana proof layer
 |---|---|
 | Website | https://ignis-protocol.com |
 | Terminal | https://ignis-protocol.com/terminal |
+| Sample Flow | https://ignis-protocol.com/terminal?sample=1 |
 | Reviewer Console | https://ignis-protocol.com/reviewer |
 | Proof Verifier | https://ignis-protocol.com/proof |
 | Ops Status | https://ignis-protocol.com/ops |
@@ -126,6 +127,8 @@ Completed:
 - PostgreSQL storage support with JSON fallback.
 - Three-hop production relay transport across Southeast Asia, Singapore, and Amsterdam.
 - Public readiness dashboard and production-safe smoke test tooling.
+- First-run sample diff flow for public users.
+- Aggregate public product metrics without user-level tracking.
 
 Not done yet:
 
@@ -183,6 +186,7 @@ POST /api/proofs/verify
 POST /api/proofs/:id/anchor
 GET  /api/signal
 GET  /api/solana
+GET  /api/public-metrics
 ```
 
 Create an ephemeral session:
@@ -294,6 +298,8 @@ Launch and audit prep:
 - [Audit record](docs/AUDIT.md)
 - [Audit prep package](docs/AUDIT_PREP.md)
 - [Launch copy pack](docs/LAUNCH_COPY.md)
+- [User flow](docs/USER_FLOW.md)
+- [Reviewer quickstart](docs/REVIEWER_QUICKSTART.md)
 - [Launch readiness checklist](docs/LAUNCH_READINESS.md)
 - [Incident response runbook](docs/INCIDENT_RESPONSE.md)
 - [Monitoring plan](docs/MONITORING.md)
@@ -322,7 +328,8 @@ Launch and audit prep:
 - [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and public polish.
 - [x] Phase 8A: audit prep package, launch checklist, incident response, and stricter smoke tooling.
 - [x] Phase 8B: free-first public preview hardening, monitoring, launch runbook, reviewer operations, feedback intake, and security hardening.
-- [ ] Phase 8C: recovery drill evidence, optional formal third-party audit, and broader public launch decision.
+- [x] Phase 8C: public user flow, reviewer onboarding, sample diff, CTA polish, and aggregate metrics.
+- [ ] Phase 8D: recovery drill evidence, optional formal third-party audit, and broader public launch decision.
 
 ---
 

@@ -1,0 +1,17 @@
+From 4bd3a1f Mon Sep 17 00:00:00 2001
+Author: Builder <builder@example.com>
+Date: 2026-06-20T10:11:12+07:00
+Subject: [PATCH] Add faceless status message
+
+diff --git a/C:\Users\builder\project\agent.js b/src/agent.js
+index 1d2c3f4..7a8b9c0 100644
+--- a/C:\Users\builder\project\agent.js
++++ b/src/agent.js
+@@ -1,5 +1,6 @@
+-const remote = "git@github.com:builder/private-repo.git";
++const status = "code without a face";
+ 
+ export function describeAgent() {
+-  return remote;
++  return status;
+ }

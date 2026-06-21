@@ -33,6 +33,10 @@ async function main() {
   const relays = await get('/api/relays');
   assert.equal(relays.production_ready, true, 'relay endpoint not production ready');
 
+  const metrics = await get('/api/public-metrics');
+  assert.equal(metrics.privacy, 'aggregate only; no IP, wallet, session, or user-level analytics', 'public metrics must be aggregate only');
+  assert.equal(metrics.product_state.audited_alpha, true, 'public metrics should expose audited alpha state');
+
   const requiredChecks = readiness.checks.filter(check => check.required);
   const failedRequired = requiredChecks.filter(check => check.status !== 'pass');
   assert.equal(failedRequired.length, 0, `required readiness checks failed: ${failedRequired.map(check => check.id).join(', ')}`);
@@ -49,6 +53,7 @@ async function main() {
     required_checks: Object.fromEntries(requiredChecks.map(check => [check.id, check.status])),
     relays: security.relay.nodes.map(node => `${node.id}:${node.region}:${node.mode}`),
     storage: health.storage.driver,
+    public_metrics: metrics.totals,
     audit_chain_valid: health.audit_chain_valid,
     solana_configured: solana.configured,
     strict_solana: requireSolana,

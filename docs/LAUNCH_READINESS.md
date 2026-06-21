@@ -25,6 +25,8 @@ Use this checklist before public preview and again before broader public launch.
 - [ ] Reviewer operations runbook exists.
 - [ ] Public feedback intake is available.
 - [ ] Security hardening checklist is current.
+- [ ] Sample diff flow works from `/terminal?sample=1`.
+- [ ] Public aggregate metrics work at `/api/public-metrics`.
 
 ## Required Before Broader Public Launch
 
@@ -66,6 +68,8 @@ Use this checklist before public preview and again before broader public launch.
 - `docs/PUBLIC_FEEDBACK.md`
 - `docs/AUDIT.md`
 - `docs/LAUNCH_COPY.md`
+- `docs/USER_FLOW.md`
+- `docs/REVIEWER_QUICKSTART.md`
 - `docs/AUDIT_PREP.md`
 - `docs/INCIDENT_RESPONSE.md`
 - `docs/AUDITOR_REQUEST.md`

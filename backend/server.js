@@ -133,6 +133,7 @@ app.get('/', (req, res) => ok(res, req, {
     'POST /api/proofs/:id/anchor',
     'GET  /api/signal',
     'GET  /api/solana',
+    'GET  /api/public-metrics',
     'GET  /api/security',
     'GET  /api/readiness',
   ],
@@ -161,6 +162,31 @@ app.get('/health', (req, res) => {
     audit_chain_valid: verifyAuditChain(),
     uptime: Math.floor(process.uptime()),
     ts: new Date().toISOString(),
+  });
+});
+
+app.get('/api/public-metrics', (req, res) => {
+  const state = storage.state;
+  const settled = state.reviews.filter(item => item.status !== 'queued');
+  const accepted = settled.filter(item => item.status === 'accepted');
+  return ok(res, req, {
+    privacy: 'aggregate only; no IP, wallet, session, or user-level analytics',
+    totals: {
+      sessions: state.sessions.length,
+      submissions: state.submissions.length,
+      queued_reviews: state.reviews.filter(item => item.status === 'queued').length,
+      settled_reviews: settled.length,
+      accepted_reviews: accepted.length,
+      proofs: state.proofs.length,
+      confirmed_anchors: state.proofs.filter(item => item.anchor?.status === 'confirmed').length,
+    },
+    product_state: {
+      audited_alpha: true,
+      reviewer_quorum: REVIEW_QUORUM,
+      storage: storage.driver,
+      relay_network: relayTransport.productionReady(),
+      solana_signer: solana.status().configured,
+    },
   });
 });
 
