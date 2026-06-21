@@ -9,6 +9,7 @@
     "dev": "nodemon server.js",
     "test": "node test/review-flow.test.js",
     "drill:phase8d": "node test/phase8d-drills.js",
+    "keys:reviewers": "node generate-reviewer-keys.js",
     "monitor:production": "node test/http-monitor.js",
     "smoke:production": "node test/production-smoke.js"
   },
