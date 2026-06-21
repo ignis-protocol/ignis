@@ -1,8 +1,8 @@
 # IGNIS Launch Readiness Checklist
 
-Use this checklist before closed beta and again before public launch.
+Use this checklist before public preview and again before broader public launch.
 
-## Required Before Closed Beta
+## Required Before Public Preview
 
 - [ ] `https://ignis-protocol.com` loads the product site.
 - [ ] `https://ignis-protocol.com/terminal` loads the terminal.
@@ -17,11 +17,12 @@ Use this checklist before closed beta and again before public launch.
 - [ ] Relay nodes show `mode: network`.
 - [ ] PostgreSQL is writable.
 - [ ] Audit chain is valid.
-- [ ] Reviewer keys are available to beta reviewers through a private channel.
+- [ ] Reviewer keys are available to trusted reviewers through a private channel.
 - [ ] Public copy does not claim guaranteed anonymity.
 - [ ] Orynth ownership verification is complete.
+- [ ] Extensionless public routes work: `/terminal`, `/reviewer`, `/proof`, `/ops`.
 
-## Required Before Public Launch
+## Required Before Broader Public Launch
 
 - [ ] External security and privacy audit completed.
 - [ ] Audit findings triaged and critical/high issues resolved.
@@ -35,8 +36,8 @@ Use this checklist before closed beta and again before public launch.
 - [ ] Domain renewal and Railway/Vercel billing are stable.
 - [ ] Social preview cards are correct.
 - [ ] README and docs match live production behavior.
-- [ ] Closed beta feedback template is ready for every participant.
-- [ ] Closed beta plan is assigned to an operator.
+- [ ] Public feedback template is ready.
+- [ ] Public preview operator flow is assigned.
 
 ## Manual Flow Check
 
@@ -55,11 +56,11 @@ Use this checklist before closed beta and again before public launch.
 
 - `docs/MONITORING.md`
 - `docs/DRILLS.md`
-- `docs/BETA_FEEDBACK.md`
+- `docs/PUBLIC_FEEDBACK.md`
 - `docs/AUDIT_PREP.md`
 - `docs/INCIDENT_RESPONSE.md`
 - `docs/AUDITOR_REQUEST.md`
-- `docs/CLOSED_BETA_PLAN.md`
+- `docs/PUBLIC_PREVIEW_PLAN.md`
 - `docs/SOLANA_SIGNER.md`
 - `monitoring/http-checks.json`
 

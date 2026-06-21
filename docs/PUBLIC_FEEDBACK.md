@@ -1,11 +1,12 @@
-# IGNIS Closed Beta Feedback Template
+# IGNIS Public Feedback Template
 
-Use this template for each beta participant or reviewer.
+Use this template for public preview feedback, reviewer feedback, or operator
+notes.
 
 ## Participant
 
 - Handle:
-- Role: contributor / reviewer / observer
+- Role: contributor / reviewer / observer / operator
 - Date:
 - Browser/device:
 
@@ -35,7 +36,7 @@ Use this template for each beta participant or reviewer.
 - What felt slow?
 - Which copy was unclear?
 - Which action felt risky?
-- What should be removed before public launch?
+- What should be removed or changed before broader launch?
 
 ## Security / Privacy Notes
 
@@ -49,7 +50,7 @@ Use this template for each beta participant or reviewer.
 | Severity | Meaning |
 |---|---|
 | P0 | Cannot continue or security/privacy issue |
-| P1 | Major UX/API issue before public beta |
+| P1 | Major UX/API issue before broader public launch |
 | P2 | Polish or copy issue |
 | P3 | Nice-to-have |
 

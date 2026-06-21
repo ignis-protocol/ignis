@@ -1,7 +1,7 @@
 # IGNIS Monitoring Plan
 
-This plan defines the checks to configure in an uptime or observability provider
-before closed beta.
+This plan defines the free-first checks to run before public preview and to
+recreate in an uptime provider when budget allows.
 
 The same checks are also represented in `monitoring/http-checks.json` as a
 provider-neutral source of truth.
@@ -14,7 +14,7 @@ provider-neutral source of truth.
 | Ops dashboard | `https://ignis-protocol.com/ops` | HTTP 200 |
 | API health | `https://api.ignis-protocol.com/health` | HTTP 200, `ok: true` |
 | API readiness | `https://api.ignis-protocol.com/api/readiness` | HTTP 200, `ready: true` |
-| Tokyo-label replacement relay | `https://ignis-relay-tyo-production.up.railway.app/health` | HTTP 200, `ok: true` |
+| Southeast Asia relay | `https://ignis-relay-tyo-production.up.railway.app/health` | HTTP 200, `ok: true` |
 | Singapore relay | `https://ignis-relay-sgp-production.up.railway.app/health` | HTTP 200, `ok: true` |
 | Amsterdam relay | `https://ignis-relay-ams-production.up.railway.app/health` | HTTP 200, `ok: true` |
 
@@ -33,7 +33,7 @@ Alert immediately when:
 - `audit_chain_valid` is false.
 - `relay_production_ready` is false.
 - PostgreSQL storage is not writable.
-- `queued_reviews` grows unexpectedly for the beta cohort.
+- `queued_reviews` grows unexpectedly for the active public preview window.
 - `failed_anchors` grows while the Solana signer is configured and funded.
 
 ## Suggested Cadence
@@ -43,7 +43,7 @@ Alert immediately when:
 | Website and ops dashboard | 5 minutes |
 | API health and readiness | 1 minute |
 | Relay health | 1 minute |
-| Production smoke script | manual before release, daily during beta |
+| Production smoke script | manual before release, daily during public preview |
 
 ## Manual Verification
 

@@ -1,11 +1,14 @@
 const assert = require('assert');
 
 const baseUrl = process.env.IGNIS_API_URL || 'https://api.ignis-protocol.com';
+const siteUrl = process.env.IGNIS_SITE_URL || 'https://ignis-protocol.com';
 const shouldSubmit = process.env.IGNIS_SMOKE_SUBMIT === '1';
 const requireSolana = process.env.IGNIS_SMOKE_REQUIRE_SOLANA === '1';
 const reviewerKey = process.env.IGNIS_REVIEWER_KEY || '';
 
 async function main() {
+  const pages = await checkPublicPages();
+
   const health = await get('/health');
   assert.equal(health.ok, true, 'health endpoint failed');
   assert.equal(health.storage.writable, true, 'storage must be writable');
@@ -35,7 +38,9 @@ async function main() {
   assert.equal(failedRequired.length, 0, `required readiness checks failed: ${failedRequired.map(check => check.id).join(', ')}`);
 
   const result = {
+    site: siteUrl,
     api: baseUrl,
+    pages,
     version: health.version,
     ready: readiness.ready,
     readiness_status: readiness.status,
@@ -109,6 +114,36 @@ async function request(path, options) {
     throw new Error(`${path} failed: ${body.error?.message || response.status}`);
   }
   return body;
+}
+
+async function checkPublicPages() {
+  const pages = [
+    ['home', '/'],
+    ['protocol', '/protocol'],
+    ['features', '/features'],
+    ['manifesto', '/manifesto'],
+    ['terminal', '/terminal'],
+    ['reviewer', '/reviewer'],
+    ['proof', '/proof'],
+    ['ops', '/ops'],
+  ];
+  const results = {};
+  for (const [name, path] of pages) {
+    const html = await requestText(siteUrl + path);
+    assert.match(html, /IGNIS/i, `${path} should render IGNIS content`);
+    assert.doesNotMatch(html, /<title>\s*(404|not found)|404\s*:\s*not found|page not found/i, `${path} should not render a 404 page`);
+    results[name] = 'pass';
+  }
+  return results;
+}
+
+async function requestText(url) {
+  const response = await fetch(url, { redirect: 'follow' });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`${url} failed: HTTP ${response.status}`);
+  }
+  return text;
 }
 
 main().catch(error => {

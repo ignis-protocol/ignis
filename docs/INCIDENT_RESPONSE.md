@@ -1,6 +1,7 @@
 # IGNIS Incident Response
 
-This runbook covers the most likely production incidents during alpha and beta.
+This runbook covers the most likely production incidents during alpha public
+preview.
 
 ## First Checks
 
@@ -42,7 +43,7 @@ Open:
 
 ## Audit Chain Invalid
 
-1. Stop public beta intake if possible.
+1. Pause public intake if possible.
 2. Export current PostgreSQL state for forensic review.
 3. Do not manually rewrite audit events unless the incident is understood.
 4. Compare latest deploy and DB changes.

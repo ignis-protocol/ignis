@@ -44,7 +44,7 @@ async function refresh(){
     const summary=$('summary');
     summary.classList.remove('ready','degraded','blocked');
     summary.classList.add(ready.status);
-    summary.querySelector('.headline').textContent=ready.status==='ready'?'Ready for beta':ready.status==='degraded'?'Ready with warnings':'Blocked';
+    summary.querySelector('.headline').textContent=ready.status==='ready'?'Ready for public preview':ready.status==='degraded'?'Ready with warnings':'Blocked';
     summary.querySelector('p').textContent=`${health.version} / ${health.storage.driver} / ${health.relays_online} relays online / audit chain ${health.audit_chain_valid?'valid':'invalid'}.`;
     $('state-text').textContent=`${ready.status} / ${ready.checked_at}`;
     $('metrics').innerHTML=[metric('submissions',ready.metrics.submissions),metric('queued reviews',ready.metrics.queued_reviews),metric('proof receipts',ready.metrics.proofs),metric('pending anchors',ready.metrics.pending_anchors),metric('portable score',signal.portable_score),metric('solana',solana.configured?'signer ready':'awaiting signer')].join('');

@@ -130,8 +130,8 @@ Completed:
 Not done yet:
 
 - External anonymity/security audit.
-- IGNIS SPL incentive layer.
-- Closed beta user/reviewer cohort.
+- Public preview operating cadence.
+- Broader public launch drills.
 
 ---
 
@@ -287,17 +287,17 @@ config:
 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
 ```
 
-Phase 8A launch and audit prep:
+Launch and audit prep:
 
 - [Audit prep package](docs/AUDIT_PREP.md)
 - [Launch readiness checklist](docs/LAUNCH_READINESS.md)
 - [Incident response runbook](docs/INCIDENT_RESPONSE.md)
 - [Monitoring plan](docs/MONITORING.md)
 - [Operational drills](docs/DRILLS.md)
-- [Closed beta feedback template](docs/BETA_FEEDBACK.md)
+- [Public feedback template](docs/PUBLIC_FEEDBACK.md)
 - [Solana signer handoff](docs/SOLANA_SIGNER.md)
 - [Auditor request](docs/AUDITOR_REQUEST.md)
-- [Closed beta plan](docs/CLOSED_BETA_PLAN.md)
+- [Public preview plan](docs/PUBLIC_PREVIEW_PLAN.md)
 - [Monitoring check config](monitoring/http-checks.json)
 
 ---
@@ -312,9 +312,9 @@ Phase 8A launch and audit prep:
 - [x] Phase 4: reviewer console, wallet auth, proof receipts, PostgreSQL support, and Solana devnet anchor queue.
 - [x] Phase 5: real diff intake, metadata sanitizer, sealed review bundles, and end-to-end review flow.
 - [x] Phase 6: encrypted retention, signed relay transport, abuse controls, key rotation, and audit chain.
-- [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and beta polish.
+- [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and public polish.
 - [x] Phase 8A: audit prep package, launch checklist, incident response, and stricter smoke tooling.
-- [ ] Phase 8B: external audit, closed beta, monitoring provider setup, recovery drills, and public launch.
+- [ ] Phase 8B: public preview hardening, external audit, monitoring provider setup, recovery drills, and broader public launch.
 
 ---
 

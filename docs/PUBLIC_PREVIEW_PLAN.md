@@ -1,4 +1,4 @@
-# IGNIS Closed Beta Plan
+# IGNIS Public Preview Plan
 
 ## Goals
 
@@ -6,27 +6,34 @@
 - Validate blind reviewer flow and quorum settlement.
 - Confirm proof receipt UX is understandable.
 - Find copy that overclaims privacy before audit.
-- Observe spam, malformed diff, and support burden.
+- Observe spam, malformed diff, public support burden, and reviewer workload.
 
-## Cohort
+## Public Preview Model
 
-Start with:
+Public preview is open for real product exploration, but privacy claims remain
+conservative until an independent audit is complete.
 
-- 3 reviewers with private reviewer keys.
-- 5 to 10 contributors who can submit harmless diffs.
-- 1 operator watching `/ops`, Railway, Vercel, and feedback.
+- Public users can open the product site, terminal, proof verifier, and ops
+  dashboard.
+- Reviewer access remains key-gated because reviewer actions affect proof
+  receipts.
+- Operators watch `/ops`, Railway, Vercel, GitHub issues, and public feedback.
+- No token, staking, reward, or incentive layer is in scope.
 
 ## Entry Criteria
 
 - `npm run smoke:production` passes.
 - `/api/readiness` required checks pass.
-- Reviewer keys distributed privately.
+- Reviewer keys are distributed privately to trusted reviewers.
 - Public copy avoids guaranteed anonymity claims.
-- Feedback template is ready for each tester.
+- Public feedback intake is ready.
+- `/terminal`, `/reviewer`, `/proof`, and `/ops` load from clean extensionless
+  routes.
 
-## Test Window
+## Public Launch Window
 
-Recommended first run: 48 hours.
+Start as an alpha public preview. Keep launch messaging conservative until the
+external audit is complete.
 
 ## Flow
 
@@ -39,15 +46,16 @@ Recommended first run: 48 hours.
 7. Reviewers log into `/reviewer`.
 8. Reviewers cast quorum votes.
 9. Contributor or operator verifies receipt at `/proof`.
-10. Feedback is recorded in `docs/BETA_FEEDBACK.md` format.
+10. Feedback is recorded in `docs/PUBLIC_FEEDBACK.md` format.
 
-## Exit Criteria
+## Public Ready Criteria
 
 - No P0 security/privacy issue.
 - No API or relay outage.
 - At least three successful full flows.
 - Reviewer quorum reaches settlement without manual API calls.
 - Proof verifier can be understood without explanation.
+- Ops dashboard remains `ready` with Solana signer active.
 
 ## No-Go Conditions
 
@@ -56,3 +64,4 @@ Recommended first run: 48 hours.
 - Audit chain becomes invalid.
 - Reviewers cannot reach quorum.
 - Users misunderstand the product as a token or reward system.
+- Frontend copy claims guaranteed anonymity or audit-backed privacy.

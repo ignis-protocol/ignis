@@ -165,7 +165,7 @@ function renderTicker(ticks){
 renderTicker([
   ['connecting to IGNIS protocol','info'],
   ['blind review quorum: 3','hl'],
-  ['Solana anchor queue ready','up']
+  ['Solana signer live','up']
 ]);
 
 function ln(text='', cls='g0', html=false){
@@ -552,7 +552,7 @@ function cmdAbout(){
   blank(); ln('ABOUT IGNIS', 'hdr'); sep();
   ln('IGNIS is a privacy-preserving code contribution protocol: code without a face.', 'g0');
   blank();
-  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana anchor queue'].forEach(x => ln('  - ' + x, 'dim'));
+  ['ephemeral local identity','metadata-stripped diff bundles','multi-hop relay routing','blind review quorum','verifiable proof receipts','optional private wallet commitment','Solana devnet signer'].forEach(x => ln('  - ' + x, 'dim'));
   blank();
 }
 
