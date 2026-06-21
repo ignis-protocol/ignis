@@ -9,22 +9,16 @@ That file is intentionally ignored by git and must not be committed.
 AJtFAby1xGnTKgpoC3z5uB64aWeBTqDeZTeYmB6M9Gzr
 ```
 
-## Funding Required
+## Current Status
 
-The default Solana devnet RPC faucet returned a 429/faucet-dry response during
-setup. Fund the signer above from:
+- Status: funded and active on Solana devnet.
+- Balance verified: 10 devnet SOL.
+- Production backend variables are configured on Railway.
+- Strict production smoke passes with Solana required.
 
-```text
-https://faucet.solana.com
-```
+## Production Anchor Signer
 
-Use devnet. A small amount is enough for memo anchoring tests.
-
-## Enable Production Anchor Signer
-
-After the signer has devnet SOL:
-
-1. Set these Railway variables on the `ignis` backend service:
+The `ignis` backend service uses:
 
 ```text
 SOLANA_CLUSTER=devnet
@@ -32,15 +26,14 @@ SOLANA_RPC_URL=https://api.devnet.solana.com
 SOLANA_ANCHOR_SECRET_KEY=<value from backend/.env.local>
 ```
 
-2. Redeploy the `ignis` service.
-3. Run strict smoke:
+Run strict smoke after any signer, Solana, or Railway env change:
 
 ```bash
 cd backend
 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
 ```
 
-4. Run a full write-path smoke only when a test submission is acceptable:
+Run a full write-path smoke only when a test submission is acceptable:
 
 ```bash
 IGNIS_SMOKE_SUBMIT=1 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production

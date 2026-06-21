@@ -100,7 +100,8 @@ full submission path, run:
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
 ```
 
-After Solana signer provisioning, strict smoke can require anchor signer config:
+With the Solana devnet signer active, strict smoke should require anchor signer
+config:
 
 ```bash
 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production

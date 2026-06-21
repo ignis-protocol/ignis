@@ -43,6 +43,7 @@ claims.
 ## Known Limitations
 
 - Relay services are not yet operated by independent third parties.
-- Solana production signer is pending funding/configuration.
+- Solana devnet signer is funded and configured in production; mainnet anchoring
+  is not in scope.
 - Closed beta abuse data is not available yet.
 - No token or incentive layer is in scope.

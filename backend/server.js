@@ -1019,7 +1019,9 @@ function readinessReport() {
     },
     relay_nodes: relayStatus.nodes.map(({ id, region, role, url, mode }) => ({ id, region, role, url, mode })),
     notes: [
-      'Solana anchoring is optional until the production signer is provisioned.',
+      solanaStatus.configured
+        ? 'Solana devnet anchoring is active through the configured production signer.'
+        : 'Solana anchoring is queued until the production signer is configured.',
       'External privacy and security audit is still required before strong anonymity claims.',
     ],
   };

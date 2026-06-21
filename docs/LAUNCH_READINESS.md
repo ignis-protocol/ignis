@@ -25,8 +25,7 @@ Use this checklist before closed beta and again before public launch.
 
 - [ ] External security and privacy audit completed.
 - [ ] Audit findings triaged and critical/high issues resolved.
-- [ ] Production Solana signer configured or the public copy clearly states that
-  anchors are queued until signer activation.
+- [ ] Production devnet Solana signer configured and strict Solana smoke passes.
 - [ ] Backup and restore drill completed.
 - [ ] Reviewer key rotation drill completed.
 - [ ] Bundle key rotation drill completed.

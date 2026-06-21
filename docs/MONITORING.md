@@ -34,7 +34,7 @@ Alert immediately when:
 - `relay_production_ready` is false.
 - PostgreSQL storage is not writable.
 - `queued_reviews` grows unexpectedly for the beta cohort.
-- `failed_anchors` grows after Solana signer provisioning.
+- `failed_anchors` grows while the Solana signer is configured and funded.
 
 ## Suggested Cadence
 
@@ -52,7 +52,7 @@ cd backend
 npm run smoke:production
 ```
 
-After signer provisioning:
+With signer provisioning active:
 
 ```bash
 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production

@@ -122,13 +122,13 @@ Completed:
 - Privacy-preserving wallet commitments.
 - Verifiable proof receipts for accepted contributions.
 - Solana devnet memo anchoring with retry queue.
+- Funded production devnet anchor signer.
 - PostgreSQL storage support with JSON fallback.
 - Three-hop production relay transport across Southeast Asia, Singapore, and Amsterdam.
 - Public readiness dashboard and production-safe smoke test tooling.
 
 Not done yet:
 
-- Funded production devnet anchor signer.
 - External anonymity/security audit.
 - IGNIS SPL incentive layer.
 - Closed beta user/reviewer cohort.
@@ -280,7 +280,8 @@ without creating a submission. To run the full submit path intentionally:
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
 ```
 
-After Solana signer provisioning, strict smoke can require anchor signer config:
+With the Solana devnet signer active, strict smoke can require anchor signer
+config:
 
 ```bash
 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
@@ -313,7 +314,7 @@ Phase 8A launch and audit prep:
 - [x] Phase 6: encrypted retention, signed relay transport, abuse controls, key rotation, and audit chain.
 - [x] Phase 7: readiness dashboard, production smoke suite, ops docs, CORS cleanup, and beta polish.
 - [x] Phase 8A: audit prep package, launch checklist, incident response, and stricter smoke tooling.
-- [ ] Phase 8B: production Solana signer, external audit, closed beta, monitoring, recovery, and public launch.
+- [ ] Phase 8B: external audit, closed beta, monitoring provider setup, recovery drills, and public launch.
 
 ---
 

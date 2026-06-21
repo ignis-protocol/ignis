@@ -14,7 +14,7 @@ IGNIS is a privacy-preserving code contribution protocol:
 4. A signed relay path produces three hop receipts.
 5. Reviewers score the diff blind.
 6. Accepted work receives a verifiable proof receipt.
-7. Solana anchoring is queued when a signer is configured.
+7. Solana anchoring is queued through the configured devnet signer.
 
 IGNIS is not currently a token, staking system, reward protocol, or production
 anonymity guarantee.
@@ -65,7 +65,8 @@ anonymity guarantee.
 ## Known Limitations
 
 - No independent privacy or security audit has been completed.
-- Solana signer is not configured in production at the time of this package.
+- Solana devnet signer is configured in production; mainnet anchoring is not in
+  scope for this alpha package.
 - Relay services are separate Railway services but not independently operated by
   different legal entities.
 - Traffic-analysis resistance has not been formally tested.
@@ -85,7 +86,7 @@ Optional write-path smoke:
 IGNIS_SMOKE_SUBMIT=1 npm run smoke:production
 ```
 
-Optional strict Solana mode after signer provisioning:
+Optional strict Solana mode:
 
 ```bash
 IGNIS_SMOKE_REQUIRE_SOLANA=1 npm run smoke:production
