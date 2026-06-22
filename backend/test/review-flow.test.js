@@ -14,6 +14,7 @@ const reviewerKeys = [
   'reviewer-two-secret-1234',
   'reviewer-three-secret-1234',
 ];
+const maintainerKey = 'maintainer-one-secret-1234';
 
 process.env.STORE_PATH = storePath;
 process.env.REVIEW_QUORUM = '3';
@@ -22,6 +23,7 @@ process.env.REVIEWER_API_KEYS = [
   `two:${reviewerKeys[1]}`,
   `three:${reviewerKeys[2]}`,
 ].join(',');
+process.env.MAINTAINER_API_KEYS = `maintainer:${maintainerKey}`;
 process.env.RATE_LIMIT_PER_MINUTE = '1000';
 process.env.AUTH_SECRET = 'test-auth-secret-with-at-least-32-bytes';
 process.env.SEALED_BUNDLE_KEYS = `test-v1:${Buffer.alloc(32, 7).toString('base64')}`;
@@ -33,6 +35,7 @@ const app = require('../server');
 const { sanitizeDiff } = require('../lib/sanitizer');
 const { BundleVault } = require('../lib/bundle-vault');
 const { RelayTransport } = require('../lib/relay-transport');
+const { evaluatePublicationPolicy } = require('../lib/publication-policy');
 
 const dirtyDiff = [
   'From 4bd3a1f Mon Sep 17 00:00:00 2001',
@@ -47,6 +50,19 @@ const dirtyDiff = [
   '+const host = "/home/jane/.ssh/id_ed25519";',
   '+const ipv4 = "203.0.113.42";',
   '+const ipv6 = "2001:db8:85a3::8a2e:370:7334";',
+].join('\n');
+
+const publishableDiff = [
+  'From 4bd3a1f Mon Sep 17 00:00:00 2001',
+  'Author: Jane Builder <jane.builder@example.com>',
+  'Date: 2026-06-20T10:11:12+07:00',
+  'diff --git a/src/feature.js b/src/feature.js',
+  '--- a/src/feature.js',
+  '+++ b/src/feature.js',
+  '@@ -1 +1,2 @@',
+  '-const enabled = false;',
+  '+const enabled = true;',
+  '+const mode = "anonymous";',
 ].join('\n');
 
 test('sanitizer removes identity-bearing diff metadata', () => {
@@ -191,6 +207,21 @@ test('abuse controls reject credential and command-execution payloads', async t 
   assert.equal(body.error.code, 'unsafe_diff_rejected');
 });
 
+test('publication policy blocks protected automation and secret paths', () => {
+  const patch = [
+    'diff --git a/.github/workflows/pwn.yml b/.github/workflows/pwn.yml',
+    'new file mode 100644',
+    '--- /dev/null',
+    '+++ b/.github/workflows/pwn.yml',
+    '@@ -0,0 +1,2 @@',
+    '+name: pwn',
+    '+on: push',
+  ].join('\n');
+  const result = evaluatePublicationPolicy({ repo: 'ignis-protocol/ignis', patch });
+  assert.equal(result.ok, false);
+  assert.ok(result.findings.some(item => item.code === 'protected_path'));
+});
+
 test('blind review reaches quorum and settles a submission', async t => {
   const server = app.listen(0);
   await new Promise(resolve => server.once('listening', resolve));
@@ -258,9 +289,9 @@ test('blind review reaches quorum and settles a submission', async t => {
     method: 'POST',
     body: JSON.stringify({
       session: sessionId,
-      repo: 'ignis/test',
+      repo: 'ignis-protocol/ignis',
       summary: 'Add quorum settlement regression coverage.',
-      diff: dirtyDiff,
+      diff: publishableDiff,
     }),
   });
   assert.equal(submissionResult.response.status, 201);
@@ -365,6 +396,41 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.equal(proofResult.response.status, 200);
   assert.equal(proofResult.body.valid, true);
   assert.equal(proofResult.body.proof.anchor.status, 'awaiting_signer');
+
+  const publicStatus = await request(`/api/submissions/${submissionId}/status`);
+  assert.equal(publicStatus.body.submission.publication.status, 'awaiting_maintainer');
+
+  const maintainerDenied = await request('/api/maintainer/publications');
+  assert.equal(maintainerDenied.response.status, 401);
+
+  const maintainerSession = await request('/api/maintainer/session', {
+    method: 'POST',
+    body: JSON.stringify({ key: maintainerKey }),
+  });
+  assert.equal(maintainerSession.response.status, 201);
+  const maintainerToken = maintainerSession.body.token;
+  const publications = await request('/api/maintainer/publications', {
+    headers: { Authorization: `Bearer ${maintainerToken}` },
+  });
+  assert.equal(publications.response.status, 200);
+  assert.equal(publications.body.publications[0].submission_id, submissionId);
+  assert.equal(publications.body.publications[0].policy.status, 'pass');
+
+  const approve = await request(`/api/maintainer/publications/${publications.body.publications[0].id}/approve`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${maintainerToken}` },
+    body: JSON.stringify({ note: 'Approved for anonymous PR publication.' }),
+  });
+  assert.equal(approve.response.status, 200);
+  assert.equal(approve.body.publication.status, 'awaiting_github_app');
+
+  const publishWithoutApp = await request(`/api/maintainer/publications/${publications.body.publications[0].id}/publish`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${maintainerToken}` },
+    body: JSON.stringify({}),
+  });
+  assert.equal(publishWithoutApp.response.status, 503);
+  assert.equal(publishWithoutApp.body.error.code, 'github_app_not_configured');
 
   const proofVerify = await request('/api/proofs/verify', {
     method: 'POST',

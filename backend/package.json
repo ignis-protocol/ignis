@@ -14,9 +14,12 @@
     "smoke:production": "node test/production-smoke.js"
   },
   "dependencies": {
+    "@octokit/auth-app": "^8.2.0",
+    "@octokit/request": "^10.0.10",
     "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
     "cors": "^2.8.5",
+    "diff": "^9.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "express-rate-limit": "^7.2.0",

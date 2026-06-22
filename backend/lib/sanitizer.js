@@ -155,20 +155,31 @@ function normalizeDiffHeaders(text) {
 
 function sanitizeDiffPaths(text) {
   const findings = [];
-  const sanitized = text.replace(/^((?:diff --git a\/|--- |\+\+\+ |rename from |rename to ))(.+)$/gm, (line, prefix, filePath) => {
-    const cleanPath = sanitizePath(filePath);
-    if (cleanPath !== filePath) {
+  let sanitized = text.replace(/^diff --git a\/(.+?) b\/(.+)$/gm, (line, oldPath, newPath) => {
+    const cleanOldPath = sanitizePath(oldPath);
+    const cleanNewPath = sanitizePath(newPath);
+    const finalOldPath = cleanOldPath.includes('[redacted') ? cleanNewPath : cleanOldPath;
+    if (finalOldPath !== oldPath || cleanNewPath !== newPath) {
       findings.push({ id: 'path_identity_marker', label: 'Path identity marker', severity: 'high', count: 1 });
     }
-    return `${prefix}${cleanPath}`;
+    return `diff --git a/${finalOldPath} b/${cleanNewPath}`;
+  });
+  sanitized = sanitized.replace(/^((?:--- |\+\+\+ |rename from |rename to ))(.+)$/gm, (line, prefix, filePath) => {
+    const cleanPath = sanitizePath(filePath);
+    const normalizedPath = cleanPath.includes('[redacted') && prefix !== 'rename from ' ? cleanPath : cleanPath.replace(/^a\/\[redacted-user-path\].*\/([^/\s]+)$/i, 'a/$1');
+    if (normalizedPath !== filePath) {
+      findings.push({ id: 'path_identity_marker', label: 'Path identity marker', severity: 'high', count: 1 });
+    }
+    return `${prefix}${normalizedPath}`;
   });
   return { text: sanitized, findings };
 }
 
 function sanitizePath(filePath) {
   return filePath
+    .replace(/\\/g, '/')
     .replace(/(?:^|\/)(?:Users|home)\/[^/\s]+/g, '/[redacted-user]')
-    .replace(/[A-Z]:\\Users\\[^\\\s]+/gi, '[redacted-user-path]')
+    .replace(/[A-Z]:\/Users\/[^/\s]+/gi, '[redacted-user-path]')
     .replace(/([^/\s]+)@([^/\s]+)/g, '[redacted-identity]');
 }
 

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IGNIS Maintainer Console</title>
+<meta name="description" content="Private maintainer console for accepted IGNIS patches, publication policy, and anonymous GitHub pull requests.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/fonts.css">
+<style>
+:root{--bg:#070a0e;--panel:#0d1117;--panel2:#111820;--line:rgba(167,139,250,.18);--green:#00ff41;--cyan:#2dd4bf;--purple:#a78bfa;--muted:#94a3b8;--text:#e2e8f0;--warn:#fbbf24;--bad:#f87171}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 82% 8%,rgba(0,255,65,.13),transparent 30%),linear-gradient(180deg,#080b10,#050608 72%);color:var(--text);font:14px/1.55 Inter,sans-serif;min-height:100vh}button,input,textarea{font:inherit}button{cursor:pointer}.shell{display:grid;grid-template-rows:60px 1fr;min-height:100vh}.top{display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--line);background:rgba(8,11,16,.88);backdrop-filter:blur(18px)}.brand{display:flex;align-items:center;gap:12px;color:white;text-decoration:none;font-weight:800}.brand img{width:32px;height:32px;border-radius:7px;filter:drop-shadow(0 0 14px rgba(0,255,65,.5))}.nav{display:flex;align-items:center;gap:14px}.nav a,.status{color:var(--muted);text-decoration:none;font:12px JetBrains Mono}.nav a:hover{color:white}.status{color:var(--cyan)}.layout{display:grid;grid-template-columns:330px 1fr;min-height:0}.queue{padding:18px;border-right:1px solid var(--line);background:rgba(13,17,23,.86);overflow:auto}.main{padding:28px;overflow:auto}.login{max-width:520px;margin:9vh auto;padding:28px;border:1px solid var(--line);background:rgba(13,17,23,.94);box-shadow:0 24px 90px rgba(0,0,0,.32)}.label{font:11px JetBrains Mono;color:var(--purple);text-transform:uppercase;letter-spacing:.12em}.login h1{margin:8px 0 10px;font-size:25px}.muted{color:var(--muted)}.field{width:100%;border:1px solid var(--line);background:#070a0e;color:var(--text);padding:11px 12px;border-radius:6px;outline:none}.field:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(167,139,250,.12)}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:6px}.btn:hover{border-color:var(--purple);transform:translateY(-1px)}.primary{background:linear-gradient(135deg,var(--green),#8bffb3);color:#031107;border-color:transparent;font-weight:800}.danger{border-color:rgba(248,113,113,.5);color:var(--bad)}.accept{border-color:rgba(74,222,128,.5);color:#4ade80}.login .btn{width:100%;margin-top:12px}.queue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.count{font:12px JetBrains Mono;color:var(--purple)}.item{width:100%;text-align:left;padding:13px;margin-bottom:8px;border:1px solid rgba(167,139,250,.13);background:#080b10;color:var(--text);border-radius:6px;transition:.2s}.item:hover,.item.active{border-color:var(--purple);background:#111820}.item strong,.item span{display:block}.item span{color:var(--muted);font:11px JetBrains Mono;margin-top:5px}.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font:11px JetBrains Mono;color:var(--muted)}.pill.pass{color:#4ade80;border-color:rgba(74,222,128,.32)}.pill.warn{color:var(--warn);border-color:rgba(251,191,36,.32)}.pill.fail{color:var(--bad);border-color:rgba(248,113,113,.32)}.detail{max-width:1180px}.detail h1{font-size:29px;margin:8px 0 18px}.grid{display:grid;grid-template-columns:155px 1fr;gap:10px 18px;padding:18px;border:1px solid var(--line);background:rgba(13,17,23,.82);border-radius:6px}.grid dt{color:var(--muted)}.grid dd{margin:0;font-family:JetBrains Mono;overflow-wrap:anywhere}.panel{margin-top:16px;border:1px solid var(--line);background:rgba(13,17,23,.82);border-radius:6px}.panel h2{margin:0;padding:16px;border-bottom:1px solid var(--line);font-size:14px}.panel-body{padding:16px}.findings{display:grid;gap:8px}.finding{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px;border:1px solid rgba(167,139,250,.13);background:#080b10;font:12px JetBrains Mono}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px}.toolbar .field{max-width:210px}.empty{color:#475569;padding:20px 0}.toast{position:fixed;right:20px;bottom:20px;max-width:390px;background:#111820;border:1px solid rgba(167,139,250,.34);padding:12px 16px;border-radius:6px}.hidden{display:none!important}@media(max-width:860px){.layout{grid-template-columns:1fr}.queue{border-right:0;border-bottom:1px solid var(--line);max-height:300px}.main{padding:18px}.grid{grid-template-columns:1fr}.nav a:not(:last-child){display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <a class="brand" href="/"><img src="/ignis-logo.jpg" alt=""><span>IGNIS</span></a>
+    <div class="nav"><a href="/terminal">Terminal</a><a href="/reviewer">Review</a><a href="/ops">Ops</a><span class="status" id="status">LOCKED</span></div>
+  </header>
+  <main id="login" class="login">
+    <div class="label">Private maintainer access</div>
+    <h1>Publication gate</h1>
+    <p class="muted">Approve accepted blind-review patches, inspect publication policy, export patch files, and publish anonymous GitHub pull requests.</p>
+    <input id="key" class="field" type="password" autocomplete="off" placeholder="Maintainer key">
+    <button id="login-btn" class="btn primary">Unlock maintainer console</button>
+  </main>
+  <main id="console" class="layout hidden">
+    <aside class="queue">
+      <div class="queue-head"><div class="label">Publication queue</div><span class="count" id="queue-count">0</span></div>
+      <div class="toolbar"><select id="filter" class="field"><option value="active">Active</option><option value="all">All</option><option value="awaiting_maintainer">Awaiting</option><option value="approved">Approved</option><option value="awaiting_github_app">Needs GitHub App</option><option value="published">Published</option></select><button id="refresh" class="btn">Refresh</button></div>
+      <div id="queue-list"></div>
+    </aside>
+    <section class="main"><div id="detail" class="detail"><div class="empty">Select an accepted patch.</div></div></section>
+  </main>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script>
+const API = 'https://api.ignis-protocol.com';
+const $ = id => document.getElementById(id);
+let token = sessionStorage.getItem('ignis_maintainer_token') || '';
+let publications = [];
+let activeId = '';
+
+async function request(route, options = {}) {
+  const { headers = {}, ...rest } = options;
+  const response = await fetch(API + route, { ...rest, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...headers } });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.ok === false) throw new Error(data.error?.message || `Request failed ${response.status}`);
+  return data;
+}
+
+async function login() {
+  try {
+    const data = await request('/api/maintainer/session', { method: 'POST', body: JSON.stringify({ key: $('key').value }) });
+    token = data.token;
+    sessionStorage.setItem('ignis_maintainer_token', token);
+    openConsole(data.maintainer.label);
+  } catch (error) { toast(error.message); }
+}
+
+async function openConsole(label) {
+  $('login').classList.add('hidden');
+  $('console').classList.remove('hidden');
+  $('status').textContent = `MAINTAINER ${label}`;
+  await loadQueue();
+}
+
+async function loadQueue() {
+  try {
+    const data = await request(`/api/maintainer/publications?status=${encodeURIComponent($('filter').value)}&limit=100`);
+    publications = data.publications;
+    $('queue-count').textContent = String(publications.length);
+    $('queue-list').innerHTML = publications.length ? publications.map(item => `<button class="item ${item.id===activeId?'active':''}" data-id="${esc(item.id)}"><strong>${esc(item.repo)}</strong><span>${esc(item.status)} / ${esc(item.submission?.summary || item.id)}</span></button>`).join('') : '<div class="empty">No publication records.</div>';
+    if (activeId && publications.some(item => item.id === activeId)) renderDetail(activeId);
+    else if (publications[0]) renderDetail(publications[0].id);
+  } catch (error) { toast(error.message); }
+}
+
+function renderDetail(id) {
+  activeId = id;
+  document.querySelectorAll('.item').forEach(node => node.classList.toggle('active', node.dataset.id === id));
+  const item = publications.find(pub => pub.id === id);
+  if (!item) return;
+  const policy = item.policy || {};
+  $('detail').innerHTML = `
+    <div class="label">Accepted patch publication</div>
+    <h1>${esc(item.title || item.id)}</h1>
+    <dl class="grid">
+      <dt>Status</dt><dd><span class="pill ${policy.status || ''}">${esc(item.status)}</span></dd>
+      <dt>Repository</dt><dd>${esc(item.repo)}</dd>
+      <dt>Submission</dt><dd>${esc(item.submission_id)}</dd>
+      <dt>Proof</dt><dd>${esc(item.proof_id || 'pending')}</dd>
+      <dt>Diff hash</dt><dd>${esc(item.submission?.diff_hash || '')}</dd>
+      <dt>Review score</dt><dd>${esc(item.submission?.review_score || 'n/a')}</dd>
+      <dt>Pull request</dt><dd>${item.pr_url ? `<a href="${esc(item.pr_url)}" target="_blank" rel="noopener noreferrer">${esc(item.pr_url)}</a>` : 'not published'}</dd>
+    </dl>
+    <div class="panel"><h2>Publication policy <span class="pill ${esc(policy.status || 'warn')}">${esc(policy.status || 'pending')}</span></h2><div class="panel-body">
+      <div class="findings">${(policy.findings || []).length ? policy.findings.map(f => `<div class="finding"><span class="pill ${esc(f.severity === 'high' ? 'fail' : 'warn')}">${esc(f.severity)}</span><span>${esc(f.code)} ${f.path ? `- ${esc(f.path)}` : ''}<br><span class="muted">${esc(f.detail || '')}</span></span></div>`).join('') : '<div class="muted">No blocking findings.</div>'}</div>
+      <p class="muted">${esc(policy.files?.length || 0)} files / ${esc(policy.added_lines || 0)} added lines / ${esc(policy.removed_lines || 0)} removed lines</p>
+    </div></div>
+    <div class="actions">
+      <button class="btn" data-action="download">Download patch</button>
+      <button class="btn accept" data-action="approve">Approve</button>
+      <button class="btn primary" data-action="publish">Publish PR</button>
+      <button class="btn" data-action="sync">Sync PR</button>
+      <button class="btn danger" data-action="reject">Reject</button>
+    </div>`;
+}
+
+async function action(type) {
+  if (!activeId) return;
+  try {
+    if (type === 'download') return await downloadPatch();
+    const body = type === 'reject' ? { reason: 'Rejected by maintainer.' } : {};
+    const data = await request(`/api/maintainer/publications/${encodeURIComponent(activeId)}/${type}`, { method: 'POST', body: JSON.stringify(body) });
+    toast(`${type} complete`);
+    await loadQueue();
+    if (data.publication) renderDetail(data.publication.id);
+  } catch (error) { toast(error.message); }
+}
+
+async function downloadPatch() {
+  const response = await fetch(`${API}/api/maintainer/publications/${encodeURIComponent(activeId)}/patch`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) throw new Error(`Patch download failed ${response.status}`);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `ignis-${activeId}.patch`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+  toast('patch downloaded');
+}
+
+function toast(message) { $('toast').textContent = message; $('toast').classList.remove('hidden'); setTimeout(() => $('toast').classList.add('hidden'), 4200); }
+function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char])); }
+
+$('login-btn').addEventListener('click', login);
+$('key').addEventListener('keydown', event => { if (event.key === 'Enter') login(); });
+$('refresh').addEventListener('click', loadQueue);
+$('filter').addEventListener('change', loadQueue);
+$('queue-list').addEventListener('click', event => { const button = event.target.closest('[data-id]'); if (button) renderDetail(button.dataset.id); });
+$('detail').addEventListener('click', event => { const button = event.target.closest('[data-action]'); if (button) action(button.dataset.action); });
+if (token) request('/api/maintainer/me').then(data => openConsole(data.maintainer.label)).catch(() => sessionStorage.removeItem('ignis_maintainer_token'));
+</script>
+</body>
+</html>

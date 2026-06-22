@@ -20,6 +20,7 @@
     { "source": "/terminal", "destination": "/terminal.html" },
     { "source": "/ops", "destination": "/ops.html" },
     { "source": "/proof", "destination": "/proof.html" },
-    { "source": "/reviewer", "destination": "/reviewer.html" }
+    { "source": "/reviewer", "destination": "/reviewer.html" },
+    { "source": "/maintainer", "destination": "/maintainer.html" }
   ]
 }

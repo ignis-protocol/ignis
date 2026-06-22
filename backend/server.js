@@ -15,6 +15,8 @@ const { sanitizeDiff } = require('./lib/sanitizer');
 const { BundleVault } = require('./lib/bundle-vault');
 const { enforceSubmissionQuota, inspectDiff } = require('./lib/abuse-controls');
 const { RelayTransport } = require('./lib/relay-transport');
+const { evaluatePublicationPolicy } = require('./lib/publication-policy');
+const { GitHubPublisher } = require('./lib/github-publisher');
 
 const bs58 = bs58Module.default || bs58Module;
 const app = express();
@@ -28,14 +30,20 @@ const REVIEWER_KEYS = parseReviewerKeys(
   process.env.REVIEWER_API_KEYS || '',
   process.env.REVIEWER_API_KEYS_PREVIOUS || '',
 );
+const MAINTAINER_KEYS = parseReviewerKeys(
+  process.env.MAINTAINER_API_KEYS || '',
+  process.env.MAINTAINER_API_KEYS_PREVIOUS || '',
+);
 const WALLET_CHALLENGE_TTL_MS = Number(process.env.WALLET_CHALLENGE_TTL_MINUTES || 5) * 60 * 1000;
 const AUTH_TOKEN_TTL_SECONDS = Number(process.env.AUTH_TOKEN_TTL_MINUTES || 30) * 60;
 const REVIEWER_TOKEN_TTL_SECONDS = Number(process.env.REVIEWER_TOKEN_TTL_MINUTES || 30) * 60;
+const MAINTAINER_TOKEN_TTL_SECONDS = Number(process.env.MAINTAINER_TOKEN_TTL_MINUTES || 30) * 60;
 const STORE_PATH = process.env.STORE_PATH || path.join(__dirname, 'data', 'ignis-store.json');
 const storage = new IgnisStorage({ filePath: STORE_PATH, databaseUrl: process.env.DATABASE_URL });
 const tokens = createTokenService(process.env.AUTH_SECRET);
 const vault = new BundleVault({ fallbackSecret: process.env.AUTH_SECRET });
 const relayTransport = new RelayTransport({ authSecret: process.env.AUTH_SECRET });
+const githubPublisher = new GitHubPublisher(process.env);
 const BUNDLE_RETENTION_DAYS = Number(process.env.BUNDLE_RETENTION_DAYS || 30);
 const solana = new SolanaAnchor({
   cluster: process.env.SOLANA_CLUSTER || 'mainnet-beta',
@@ -68,7 +76,7 @@ app.use(cors({
     return callback(new ApiError(403, 'origin_not_allowed', 'Origin is not allowed by CORS policy.'));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Reviewer-Key'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Reviewer-Key', 'X-Maintainer-Key'],
 }));
 app.use(express.json({ limit: process.env.REQUEST_BODY_LIMIT || '384kb' }));
 app.use(express.urlencoded({ extended: false }));
@@ -117,12 +125,17 @@ app.get('/', (req, res) => ok(res, req, {
       'wallet signature authentication',
       'verifiable proof receipts',
       'Solana mainnet anchor signer',
+      'accepted patch publication queue',
+      'maintainer approval gate',
+      'GitHub App anonymous PR publishing',
     ],
     excluded: ['staking', 'reward distribution'],
   },
   endpoints: [
     'POST /api/reviewer/session',
     'GET  /api/reviewer/me',
+    'POST /api/maintainer/session',
+    'GET  /api/maintainer/me',
     'POST /api/wallet/challenge',
     'POST /api/wallet/verify',
     'POST /api/sessions',
@@ -134,6 +147,9 @@ app.get('/', (req, res) => ok(res, req, {
     'GET  /api/proofs/:id',
     'POST /api/proofs/verify',
     'POST /api/proofs/:id/anchor',
+    'GET  /api/maintainer/publications',
+    'POST /api/maintainer/publications/:id/approve',
+    'POST /api/maintainer/publications/:id/publish',
     'GET  /api/signal',
     'GET  /api/solana',
     'GET  /api/public-metrics',
@@ -157,10 +173,13 @@ app.get('/health', (req, res) => {
     submissions: state.submissions.length,
     reviews: state.reviews.length,
     proofs: state.proofs.length,
+    publications: state.publications.length,
     anchors_pending: state.anchor_jobs.filter(item => item.status === 'pending').length,
     review_quorum: REVIEW_QUORUM,
     reviewers_configured: REVIEWER_KEYS.size,
     reviewer_keys_in_grace: [...REVIEWER_KEYS.values()].filter(item => item.status === 'grace').length,
+    maintainers_configured: MAINTAINER_KEYS.size,
+    github_publication_configured: githubPublisher.status().configured,
     solana_anchor_configured: solana.status().configured,
     audit_chain_valid: verifyAuditChain(),
     uptime: Math.floor(process.uptime()),
@@ -182,6 +201,8 @@ app.get('/api/public-metrics', (req, res) => {
       accepted_reviews: accepted.length,
       proofs: state.proofs.length,
       confirmed_anchors: state.proofs.filter(item => item.anchor?.status === 'confirmed').length,
+      publications: state.publications.length,
+      published_pull_requests: state.publications.filter(item => item.status === 'published').length,
     },
     product_state: {
       audited_alpha: true,
@@ -191,6 +212,8 @@ app.get('/api/public-metrics', (req, res) => {
       storage: storage.driver,
       relay_network: relayTransport.productionReady(),
       solana_signer: solana.status().configured,
+      maintainer_gate: MAINTAINER_KEYS.size > 0,
+      github_publication: githubPublisher.status().configured,
     },
   });
 });
@@ -225,6 +248,34 @@ app.get('/api/reviewer/me', requireReviewer, (req, res) => ok(res, req, {
     key_status: req.reviewer.status || 'session',
   },
   queue_depth: storage.state.reviews.filter(item => item.status === 'queued').length,
+}));
+
+app.post('/api/maintainer/session', authLimiter, asyncHandler(async (req, res) => {
+  const maintainer = authenticateMaintainerKey(req.body.key || req.get('X-Maintainer-Key'));
+  const token = tokens.issue({
+    type: 'maintainer',
+    sub: maintainer.id,
+    label: maintainer.label,
+    key_id: maintainer.key_id,
+  }, MAINTAINER_TOKEN_TTL_SECONDS);
+  audit('maintainer_session_created', { maintainer_id: maintainer.id, key_id: maintainer.key_id, key_status: maintainer.status });
+  await storage.persist();
+  return ok(res.status(201), req, {
+    token,
+    maintainer: { id: maintainer.id, label: maintainer.label, key_id: maintainer.key_id, key_status: maintainer.status },
+    expires_in: MAINTAINER_TOKEN_TTL_SECONDS,
+  });
+}));
+
+app.get('/api/maintainer/me', requireMaintainer, (req, res) => ok(res, req, {
+  maintainer: {
+    id: req.maintainer.id,
+    label: req.maintainer.label,
+    key_id: req.maintainer.key_id || null,
+    key_status: req.maintainer.status || 'session',
+  },
+  queue_depth: storage.state.publications.filter(item => ['awaiting_maintainer', 'approved', 'ready_to_publish'].includes(item.status)).length,
+  github: githubPublisher.status(),
 }));
 
 app.post('/api/wallet/challenge', authLimiter, asyncHandler(async (req, res) => {
@@ -536,6 +587,135 @@ app.post('/api/proofs/:id/anchor', requireReviewer, asyncHandler(async (req, res
   return ok(res, req, { proof: serializeProof(proof), solana: solana.status() });
 }));
 
+app.get('/api/maintainer/publications', requireMaintainer, (req, res) => {
+  const status = optionalText(req.query.status, 30) || 'active';
+  const publications = storage.state.publications
+    .filter(item => status === 'all' || (status === 'active' ? item.status !== 'rejected' && item.status !== 'published' : item.status === status))
+    .slice(0, clampInt(req.query.limit, 1, 100, 25))
+    .map(item => serializePublication(item, { includePolicy: true }));
+  return ok(res, req, {
+    publications,
+    total: storage.state.publications.length,
+    github: githubPublisher.status(),
+  });
+});
+
+app.get('/api/maintainer/publications/:id', requireMaintainer, (req, res, next) => {
+  try {
+    const publication = findPublication(req.params.id);
+    if (!publication) throw new ApiError(404, 'publication_not_found', 'Publication does not exist.');
+    return ok(res, req, { publication: serializePublication(publication, { includePolicy: true, includeProof: true }) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/api/maintainer/publications/:id/patch', requireMaintainer, (req, res, next) => {
+  try {
+    const publication = findPublication(req.params.id);
+    if (!publication) throw new ApiError(404, 'publication_not_found', 'Publication does not exist.');
+    const submission = findSubmission(publication.submission_id);
+    if (!submission) throw new ApiError(404, 'submission_not_found', 'Submission does not exist.');
+    const patch = openSubmissionBundle(submission).sanitized_diff;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="ignis-${submission.id}.patch"`);
+    return res.send(patch);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/api/maintainer/publications/:id/approve', requireMaintainer, asyncHandler(async (req, res) => {
+  const publication = findPublication(req.params.id);
+  if (!publication) throw new ApiError(404, 'publication_not_found', 'Publication does not exist.');
+  const submission = findSubmission(publication.submission_id);
+  if (!submission || submission.status !== 'accepted') {
+    throw new ApiError(409, 'submission_not_accepted', 'Only accepted submissions can be approved for publication.');
+  }
+  const policy = policyForSubmission(submission);
+  publication.policy = policy;
+  publication.base_branch = optionalText(req.body.base_branch, 80) || githubPublisher.status().default_base_branch;
+  publication.title = optionalText(req.body.title, 160) || defaultPublicationTitle(submission);
+  publication.note = optionalText(req.body.note, 700);
+  publication.reviewed_by = { id: req.maintainer.id, label: req.maintainer.label, key_id: req.maintainer.key_id || null };
+  publication.reviewed_at = new Date().toISOString();
+  if (!policy.ok) {
+    publication.status = 'policy_blocked';
+    audit('publication_policy_blocked', { publication_id: publication.id, submission_id: submission.id, findings: policy.findings.map(item => item.code) });
+    await storage.persist();
+    throw new ApiError(422, 'publication_policy_failed', 'Publication policy blocked this patch.', { policy });
+  }
+  publication.status = githubPublisher.status().configured ? 'approved' : 'awaiting_github_app';
+  publication.updated_at = new Date().toISOString();
+  submission.publication_status = publication.status;
+  audit('publication_approved', { publication_id: publication.id, submission_id: submission.id, maintainer_id: req.maintainer.id });
+  await storage.persist();
+  return ok(res, req, { publication: serializePublication(publication, { includePolicy: true, includeProof: true }) });
+}));
+
+app.post('/api/maintainer/publications/:id/reject', requireMaintainer, asyncHandler(async (req, res) => {
+  const publication = findPublication(req.params.id);
+  if (!publication) throw new ApiError(404, 'publication_not_found', 'Publication does not exist.');
+  publication.status = 'rejected';
+  publication.rejection_reason = optionalText(req.body.reason, 700) || 'Rejected by maintainer.';
+  publication.reviewed_by = { id: req.maintainer.id, label: req.maintainer.label, key_id: req.maintainer.key_id || null };
+  publication.reviewed_at = new Date().toISOString();
+  publication.updated_at = new Date().toISOString();
+  const submission = findSubmission(publication.submission_id);
+  if (submission) submission.publication_status = publication.status;
+  audit('publication_rejected', { publication_id: publication.id, submission_id: publication.submission_id, maintainer_id: req.maintainer.id });
+  await storage.persist();
+  return ok(res, req, { publication: serializePublication(publication, { includePolicy: true }) });
+}));
+
+app.post('/api/maintainer/publications/:id/publish', requireMaintainer, asyncHandler(async (req, res) => {
+  const publication = findPublication(req.params.id);
+  if (!publication) throw new ApiError(404, 'publication_not_found', 'Publication does not exist.');
+  if (!['approved', 'ready_to_publish', 'awaiting_github_app'].includes(publication.status)) {
+    throw new ApiError(409, 'publication_not_approved', 'Publication must be approved before publishing.');
+  }
+  if (!githubPublisher.status().configured) {
+    throw new ApiError(503, 'github_app_not_configured', 'GitHub App publication is not configured yet.');
+  }
+  const submission = findSubmission(publication.submission_id);
+  const proof = storage.state.proofs.find(item => item.submission_id === publication.submission_id);
+  const patch = openSubmissionBundle(submission).sanitized_diff;
+  const policy = policyForSubmission(submission);
+  if (!policy.ok) throw new ApiError(422, 'publication_policy_failed', 'Publication policy blocked this patch.', { policy });
+  publication.status = 'publishing';
+  publication.updated_at = new Date().toISOString();
+  await storage.persist();
+  const result = await githubPublisher.publish({
+    repo: publication.repo,
+    baseBranch: optionalText(req.body.base_branch, 80) || publication.base_branch,
+    branchName: publication.branch || `ignis/${submission.id}`,
+    title: optionalText(req.body.title, 160) || publication.title || defaultPublicationTitle(submission),
+    body: publicationPullRequestBody(submission, proof, publication),
+    patch,
+  });
+  Object.assign(publication, result, {
+    status: 'published',
+    published_by: { id: req.maintainer.id, label: req.maintainer.label, key_id: req.maintainer.key_id || null },
+    published_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  submission.publication_status = 'published';
+  audit('publication_published', { publication_id: publication.id, submission_id: submission.id, pr_number: result.pr_number });
+  await storage.persist();
+  return ok(res, req, { publication: serializePublication(publication, { includePolicy: true, includeProof: true }) });
+}));
+
+app.post('/api/maintainer/publications/:id/sync', requireMaintainer, asyncHandler(async (req, res) => {
+  const publication = findPublication(req.params.id);
+  if (!publication) throw new ApiError(404, 'publication_not_found', 'Publication does not exist.');
+  if (!publication.pr_number) throw new ApiError(409, 'publication_not_published', 'Publication has no pull request yet.');
+  if (!githubPublisher.status().configured) throw new ApiError(503, 'github_app_not_configured', 'GitHub App publication is not configured yet.');
+  const result = await githubPublisher.syncPullRequest({ repo: publication.repo, prNumber: publication.pr_number });
+  Object.assign(publication, result, { synced_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+  await storage.persist();
+  return ok(res, req, { publication: serializePublication(publication, { includePolicy: true, includeProof: true }) });
+}));
+
 app.get('/api/signal', (req, res) => {
   const state = storage.state;
   const accepted = state.submissions.filter(item => item.status === 'accepted').length;
@@ -588,7 +768,7 @@ app.get('/api/solana', (req, res) => {
 
 app.use((req, res) => error(res, req, new ApiError(404, 'route_not_found', 'Route not found.')));
 app.use((err, req, res, _next) => {
-  if (!err.status || err.status >= 500) console.error('[ERROR]', err);
+  if (!err.status || (err.status >= 500 && err.name !== 'ApiError')) console.error('[ERROR]', err);
   return error(res, req, err);
 });
 
@@ -690,6 +870,8 @@ function settleReview(review) {
     storage.state.proofs.unshift(proof);
     submission.proof_status = 'issued';
     submission.proof_id = proof.id;
+    const publication = ensurePublication(submission, proof);
+    submission.publication_status = publication.status;
     queueAnchor(proof);
   } else {
     submission.proof_status = 'not_eligible';
@@ -718,6 +900,37 @@ function createProof(submission, review) {
     issued_at: new Date().toISOString(),
     anchor: { status: 'pending', signature: null, explorer_url: null, anchored_at: null, error: null },
   };
+}
+
+function ensurePublication(submission, proof = null) {
+  let publication = storage.state.publications.find(item => item.submission_id === submission.id);
+  if (publication) return publication;
+  publication = {
+    id: newId('publication'),
+    submission_id: submission.id,
+    proof_id: proof?.id || submission.proof_id || null,
+    repo: submission.repo,
+    status: 'awaiting_maintainer',
+    title: defaultPublicationTitle(submission),
+    base_branch: githubPublisher.status().default_base_branch,
+    branch: `ignis/${submission.id}`,
+    policy: null,
+    pr_number: null,
+    pr_url: null,
+    pr_state: null,
+    commit_sha: null,
+    reviewed_by: null,
+    reviewed_at: null,
+    published_by: null,
+    published_at: null,
+    synced_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  storage.state.publications.unshift(publication);
+  trim(storage.state.publications, 1000);
+  audit('publication_queued', { publication_id: publication.id, submission_id: submission.id, repo: submission.repo });
+  return publication;
 }
 
 function verifyProofIntegrity(proof) {
@@ -794,6 +1007,14 @@ function serializeSubmission(submission, options = {}) {
   delete result.abuse_report;
   result.metadata_report = submission.metadata_report_summary || null;
   result.bundle_encrypted = Boolean(submission.encrypted_bundle);
+  const publication = storage.state.publications.find(item => item.submission_id === submission.id);
+  result.publication = publication ? {
+    id: publication.id,
+    status: publication.status,
+    pr_url: publication.pr_url || null,
+    pr_state: publication.pr_state || null,
+    published_at: publication.published_at || null,
+  } : null;
   if (options.includeSession) result.session = submission.session;
   return result;
 }
@@ -858,6 +1079,50 @@ function serializeProof(proof) {
   };
 }
 
+function serializePublication(publication, options = {}) {
+  const submission = findSubmission(publication.submission_id);
+  const proof = publication.proof_id ? findProof(publication.proof_id) : storage.state.proofs.find(item => item.submission_id === publication.submission_id);
+  const result = {
+    id: publication.id,
+    submission_id: publication.submission_id,
+    proof_id: publication.proof_id || proof?.id || null,
+    repo: publication.repo,
+    status: publication.status,
+    title: publication.title,
+    base_branch: publication.base_branch,
+    branch: publication.branch,
+    pr_number: publication.pr_number,
+    pr_url: publication.pr_url,
+    pr_state: publication.pr_state,
+    commit_sha: publication.commit_sha,
+    created_at: publication.created_at,
+    updated_at: publication.updated_at,
+    reviewed_at: publication.reviewed_at,
+    published_at: publication.published_at,
+    synced_at: publication.synced_at,
+    submission: submission ? {
+      summary: submission.summary,
+      diff_hash: submission.diff_hash,
+      status: submission.status,
+      review_score: submission.review_score || null,
+      metadata_report: submission.metadata_report_summary || null,
+    } : null,
+  };
+  if (options.includePolicy) {
+    try {
+      result.policy = publication.policy || (submission ? policyForSubmission(submission) : null);
+    } catch (error) {
+      result.policy = {
+        ok: false,
+        status: 'fail',
+        findings: [{ severity: 'high', code: error.code || 'policy_unavailable', detail: error.message }],
+      };
+    }
+  }
+  if (options.includeProof && proof) result.proof = serializeProof(proof);
+  return result;
+}
+
 function requireReviewer(req, _res, next) {
   try {
     const bearer = bearerToken(req);
@@ -867,6 +1132,21 @@ function requireReviewer(req, _res, next) {
       return next();
     }
     req.reviewer = authenticateReviewerKey(req.get('X-Reviewer-Key'));
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+}
+
+function requireMaintainer(req, _res, next) {
+  try {
+    const bearer = bearerToken(req);
+    const payload = bearer ? tokens.verify(bearer, 'maintainer') : null;
+    if (payload) {
+      req.maintainer = { id: payload.sub, label: payload.label, key_id: payload.key_id, status: 'session' };
+      return next();
+    }
+    req.maintainer = authenticateMaintainerKey(req.get('X-Maintainer-Key'));
     return next();
   } catch (error) {
     return next(error);
@@ -887,6 +1167,15 @@ function authenticateReviewerKey(value) {
   const reviewer = REVIEWER_KEYS.get(sha256(key));
   if (!reviewer) throw new ApiError(403, 'reviewer_key_invalid', 'Reviewer key is invalid.');
   return reviewer;
+}
+
+function authenticateMaintainerKey(value) {
+  if (!MAINTAINER_KEYS.size) throw new ApiError(503, 'maintainers_not_configured', 'Maintainer access is not configured.');
+  const key = String(value || '').trim();
+  if (!key) throw new ApiError(401, 'maintainer_key_required', 'Maintainer key is required.');
+  const maintainer = MAINTAINER_KEYS.get(sha256(key));
+  if (!maintainer) throw new ApiError(403, 'maintainer_key_invalid', 'Maintainer key is invalid.');
+  return maintainer;
 }
 
 function walletMessage(challenge) {
@@ -1052,6 +1341,20 @@ function readinessReport() {
       detail: solanaStatus.configured ? `${solanaStatus.cluster} signer ready` : `${solanaStatus.cluster} signer not configured`,
       required: false,
     },
+    {
+      id: 'maintainer_gate',
+      label: 'Maintainer publication gate',
+      status: MAINTAINER_KEYS.size ? 'pass' : 'warn',
+      detail: `${MAINTAINER_KEYS.size} maintainers configured`,
+      required: false,
+    },
+    {
+      id: 'github_publication',
+      label: 'GitHub App publication',
+      status: githubPublisher.status().configured ? 'pass' : 'warn',
+      detail: githubPublisher.status().configured ? 'GitHub App ready' : 'manual patch export only',
+      required: false,
+    },
   ];
   const ready = checks.every(check => !check.required || check.status === 'pass');
   return {
@@ -1066,6 +1369,7 @@ function readinessReport() {
       submissions: state.submissions.length,
       queued_reviews: queuedReviews,
       proofs: state.proofs.length,
+      publications: state.publications.length,
       pending_anchors: pendingAnchors,
       failed_anchors: failedAnchors,
       uptime_seconds: Math.floor(process.uptime()),
@@ -1165,6 +1469,29 @@ function findReview(id) {
 function findProof(id) {
   return storage.state.proofs.find(item => item.id === id);
 }
+function findPublication(id) {
+  return storage.state.publications.find(item => item.id === id || item.submission_id === id);
+}
+function policyForSubmission(submission) {
+  const bundle = openSubmissionBundle(submission);
+  return evaluatePublicationPolicy({ repo: submission.repo, patch: bundle.sanitized_diff, env: process.env });
+}
+function defaultPublicationTitle(submission) {
+  return `IGNIS accepted patch: ${submission.summary.slice(0, 80)}`;
+}
+function publicationPullRequestBody(submission, proof, publication) {
+  return [
+    'Published by IGNIS after blind review quorum.',
+    '',
+    `Submission: ${submission.id}`,
+    `Proof: ${proof?.id || publication.proof_id || 'pending'}`,
+    `Diff hash: ${submission.diff_hash}`,
+    `Review score: ${submission.review_score || 'n/a'}`,
+    `Publication: ${publication.id}`,
+    '',
+    'Author identity, wallet identity, source metadata, and local paths were stripped before this patch was published.',
+  ].join('\n');
+}
 function bearerToken(req) {
   const value = String(req.get('Authorization') || '');
   return value.startsWith('Bearer ') ? value.slice(7).trim() : '';
@@ -1241,18 +1568,21 @@ function ok(res, req, data) {
 }
 function error(res, req, err) {
   const status = err.status || 500;
+  const payload = { code: err.code || 'internal_error', message: status >= 500 ? 'Internal server error.' : err.message };
+  if (status < 500 && err.details) payload.details = err.details;
   return res.status(status).json({
     ok: false,
     request_id: req.requestId,
-    error: { code: err.code || 'internal_error', message: status >= 500 ? 'Internal server error.' : err.message },
+    error: payload,
   });
 }
-function ApiError(status, code, message) {
+function ApiError(status, code, message, details = null) {
   Error.captureStackTrace(this, ApiError);
   this.name = 'ApiError';
   this.status = status;
   this.code = code;
   this.message = message;
+  this.details = details;
 }
 ApiError.prototype = Object.create(Error.prototype);
 ApiError.prototype.constructor = ApiError;

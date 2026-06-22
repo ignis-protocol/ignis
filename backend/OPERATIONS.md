@@ -6,6 +6,8 @@
 AUTH_SECRET=<32+ random bytes>
 REVIEWER_API_KEYS=reviewer-1:<secret>,reviewer-2:<secret>,reviewer-3:<secret>
 REVIEWER_API_KEYS_PREVIOUS=
+MAINTAINER_API_KEYS=maintainer-1:<secret>
+MAINTAINER_API_KEYS_PREVIOUS=
 SEALED_BUNDLE_KEYS=2026-01:<base64-32-byte-key>
 SEALED_BUNDLE_ACTIVE_KEY_ID=2026-01
 CORS_ORIGIN=https://ignis-protocol.com,https://www.ignis-protocol.com
@@ -81,6 +83,37 @@ Put new keys in `REVIEWER_API_KEYS`. Move old keys to
 access, then remove the previous keys. Keep reviewer labels stable: duplicate
 vote protection derives reviewer identity from the label so rotation does not
 create a new voting identity.
+
+## Maintainer Publication Gate
+
+Accepted submissions automatically create a publication record. Maintainers use
+`https://ignis-protocol.com/maintainer` with `MAINTAINER_API_KEYS` to inspect
+the accepted patch, download the sanitized `.patch`, approve or reject it, and
+publish a GitHub pull request when the GitHub App is configured.
+
+Required policy variables:
+
+```text
+GITHUB_ALLOWED_REPOSITORIES=ignis-protocol/ignis
+PUBLICATION_PROTECTED_PATHS=.github/workflows/**,.env,.env.*,backend/.env*,frontend/.env*,**/*.pem,**/*.key,**/*.p12,**/*.pfx,**/id_rsa,**/id_ed25519,.secrets/**,secrets/**
+MAX_PUBLICATION_FILES=25
+MAX_PUBLICATION_ADDED_LINES=2500
+```
+
+Optional GitHub App publishing variables:
+
+```text
+GITHUB_APP_ID=
+GITHUB_APP_INSTALLATION_ID=
+GITHUB_APP_PRIVATE_KEY=
+GITHUB_DEFAULT_BASE_BRANCH=main
+GITHUB_BOT_NAME=IGNIS
+GITHUB_BOT_EMAIL=ignis-protocol[bot]@users.noreply.github.com
+```
+
+If the GitHub App variables are empty, approved publications remain in manual
+patch-export mode. This is safe for public launch; automatic PR publishing can
+be enabled later without changing the submission or reviewer flow.
 
 ## Abuse Controls and Audit
 

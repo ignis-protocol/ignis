@@ -438,7 +438,9 @@ async function cmdStatus(args=[]){
     ['metadata risk', data.submission.metadata_report?.risk || 'unknown'],
     ['review', review ? review.id : 'pending'],
     ['votes', review ? `${review.reviewers_responded} / ${review.quorum_required}` : 'pending'],
-    ['proof', data.proof ? `${location.origin}/proof?id=${data.proof.id}` : 'not issued']
+    ['proof', data.proof ? `${location.origin}/proof?id=${data.proof.id}` : 'not issued'],
+    ['publication', data.submission.publication?.status || 'awaiting accepted quorum'],
+    ['pull request', data.submission.publication?.pr_url || 'not published']
   ]);
   blank();
 }

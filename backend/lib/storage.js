@@ -10,6 +10,7 @@ const createDefaultState = () => ({
   wallet_links: [],
   proofs: [],
   anchor_jobs: [],
+  publications: [],
   audit_events: [],
 });
 

@@ -102,6 +102,7 @@ Solana proof layer
 | Terminal | https://ignis-protocol.com/terminal |
 | Sample Flow | https://ignis-protocol.com/terminal?sample=1 |
 | Reviewer Console | https://ignis-protocol.com/reviewer |
+| Maintainer Console | https://ignis-protocol.com/maintainer |
 | Proof Verifier | https://ignis-protocol.com/proof |
 | Ops Status | https://ignis-protocol.com/ops |
 | API Health | https://api.ignis-protocol.com/health |
@@ -131,6 +132,7 @@ Completed:
 - Reviewer console shows sanitized bundles and metadata reports without exposing identity fields.
 - Terminal connected to backend API with local fallback.
 - Short-lived reviewer sessions and private reviewer dashboard.
+- Maintainer publication gate for accepted patches, policy checks, patch export, and GitHub App PR publishing.
 - Phantom sign-message authentication with nonce replay protection.
 - Privacy-preserving wallet commitments.
 - Verifiable proof receipts for accepted contributions.
@@ -189,6 +191,15 @@ GET  /api/reviews/:id
 POST /api/reviews/:id/votes
 POST /api/reviewer/session
 GET  /api/reviewer/me
+POST /api/maintainer/session
+GET  /api/maintainer/me
+GET  /api/maintainer/publications
+GET  /api/maintainer/publications/:id
+GET  /api/maintainer/publications/:id/patch
+POST /api/maintainer/publications/:id/approve
+POST /api/maintainer/publications/:id/reject
+POST /api/maintainer/publications/:id/publish
+POST /api/maintainer/publications/:id/sync
 GET  /api/audit
 POST /api/wallet/challenge
 POST /api/wallet/verify
@@ -239,6 +250,12 @@ Reviewer keys are configured only on the backend through `REVIEWER_API_KEYS`.
 The API stores reviewer fingerprints, blocks duplicate votes, and settles a review
 after the configured odd-numbered quorum is reached. Partial decisions and scores
 stay hidden until settlement; settled feedback is exposed without reviewer identity.
+
+Accepted patches enter the maintainer publication queue. Maintainers can download
+the sanitized patch, run publication policy checks, approve or reject the patch,
+and publish an anonymous GitHub pull request when the GitHub App integration is
+configured. Protected paths such as workflow files, environment files, private
+keys, and secret-bearing filenames are blocked from automatic publication.
 
 Wallet authentication uses an expiring nonce and Ed25519 `signMessage`. The wallet
 address never enters the reviewer bundle. Accepted receipts contain only a salted,
@@ -344,6 +361,7 @@ Launch and audit prep:
 - [x] Phase 8B: free-first public preview hardening, monitoring, launch runbook, reviewer operations, feedback intake, and security hardening.
 - [x] Phase 8C: public user flow, reviewer onboarding, sample diff, CTA polish, and aggregate metrics.
 - [x] Phase 8D: recovery drill evidence, optional formal third-party audit, and broader public launch decision.
+- [x] Publication workflow: accepted patch queue, maintainer gate, policy checks, patch export, and GitHub App PR publishing.
 
 ---
 
