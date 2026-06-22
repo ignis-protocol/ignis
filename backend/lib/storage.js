@@ -11,6 +11,7 @@ const createDefaultState = () => ({
   proofs: [],
   anchor_jobs: [],
   publications: [],
+  agent_reviews: [],
   audit_events: [],
 });
 

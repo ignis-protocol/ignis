@@ -99,7 +99,9 @@ function renderDetail(id) {
       <div class="findings">${(policy.findings || []).length ? policy.findings.map(f => `<div class="finding"><span class="pill ${esc(f.severity === 'high' ? 'fail' : 'warn')}">${esc(f.severity)}</span><span>${esc(f.code)} ${f.path ? `- ${esc(f.path)}` : ''}<br><span class="muted">${esc(f.detail || '')}</span></span></div>`).join('') : '<div class="muted">No blocking findings.</div>'}</div>
       <p class="muted">${esc(policy.files?.length || 0)} files / ${esc(policy.added_lines || 0)} added lines / ${esc(policy.removed_lines || 0)} removed lines</p>
     </div></div>
+    ${renderAgentPanel(item)}
     <div class="actions">
+      ${item.review_id ? '<button class="btn" data-action="agent">Run AI agent</button>' : ''}
       <button class="btn" data-action="download">Download patch</button>
       <button class="btn accept" data-action="approve">Approve</button>
       <button class="btn primary" data-action="publish">Publish PR</button>
@@ -108,16 +110,48 @@ function renderDetail(id) {
     </div>`;
 }
 
+function renderAgentPanel(item) {
+  const report = item.agent;
+  if (!report) {
+    return `<div class="panel"><h2>Adversarial AI agent <span class="pill warn">not run</span></h2><div class="panel-body"><p class="muted">Run the agent before publication when a patch needs an adversarial second pass.</p></div></div>`;
+  }
+  const verdict = report.verdict || {};
+  const findings = verdict.findings || [];
+  return `<div class="panel"><h2>Adversarial AI agent <span class="pill ${esc(verdict.risk === 'critical' || verdict.risk === 'high' ? 'warn' : 'pass')}">${esc(report.status)}</span></h2><div class="panel-body">
+    <dl class="grid">
+      <dt>Model</dt><dd>${esc(report.model || 'deepseek-v4-flash')}</dd>
+      <dt>Decision</dt><dd>${esc(verdict.decision || 'pending')}</dd>
+      <dt>Risk</dt><dd>${esc(verdict.risk || 'unknown')}</dd>
+      <dt>Score</dt><dd>${esc(verdict.score || 'n/a')} / 10</dd>
+      <dt>Confidence</dt><dd>${esc(verdict.confidence || 'unknown')}</dd>
+    </dl>
+    ${verdict.summary ? `<p>${esc(verdict.summary)}</p>` : ''}
+    ${findings.length ? `<div class="findings">${findings.map(f => `<div class="finding"><span class="pill ${esc(f.severity === 'high' || f.severity === 'critical' ? 'fail' : 'warn')}">${esc(f.severity || 'note')}</span><span>${esc(f.summary || '')}<br><span class="muted">${esc(f.recommendation || '')}</span></span></div>`).join('')}</div>` : '<p class="muted">No agent findings recorded.</p>'}
+    ${verdict.tests_required?.length ? `<p class="muted">Tests requested: ${esc(verdict.tests_required.join(', '))}</p>` : ''}
+    ${verdict.maintainer_note ? `<p class="muted">Maintainer note: ${esc(verdict.maintainer_note)}</p>` : ''}
+  </div></div>`;
+}
+
 async function action(type) {
   if (!activeId) return;
   try {
     if (type === 'download') return await downloadPatch();
+    if (type === 'agent') return await runAgentForPublication();
     const body = type === 'reject' ? { reason: 'Rejected by maintainer.' } : {};
     const data = await request(`/api/maintainer/publications/${encodeURIComponent(activeId)}/${type}`, { method: 'POST', body: JSON.stringify(body) });
     toast(`${type} complete`);
     await loadQueue();
     if (data.publication) renderDetail(data.publication.id);
   } catch (error) { toast(error.message); }
+}
+
+async function runAgentForPublication() {
+  const item = publications.find(pub => pub.id === activeId);
+  if (!item?.review_id) throw new Error('No review id found for this publication.');
+  const data = await request(`/api/agent/reviews/${encodeURIComponent(item.review_id)}/run`, { method: 'POST', body: JSON.stringify({}) });
+  item.agent = data.report;
+  toast('AI agent report recorded');
+  renderDetail(activeId);
 }
 
 async function downloadPatch() {

@@ -17,6 +17,7 @@ const { enforceSubmissionQuota, inspectDiff } = require('./lib/abuse-controls');
 const { RelayTransport } = require('./lib/relay-transport');
 const { evaluatePublicationPolicy } = require('./lib/publication-policy');
 const { GitHubPublisher } = require('./lib/github-publisher');
+const { ReviewAgent } = require('./lib/review-agent');
 
 const bs58 = bs58Module.default || bs58Module;
 const app = express();
@@ -44,6 +45,7 @@ const tokens = createTokenService(process.env.AUTH_SECRET);
 const vault = new BundleVault({ fallbackSecret: process.env.AUTH_SECRET });
 const relayTransport = new RelayTransport({ authSecret: process.env.AUTH_SECRET });
 const githubPublisher = new GitHubPublisher(process.env);
+const reviewAgent = new ReviewAgent(process.env);
 const BUNDLE_RETENTION_DAYS = Number(process.env.BUNDLE_RETENTION_DAYS || 30);
 const solana = new SolanaAnchor({
   cluster: process.env.SOLANA_CLUSTER || 'mainnet-beta',
@@ -76,7 +78,7 @@ app.use(cors({
     return callback(new ApiError(403, 'origin_not_allowed', 'Origin is not allowed by CORS policy.'));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Reviewer-Key', 'X-Maintainer-Key'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Reviewer-Key', 'X-Maintainer-Key', 'X-Agent-Key'],
 }));
 app.use(express.json({ limit: process.env.REQUEST_BODY_LIMIT || '384kb' }));
 app.use(express.urlencoded({ extended: false }));
@@ -128,6 +130,7 @@ app.get('/', (req, res) => ok(res, req, {
       'accepted patch publication queue',
       'maintainer approval gate',
       'GitHub App anonymous PR publishing',
+      'adversarial AI review agent',
     ],
     excluded: ['staking', 'reward distribution'],
   },
@@ -150,6 +153,8 @@ app.get('/', (req, res) => ok(res, req, {
     'GET  /api/maintainer/publications',
     'POST /api/maintainer/publications/:id/approve',
     'POST /api/maintainer/publications/:id/publish',
+    'GET  /api/agent/reviews/:id',
+    'POST /api/agent/reviews/:id/run',
     'GET  /api/signal',
     'GET  /api/solana',
     'GET  /api/public-metrics',
@@ -174,12 +179,15 @@ app.get('/health', (req, res) => {
     reviews: state.reviews.length,
     proofs: state.proofs.length,
     publications: state.publications.length,
+    agent_reviews: state.agent_reviews.length,
     anchors_pending: state.anchor_jobs.filter(item => item.status === 'pending').length,
     review_quorum: REVIEW_QUORUM,
     reviewers_configured: REVIEWER_KEYS.size,
     reviewer_keys_in_grace: [...REVIEWER_KEYS.values()].filter(item => item.status === 'grace').length,
     maintainers_configured: MAINTAINER_KEYS.size,
     github_publication_configured: githubPublisher.status().configured,
+    agent_configured: reviewAgent.status().configured,
+    agent_model: reviewAgent.status().model,
     solana_anchor_configured: solana.status().configured,
     audit_chain_valid: verifyAuditChain(),
     uptime: Math.floor(process.uptime()),
@@ -203,6 +211,7 @@ app.get('/api/public-metrics', (req, res) => {
       confirmed_anchors: state.proofs.filter(item => item.anchor?.status === 'confirmed').length,
       publications: state.publications.length,
       published_pull_requests: state.publications.filter(item => item.status === 'published').length,
+      agent_reviews: state.agent_reviews.length,
     },
     product_state: {
       audited_alpha: true,
@@ -214,6 +223,7 @@ app.get('/api/public-metrics', (req, res) => {
       solana_signer: solana.status().configured,
       maintainer_gate: MAINTAINER_KEYS.size > 0,
       github_publication: githubPublisher.status().configured,
+      review_agent: reviewAgent.status().configured,
     },
   });
 });
@@ -716,6 +726,78 @@ app.post('/api/maintainer/publications/:id/sync', requireMaintainer, asyncHandle
   return ok(res, req, { publication: serializePublication(publication, { includePolicy: true, includeProof: true }) });
 }));
 
+app.get('/api/agent/reviews/:id', requireReviewOperator, (req, res, next) => {
+  try {
+    const review = findReview(req.params.id);
+    if (!review) throw new ApiError(404, 'review_not_found', 'Review does not exist.');
+    const report = findAgentReview(review.id);
+    return ok(res, req, {
+      agent: reviewAgent.status(),
+      report: report ? serializeAgentReview(report) : null,
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/api/agent/reviews/:id/run', requireReviewOperator, asyncHandler(async (req, res) => {
+  const review = findReview(req.params.id);
+  if (!review) throw new ApiError(404, 'review_not_found', 'Review does not exist.');
+  const submission = findSubmission(review.submission_id);
+  if (!submission) throw new ApiError(404, 'submission_not_found', 'Submission does not exist.');
+  const existing = findAgentReview(review.id);
+  if (existing?.status === 'running') throw new ApiError(409, 'agent_review_running', 'Agent review is already running.');
+  const actor = req.operator || { type: 'agent', id: 'internal', label: 'internal' };
+  const report = existing || {
+    id: newId('agent'),
+    review_id: review.id,
+    submission_id: submission.id,
+    status: 'running',
+    provider: reviewAgent.status().provider,
+    model: reviewAgent.status().model,
+    verdict: null,
+    error: null,
+    requested_by: actor,
+    requested_at: new Date().toISOString(),
+    completed_at: null,
+    updated_at: new Date().toISOString(),
+  };
+  if (!existing) storage.state.agent_reviews.unshift(report);
+  Object.assign(report, {
+    status: 'running',
+    provider: reviewAgent.status().provider,
+    model: reviewAgent.status().model,
+    error: null,
+    requested_by: actor,
+    requested_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  await storage.persist();
+  try {
+    const bundle = openSubmissionBundle(submission);
+    report.verdict = await reviewAgent.analyze({ review, submission, bundle });
+    report.status = 'complete';
+    report.completed_at = new Date().toISOString();
+    report.updated_at = report.completed_at;
+    audit('agent_review_completed', {
+      agent_review_id: report.id,
+      review_id: review.id,
+      submission_id: submission.id,
+      decision: report.verdict.decision,
+      risk: report.verdict.risk,
+    });
+    await storage.persist();
+    return ok(res.status(201), req, { report: serializeAgentReview(report) });
+  } catch (error) {
+    report.status = 'failed';
+    report.error = String(error.message).slice(0, 500);
+    report.updated_at = new Date().toISOString();
+    audit('agent_review_failed', { agent_review_id: report.id, review_id: review.id, error: report.error });
+    await storage.persist();
+    throw new ApiError(502, 'agent_review_failed', report.error);
+  }
+}));
+
 app.get('/api/signal', (req, res) => {
   const state = storage.state;
   const accepted = state.submissions.filter(item => item.status === 'accepted').length;
@@ -739,6 +821,7 @@ app.get('/api/signal', (req, res) => {
       settled_reviews: settled.length,
       reviewer_votes: state.reviews.reduce((sum, item) => sum + item.votes.length, 0),
       proofs: state.proofs.length,
+      agent_reviews: state.agent_reviews.length,
       anchors_confirmed: state.proofs.filter(item => item.anchor.status === 'confirmed').length,
     },
     portable_score: Number(portableScore.toFixed(1)),
@@ -747,6 +830,10 @@ app.get('/api/signal', (req, res) => {
     incentive_layer: 'IGNIS token live on Solana',
     token_contract: IGNIS_TOKEN_ADDRESS,
     token_network: 'Solana',
+    review_agent: {
+      configured: reviewAgent.status().configured,
+      model: reviewAgent.status().model,
+    },
   });
 });
 
@@ -1008,6 +1095,8 @@ function serializeSubmission(submission, options = {}) {
   result.metadata_report = submission.metadata_report_summary || null;
   result.bundle_encrypted = Boolean(submission.encrypted_bundle);
   const publication = storage.state.publications.find(item => item.submission_id === submission.id);
+  const review = storage.state.reviews.find(item => item.submission_id === submission.id);
+  const agentReview = review ? findAgentReview(review.id) : null;
   result.publication = publication ? {
     id: publication.id,
     status: publication.status,
@@ -1015,6 +1104,7 @@ function serializeSubmission(submission, options = {}) {
     pr_state: publication.pr_state || null,
     published_at: publication.published_at || null,
   } : null;
+  result.agent = agentReview ? serializeAgentReview(agentReview, { public: true }) : null;
   if (options.includeSession) result.session = submission.session;
   return result;
 }
@@ -1038,6 +1128,7 @@ function serializeReview(review, options = {}) {
     score: settled ? review.score : null,
     created_at: review.created_at,
     settled_at: review.settled_at,
+    agent: serializeAgentReview(findAgentReview(review.id), { public: !options.includeBundle }),
   };
   if (settled) result.feedback = review.votes.map(({ decision, score, note, created_at }) => ({ decision, score, note, created_at }));
   if (options.includeBundle && submission) {
@@ -1120,7 +1211,37 @@ function serializePublication(publication, options = {}) {
     }
   }
   if (options.includeProof && proof) result.proof = serializeProof(proof);
+  const review = submission ? storage.state.reviews.find(item => item.submission_id === submission.id) : null;
+  if (review) {
+    result.review_id = review.id;
+    result.agent = serializeAgentReview(findAgentReview(review.id));
+  }
   return result;
+}
+
+function serializeAgentReview(report, options = {}) {
+  if (!report) return null;
+  const base = {
+    id: report.id,
+    review_id: report.review_id,
+    submission_id: report.submission_id,
+    status: report.status,
+    provider: report.provider,
+    model: report.model,
+    requested_at: report.requested_at,
+    completed_at: report.completed_at,
+    updated_at: report.updated_at,
+    error: report.error || null,
+  };
+  if (!report.verdict) return base;
+  base.verdict = options.public ? {
+    decision: report.verdict.decision,
+    score: report.verdict.score,
+    confidence: report.verdict.confidence,
+    risk: report.verdict.risk,
+    summary: report.verdict.summary,
+  } : report.verdict;
+  return base;
 }
 
 function requireReviewer(req, _res, next) {
@@ -1148,6 +1269,30 @@ function requireMaintainer(req, _res, next) {
     }
     req.maintainer = authenticateMaintainerKey(req.get('X-Maintainer-Key'));
     return next();
+  } catch (error) {
+    return next(error);
+  }
+}
+
+function requireReviewOperator(req, _res, next) {
+  try {
+    const bearer = bearerToken(req);
+    const reviewerPayload = bearer ? tokens.verify(bearer, 'reviewer') : null;
+    if (reviewerPayload) {
+      req.operator = { type: 'reviewer', id: reviewerPayload.sub, label: reviewerPayload.label, key_id: reviewerPayload.key_id || null };
+      return next();
+    }
+    const maintainerPayload = bearer ? tokens.verify(bearer, 'maintainer') : null;
+    if (maintainerPayload) {
+      req.operator = { type: 'maintainer', id: maintainerPayload.sub, label: maintainerPayload.label, key_id: maintainerPayload.key_id || null };
+      return next();
+    }
+    const agentKey = String(req.get('X-Agent-Key') || '').trim();
+    if (process.env.AGENT_API_KEY && agentKey && sha256(agentKey) === sha256(process.env.AGENT_API_KEY)) {
+      req.operator = { type: 'agent', id: sha256('agent:internal'), label: 'internal-agent', key_id: sha256(agentKey).slice(7, 19) };
+      return next();
+    }
+    return next(new ApiError(401, 'review_operator_required', 'Reviewer, maintainer, or internal agent authorization is required.'));
   } catch (error) {
     return next(error);
   }
@@ -1355,6 +1500,13 @@ function readinessReport() {
       detail: githubPublisher.status().configured ? 'GitHub App ready' : 'manual patch export only',
       required: false,
     },
+    {
+      id: 'review_agent',
+      label: 'Adversarial review agent',
+      status: reviewAgent.status().configured ? 'pass' : 'warn',
+      detail: reviewAgent.status().configured ? `${reviewAgent.status().provider} / ${reviewAgent.status().model}` : 'OpenRouter key not configured',
+      required: false,
+    },
   ];
   const ready = checks.every(check => !check.required || check.status === 'pass');
   return {
@@ -1370,6 +1522,7 @@ function readinessReport() {
       queued_reviews: queuedReviews,
       proofs: state.proofs.length,
       publications: state.publications.length,
+      agent_reviews: state.agent_reviews.length,
       pending_anchors: pendingAnchors,
       failed_anchors: failedAnchors,
       uptime_seconds: Math.floor(process.uptime()),
@@ -1471,6 +1624,9 @@ function findProof(id) {
 }
 function findPublication(id) {
   return storage.state.publications.find(item => item.id === id || item.submission_id === id);
+}
+function findAgentReview(reviewId) {
+  return storage.state.agent_reviews.find(item => item.review_id === reviewId);
 }
 function policyForSubmission(submission) {
   const bundle = openSubmissionBundle(submission);

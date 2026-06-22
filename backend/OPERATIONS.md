@@ -115,6 +115,44 @@ If the GitHub App variables are empty, approved publications remain in manual
 patch-export mode. This is safe for public launch; automatic PR publishing can
 be enabled later without changing the submission or reviewer flow.
 
+## Adversarial Review Agent
+
+IGNIS can run an LLM-based adversarial second pass on a sealed, sanitized review
+bundle. The agent is designed to find risk, missing tests, hidden assumptions,
+and publication blockers before a human reviewer or maintainer acts. It never
+receives the original raw diff, wallet address, session label, IP address, or
+author metadata.
+
+Railway variables:
+
+```text
+OPENROUTER_API_KEY=<store in Railway only>
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL=deepseek-v4-flash
+OPENROUTER_SITE_URL=https://ignis-protocol.com
+OPENROUTER_APP_TITLE=IGNIS
+AGENT_API_KEY=<long random internal key>
+AGENT_TIMEOUT_MS=45000
+AGENT_MAX_DIFF_BYTES=60000
+AGENT_TEMPERATURE=0.1
+AGENT_DRY_RUN=0
+```
+
+Reviewer and maintainer bearer sessions can run:
+
+```text
+POST /api/agent/reviews/:id/run
+GET  /api/agent/reviews/:id
+```
+
+`AGENT_API_KEY` is only for internal automation clients using `X-Agent-Key`.
+Do not put the provider key or agent key in frontend code, docs, GitHub issues,
+or screenshots. If the model is unavailable, set `AGENT_DRY_RUN=1` for a local
+synthetic report while keeping the human review path live.
+
+Operational rule: an agent report is advisory. A human reviewer still casts the
+vote and a maintainer still approves publication.
+
 ## Abuse Controls and Audit
 
 - `SUBMISSION_QUOTA_PER_HOUR` and `SUBMISSION_QUOTA_PER_DAY` limit each session.

@@ -30,6 +30,10 @@ process.env.SEALED_BUNDLE_KEYS = `test-v1:${Buffer.alloc(32, 7).toString('base64
 process.env.SEALED_BUNDLE_ACTIVE_KEY_ID = 'test-v1';
 process.env.SUBMISSION_QUOTA_PER_HOUR = '10';
 process.env.SUBMISSION_QUOTA_PER_DAY = '30';
+process.env.OPENROUTER_API_KEY = 'test-openrouter-key-not-real';
+process.env.OPENROUTER_MODEL = 'deepseek-v4-flash';
+process.env.AGENT_API_KEY = 'agent-test-secret-1234';
+process.env.AGENT_DRY_RUN = '1';
 
 const app = require('../server');
 const { sanitizeDiff } = require('../lib/sanitizer');
@@ -336,6 +340,23 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.match(JSON.stringify(reviewerQueue.body), /redacted/);
   assert.equal(reviewerQueue.body.queue[0].bundle.relay_receipts.length, 3);
 
+  const agentDenied = await request(`/api/agent/reviews/${reviewId}`);
+  assert.equal(agentDenied.response.status, 401);
+  const agentRun = await request(`/api/agent/reviews/${reviewId}/run`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${reviewerToken}` },
+    body: JSON.stringify({}),
+  });
+  assert.equal(agentRun.response.status, 201);
+  assert.equal(agentRun.body.report.status, 'complete');
+  assert.equal(agentRun.body.report.model, 'deepseek-v4-flash');
+  assert.equal(agentRun.body.report.verdict.decision, 'needs_human');
+  const agentRead = await request(`/api/agent/reviews/${reviewId}`, {
+    headers: { 'X-Agent-Key': 'agent-test-secret-1234' },
+  });
+  assert.equal(agentRead.response.status, 200);
+  assert.equal(agentRead.body.report.verdict.risk, 'medium');
+
   const unauthorized = await request(`/api/reviews/${reviewId}/votes`, {
     method: 'POST',
     body: JSON.stringify({ decision: 'accept', score: 9 }),
@@ -399,6 +420,8 @@ test('blind review reaches quorum and settles a submission', async t => {
 
   const publicStatus = await request(`/api/submissions/${submissionId}/status`);
   assert.equal(publicStatus.body.submission.publication.status, 'awaiting_maintainer');
+  assert.equal(publicStatus.body.submission.agent.status, 'complete');
+  assert.equal(publicStatus.body.submission.agent.verdict.decision, 'needs_human');
 
   const maintainerDenied = await request('/api/maintainer/publications');
   assert.equal(maintainerDenied.response.status, 401);
@@ -446,6 +469,7 @@ test('blind review reaches quorum and settles a submission', async t => {
   assert.equal(signal.body.totals.accepted, 1);
   assert.equal(signal.body.totals.reviewer_votes, 3);
   assert.equal(signal.body.totals.proofs, 1);
+  assert.equal(signal.body.totals.agent_reviews, 1);
   assert.equal(signal.body.confidence, 'early');
 
   const auditResult = await request('/api/audit', {

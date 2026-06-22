@@ -438,6 +438,7 @@ async function cmdStatus(args=[]){
     ['metadata risk', data.submission.metadata_report?.risk || 'unknown'],
     ['review', review ? review.id : 'pending'],
     ['votes', review ? `${review.reviewers_responded} / ${review.quorum_required}` : 'pending'],
+    ['AI agent', data.submission.agent ? `${data.submission.agent.status}${data.submission.agent.verdict?.risk ? ` / risk ${data.submission.agent.verdict.risk}` : ''}` : 'not run'],
     ['proof', data.proof ? `${location.origin}/proof?id=${data.proof.id}` : 'not issued'],
     ['publication', data.submission.publication?.status || 'awaiting accepted quorum'],
     ['pull request', data.submission.publication?.pr_url || 'not published']
@@ -453,6 +454,7 @@ async function cmdReview(){
     panel([
       ['queued reviews', String(signal?.totals?.queued_reviews ?? health?.reviews ?? 0)],
       ['settled reviews', String(signal?.totals?.settled_reviews ?? 0)],
+      ['AI agent runs', String(signal?.totals?.agent_reviews ?? 0)],
       ['reviewer quorum', health ? `${health.reviewers_configured} configured / quorum ${health.review_quorum}` : '3 reviewers'],
       ['identity fields', 'hidden'],
       ['review console', `${location.origin}/reviewer`]
@@ -494,6 +496,7 @@ async function cmdSignal(){
     ['confidence', data?.confidence || 'unproven'],
     ['accepted', String(data?.totals?.accepted ?? 0)],
     ['settled reviews', String(data?.totals?.settled_reviews ?? 0)],
+    ['AI agent runs', String(data?.totals?.agent_reviews ?? 0)],
     ['portable proof', data ? data.proof_target : 'Solana mainnet anchor'],
     ['token layer', data ? data.incentive_layer : 'IGNIS token live on Solana'],
     ['contract', data?.token_contract || '7ZQP69CJWaxwFSMPjL89tC5FQdLzyLXwqGynedRiGory']

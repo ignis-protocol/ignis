@@ -133,6 +133,7 @@ Completed:
 - Terminal connected to backend API with local fallback.
 - Short-lived reviewer sessions and private reviewer dashboard.
 - Maintainer publication gate for accepted patches, policy checks, patch export, and GitHub App PR publishing.
+- OpenRouter adversarial AI review agent for second-pass risk, test, and publication analysis.
 - Phantom sign-message authentication with nonce replay protection.
 - Privacy-preserving wallet commitments.
 - Verifiable proof receipts for accepted contributions.
@@ -189,6 +190,8 @@ GET  /api/submissions/:id/status
 GET  /api/reviews
 GET  /api/reviews/:id
 POST /api/reviews/:id/votes
+GET  /api/agent/reviews/:id
+POST /api/agent/reviews/:id/run
 POST /api/reviewer/session
 GET  /api/reviewer/me
 POST /api/maintainer/session
@@ -256,6 +259,11 @@ the sanitized patch, run publication policy checks, approve or reject the patch,
 and publish an anonymous GitHub pull request when the GitHub App integration is
 configured. Protected paths such as workflow files, environment files, private
 keys, and secret-bearing filenames are blocked from automatic publication.
+
+The adversarial AI review agent runs only on sealed sanitized bundles. It is an
+operator tool for reviewers and maintainers, not an automatic approval path.
+Reports include decision guidance, risk, confidence, findings, required tests,
+and maintainer notes while human reviewers still cast the final vote.
 
 Wallet authentication uses an expiring nonce and Ed25519 `signMessage`. The wallet
 address never enters the reviewer bundle. Accepted receipts contain only a salted,
@@ -362,6 +370,7 @@ Launch and audit prep:
 - [x] Phase 8C: public user flow, reviewer onboarding, sample diff, CTA polish, and aggregate metrics.
 - [x] Phase 8D: recovery drill evidence, optional formal third-party audit, and broader public launch decision.
 - [x] Publication workflow: accepted patch queue, maintainer gate, policy checks, patch export, and GitHub App PR publishing.
+- [x] Adversarial review agent: OpenRouter model integration, reviewer console controls, maintainer visibility, and ops metrics.
 
 ---
 
